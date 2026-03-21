@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+ * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* Giúp padding không làm tăng chiều rộng thực tế */
+}
+
+html, body {
+  background-color: white;
+  width: 100%;
+  overflow-x: hidden; /* Ngăn chặn việc xuất hiện thanh cuộn ngang không mong muốn */
+}   
+

@@ -1,0 +1,91 @@
+/* Đảm bảo toàn bộ trang không có khoảng trắng thừa */
+body {
+  margin: 40px;
+  font-family: Arial, sans-serif; 
+  /* chọn font Arial, neu trinh duyet khong co thi dua ra cac họ liên quan thay thế */
+}
+
+.header-container {
+  background-color: #2474e5;
+  width: 100vw;          /* Chiều rộng bằng 100% màn hình thiết bị */
+  height: 100px;
+  position: fixed;       /* Dùng fixed thay vì sticky để đảm bảo nó luôn nằm trên cùng */
+  top: 0;                
+  left: 0;              
+  display: flex;
+  justify-content: center;
+  z-index: 9999;         /* Đảm bảo nó luôn đè lên các thành phần khác */
+}
+
+/* Phần nội dung bên trong vẫn nên giới hạn để dễ nhìn trên màn hình lớn */
+.header-content {
+  width: 100%;
+  padding: 0 20px;       /* Tạo khoảng cách nhỏ ở hai đầu để text không dính sát viền */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+
+/* Khối bên trái */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.brand-name {
+  font-size: 30px;
+  font-weight: bold;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  letter-spacing: -1px; 
+  /* khoảng cách giữa các chữ cái */
+}
+
+.slogan {
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  line-height: 1.2;
+  margin: 0px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  padding-left: 10px;
+}
+
+/* Khối bên phải */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 14px;
+}
+
+.header-right a {
+  color: white;
+  text-decoration: none;
+}
+
+/* Nút bấm */
+.hotline-btn, .login-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  /* khi lia chuột vào thì sẽ hiện bàn tay */
+}
+
+.hotline-btn {
+  background-color: white;
+  color: #333;
+}
+
+.login-btn {
+  background-color: white;
+  color: #333;
+}
+
+.hotline-btn:hover, .login-btn:hover {
+  background-color: #f0f0f0;
+}
