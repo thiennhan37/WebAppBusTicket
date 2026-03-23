@@ -63,11 +63,11 @@ const StaffManagement = () => {
                 {staffList.map((staff) => (
                   <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-4 py-2 font-bold text-slate-700 text-center">{staff.id}</td>
-                    <td className="px-1 py-2 font-medium text-slate-800">{staff.username}</td>
-                    <td className="px-4 py-2 text-slate-600 text-ms">{staff.firstName}</td>
-                    <td className="px-4 py-2 text-slate-500  text-ms">{staff.lastName}</td>
+                    <td className="px-1 py-2 font-medium text-slate-800">{staff.fullName}</td>
+                    <td className="px-4 py-2 text-slate-600 text-ms">{staff.role}</td>
+                    <td className="px-4 py-2 text-slate-500  text-ms">{staff.phone}</td>
                     <td className="px-4 py-2 text-center">
-                      {/* <StatusBadge type={staff.status} /> */}
+                      <StatusBadge type={staff.status.toLowerCase()} />
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex justify-center gap-1">

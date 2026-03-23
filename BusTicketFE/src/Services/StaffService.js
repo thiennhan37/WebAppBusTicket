@@ -2,7 +2,7 @@ import api from "./api";
 
 const StaffService = {
     getAllStaff(){
-        return api.get("/users");
+        return api.get("/nhaxe/member");
     }
     
 }

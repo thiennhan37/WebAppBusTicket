@@ -24,7 +24,13 @@ public class CompanyUserController {
     }
     @PostMapping("/member")
     ApiResponse<CompanyUserResponse> createCompanyUser(@RequestBody @Valid CompanyUserCrRequest request){
-        log.info("in contrller");
+
+        return ApiResponse.success(companyUserService.createCompanyUser(request));
+//        log.info("end controller");
+    }
+    @PatchMapping("/updateStaff")
+    ApiResponse<CompanyUserResponse> updateCompanyUser(@RequestBody @Valid CompanyUserCrRequest request){
+
         return ApiResponse.success(companyUserService.createCompanyUser(request));
 //        log.info("end controller");
     }
