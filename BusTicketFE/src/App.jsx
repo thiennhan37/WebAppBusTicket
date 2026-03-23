@@ -16,8 +16,8 @@ function App() {
   return (
     
     <BrowserRouter>
-      {/* <HomePage></HomePage> */}
-      <div className="flex h-screen overflow-hidden bg-white">
+      <HomePage></HomePage>
+      <div className="flex h-screen overflow-hidden bg-white hidden">
         
         <SideBar></SideBar>
 

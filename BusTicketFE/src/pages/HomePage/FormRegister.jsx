@@ -18,12 +18,13 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
     const [email, setEmail] = useState("");
     const [errorEmail, setErrorEmail] = useState("");
     const validateEmail = () =>{
+        // console.log(1);
         if(validator.isEmail(email) || !email) setErrorEmail("");
         else setErrorEmail("Email không hợp lệ")
     }
     const handleEmailChange = (e) =>{
+        // console.log(2);
         setEmail(e.target.value);
-        // if(!e.target.value) setErrorEmail("");
     }
 
     
@@ -50,7 +51,7 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                     </p>
                 </div>
 
-                <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                <form className="" onSubmit={(e) => e.preventDefault()}>
 
                     <div className="relative">
                         <User className="absolute left-4 top-4 text-gray-400" size={18} />
@@ -60,9 +61,12 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl 
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                         />
+                        <div className="min-h-[20px]"></div>
                     </div>
+                    
 
                     <div className="relative">
+
                         <Building2 className="absolute left-4 top-4 text-gray-400" size={18} />
                         <input 
                             type="text" 
@@ -70,27 +74,33 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                             className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl 
                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                         />
+                        <div className="min-h-[20px]"></div>
                     </div>
+                    
 
                     <div className="relative">
+
                         <Mail className={`absolute left-4 top-4 transition-colors ${errorEmail ? 'text-red-500' : 'text-gray-400'}`} size={18}/>
                         <input 
                             type="text" 
                             placeholder="Email Address"
                             className={`w-full pl-12 pr-4 py-3 bg-gray-50 border rounded-2xl transition-all focus:outline-none 
                                 ${errorEmail 
-                                ? 'border-red-500 focus:ring-2 focus:ring-red-200 bg-red-50' 
+                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 bg-red-50' 
                                 : 'border-gray-100 focus:ring-2 focus:ring-blue-500 focus:bg-white'
                                 }`}
+                            value={email}
                             onBlur={validateEmail}
                             onChange={handleEmailChange}
                             onFocus={() => {setErrorEmail("")}}
                         />
-                        {errorEmail && (
-                            <p className="mt-2 ml-2 text-sm text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
-                            {errorEmail}
-                            </p>
-                        )}
+                        <div className="min-h-[26px] pl-4">
+                            {errorEmail && (
+                                <p className="text-sm text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                                    {errorEmail}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <div className="relative">
@@ -108,16 +118,17 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                             onChange={handlePhoneChange}
                             onFocus={() => {setErrorPhone("")}}
                         />
-                        {errorPhone && (
-                            <p className="mt-2 ml-2 text-sm text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
-                            {errorPhone}
-                            </p>
-                        )}
+                        <div className="min-h-[26px] pl-4">
+                            {errorPhone && (
+                                <p className="mt-0 ml-0 text-sm text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                                {errorPhone}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
-                    
 
-                    <button className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all transform active:scale-[0.98] mt-2">
+                    <button className="mt-3 w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all transform active:scale-[0.98] ">
                     Create Account
                     </button>
                 </form>
