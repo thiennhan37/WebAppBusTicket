@@ -5,15 +5,27 @@ import StaffListHeader from './StaffListHeader';
 import InputGroup from './InputGroup';
 import Pagination from './Pagination';
 import StaffService from '../../Services/StaffService';
+import { toVN } from '../../utils/translate';
+import StaffInfo from './StaffInfo';
 const StaffManagement = () => {
-  // const [staffList] = useState([
-  //   { id: 'TX01', name: 'Nguyễn Tran Thien Nhan', role: 'Tài xế', phone: '0905123456', license: 'Bằng E (02/2026)', status: 'active' },
-  //   { id: 'TX02', name: 'Trần Văn B', role: 'Tài xế', phone: '0905654321', license: 'Bằng D (12/2025)', status: 'active' },
-  //   { id: 'NV01', name: 'Lê Thị C', role: 'NV Bán vé', phone: '0914111222', license: '-', status: 'banned' },
-  //   { id: 'TX03', name: 'Hoàng Văn D', role: 'Tài xế', phone: '0988777888', license: 'Bằng E (05/2027)', status: 'banned' },
-  //   { id: 'TX04', name: 'Hoàng Văn R', role: 'Tài xế', phone: '0911777888', license: 'Bằng E (05/2027)', status: 'banned' },
-  // ]);
-  
+  const [selectedStaff, setSelectedStaff] = useState({
+      id: '',
+      fullName: '',
+      role: '',
+      phone: '',
+      email: '',
+      dob: '',
+      gender: '',
+      createdAt: '',
+  });
+  const handleRowClick = (staff) => {
+    setViewInfo(true);
+    setSelectedStaff(staff);
+  };
+  const [isViewInfo, setViewInfo] = useState(false);
+  const handleInputChange = (field, value) => {
+    setSelectedStaff(prev => ({ ...prev, [field]: value }));
+  };
   const [currentPage, setCurrentPage] = useState(1);
   const handleSetCurrentPage = (page) => {
     setCurrentPage(page);
@@ -25,7 +37,7 @@ const StaffManagement = () => {
       const res = await StaffService.getAllStaff();
       setStaffList(res.data.result);
       // console.log(res.data.result);
-    } catch (error) {
+    } catch (error) { 
       console.error("Lỗi load staff", error);
     }
   }
@@ -50,7 +62,9 @@ const StaffManagement = () => {
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-50/80 text-slate-500 text-[11px] uppercase tracking-widest font-bold">
+                <tr className="bg-slate-50/80 text-slate-500 text-[11px] uppercase tracking-widest font-bold"
+                  
+                >
                   <th className="px-4 py-2 ">Mã NV</th>
                   <th className="px-4 py-2 ">Họ Tên</th>
                   <th className="px-4 py-2 ">Chức vụ</th>
@@ -61,13 +75,13 @@ const StaffManagement = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {staffList.map((staff) => (
-                  <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors" onClick={() => handleRowClick(staff)}>
                     <td className="px-4 py-2 font-bold text-slate-700 text-center">{staff.id}</td>
                     <td className="px-1 py-2 font-medium text-slate-800">{staff.fullName}</td>
-                    <td className="px-4 py-2 text-slate-600 text-ms">{staff.role}</td>
+                    <td className="px-4 py-2 text-slate-600 text-ms">{toVN(staff.role)}</td>
                     <td className="px-4 py-2 text-slate-500  text-ms">{staff.phone}</td>
                     <td className="px-4 py-2 text-center">
-                      <StatusBadge type={staff.status.toLowerCase()} />
+                      <StatusBadge type={staff.status} />
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex justify-center gap-1">
@@ -80,41 +94,12 @@ const StaffManagement = () => {
               </tbody>
             </table>
           </div>
-
+            
           <Pagination page={currentPage} totalPages={10} onPageChange={handleSetCurrentPage}/>
         </div>
 
-        {/* 3. Form nhập liệu - Thiết kế gọn gàng bên phải */}
-        <div className="w-full xl:w-[400px]">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <span className="w-1 h-6 bg-blue-600 rounded-full"></span>
-              Thông tin nhân sự
-            </h3>
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <InputGroup label="Mã NV" placeholder="Auto..." disabled={true} />
-                <InputGroup label="Họ và Tên" placeholder="VD: Nguyễn Văn A" />
-              </div>
-              
-              <InputGroup label="Chức vụ" type="select" options={['Tài xế', 'Phụ xe', 'NV Bán vé']} />
-
-              <div className="grid grid-cols-2 gap-4">
-                <InputGroup label="Bằng lái" type="select" options={['Bằng D', 'Bằng E', 'Khác']} />
-                <InputGroup label="Hạn bằng" type="date" />
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-100">
-                  Lưu thông tin
-                </button>
-                <button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition-all">
-                  Hủy bỏ
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>  
+        <StaffInfo selectedStaff={selectedStaff} handleInputChange={handleInputChange} isViewInfo={isViewInfo} setViewInfo={setViewInfo}></StaffInfo>
+         
       </div>
     </div>
   );
@@ -126,8 +111,8 @@ const StaffManagement = () => {
 
 const StatusBadge = ({ type }) => {
   const styles = {
-    active: { bg: 'bg-emerald-50', text: 'text-emerald-600', label: 'Đang hoạt động' },
-    banned: { bg: 'bg-rose-50', text: 'text-rose-600', label: 'Đã khóa' },
+    ACTIVE: { bg: 'bg-emerald-50', text: 'text-emerald-600', label: 'Đang hoạt động' },
+    BLOCKED: { bg: 'bg-rose-50', text: 'text-rose-600', label: 'Đã khóa' },
     // pending: { bg: 'bg-slate-100', text: 'text-slate-600', label: 'Đang chờ' },
   };
   const s = styles[type] || styles.pending;

@@ -1,57 +1,43 @@
 import {Routes, BrowserRouter, Route} from 'react-router-dom'
 import './App.css'
-import CompanyHeader from './components/CompanyHeader'
-import SideBar from './components/SideBar'
-import Trips from './pages/Trips'
+import CompanyLayout from './layout/CompanyLayout'
+import HomePage from './pages/HomePage/HomePage'
+import AuthProvider from './Provider/AuthProvider'
+import ProtectedRoute from './routes/ProtectedRoute'
 import Overview from './pages/Overview'
+import Trips from './pages/Trips'
 import Tickets from './pages/Tickets'
 import LocalRoutes from './pages/LocalRoutes'
 import Report from './pages/Report'
 import Rating from './pages/Rating'
 import StaffManagement from './pages/StaffManagement/StaffManagement'
-import HomePage from './pages/HomePage/HomePage'
-import FormLogin from './pages/HomePage/FormLogin'
-function App() {
-
-  return (
-    
-    <BrowserRouter>
-      <HomePage></HomePage>
-      <div className="flex h-screen overflow-hidden bg-white hidden">
-        
-        <SideBar></SideBar>
-
-        <div className="flex-1 flex flex-col min-w-0">
-          <CompanyHeader />
-          
-          {/* Phần main: 
-            - flex-1: chiếm hết phần còn lại
-            - overflow-y-auto: chỉ cho phép cuộn bên trong vùng này nếu nội dung quá dài
-            - scrollbar-hide: (tùy chọn) ẩn thanh cuộn nhưng vẫn cuộn được
-          */}
-
-          <main className="flex-1 p-0 bg-gray-50/30 overflow-y-auto scrollbar-hide">
-            <div className="mb-8">
+function App() { 
+              {/* <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
               <p className="text-gray-500">Welcome back! Here's what's happening today.</p>
-            </div>
-            
-              
+            </div> */}
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
 
-            <Routes>
-              <Route path="/" element={<Overview/>}></Route>
-              <Route path="/trips" element={<Trips/>}></Route>
-              <Route path="/tickets" element={<Tickets/>}></Route>
-              <Route path="/local-routes" element={<LocalRoutes/>}></Route>
-              <Route path="/staff" element={<StaffManagement/>}></Route>
-              <Route path="/report" element={<Report/>}></Route>
-              <Route path="/rating" element={<Rating/>}></Route>
-            </Routes>
-            
-          </main>
-        </div>
-      </div>
-    </BrowserRouter>
+          <Route path='/nhaxe/home' element={<HomePage/>}></Route>
+          <Route element={<ProtectedRoute type="company"/>}>
+              <Route element={<CompanyLayout/>}>
+                <Route path="/nhaxe/overview" element={<Overview/>}></Route>
+                <Route path="/nhaxe/trips" element={<Trips/>}></Route>
+                <Route path="/nhaxe/tickets" element={<Tickets/>}></Route>
+                <Route path="/nhaxe/local-routes" element={<LocalRoutes/>}></Route>
+                <Route path="/nhaxe/staff" element={<StaffManagement/>}></Route>
+                <Route path="/nhaxe/report" element={<Report/>}></Route>
+                <Route path="/nhaxe/rating" element={<Rating/>}></Route>
+            </Route>
+          </Route>
+          <Route path="*" element={<div>Trang không tồn tại</div>} />
+
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
 

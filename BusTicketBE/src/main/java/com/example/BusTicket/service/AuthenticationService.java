@@ -5,13 +5,16 @@ import com.example.BusTicket.dto.request.LoginRequest;
 import com.example.BusTicket.dto.request.LogoutRequest;
 import com.example.BusTicket.dto.request.RefreshTokenRequest;
 import com.example.BusTicket.dto.response.AuthenticationResponse;
-import com.example.BusTicket.dto.JwtObject.JwtAccount;
+import com.example.BusTicket.dto.general.InfoAccount;
+import com.example.BusTicket.dto.response.CompanyUserResponse;
 import com.example.BusTicket.dto.response.RefreshTokenResponse;
 import com.example.BusTicket.entity.CompanyUser;
 import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.enums.RoleEnum;
+import com.example.BusTicket.enums.StatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
+import com.example.BusTicket.mapper.CompanyUserMapper;
 import com.example.BusTicket.repository.jpa.CompanyUserRepository;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.ErrorReportConfiguration;
 
 import java.text.ParseException;
 import java.time.Duration;
@@ -31,6 +35,7 @@ public class AuthenticationService {
     private final CompanyUserRepository companyUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
+    private final CompanyUserMapper companyUserMapper;
     @Value("${jwt.accessTime}")
     private long accessTime;
     @Value("${jwt.refreshTime}")
@@ -39,22 +44,30 @@ public class AuthenticationService {
     public AuthenticationResponse login(AccountType type, LoginRequest request)
             throws JOSEException
     {
-        JwtAccount user;
+        InfoAccount account = null;
         if(type == AccountType.COMPANY){
-           user = companyUserRepository.findByEmail(request.getEmail())
+            account = companyUserRepository.findByEmail(request.getEmail())
                     .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
         }
         else{
-            user = new CompanyUser();
+            account = new CompanyUser();
         }
-        boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
-        if(!isAuthenticated) throw new MyAppException(ErrorCode.UNAUTHENTICATED);
-        String accessToken = jwtService.generateToken(user, accessTime);
-        String refreshToken = jwtService.generateToken(user, refreshTime);
 
+        boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), account.getPassword());
+        if(!isAuthenticated) throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        if(account.getStatus().equals(StatusEnum.BLOCKED.name())){
+            throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
+        String accessToken = jwtService.generateToken(account, accessTime);
+        String refreshToken = jwtService.generateToken(account, refreshTime);
+        CompanyUser user = (CompanyUser) account;
+        CompanyUserResponse userResponse = companyUserMapper.toCompanyUserResponse(user);
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .user(userResponse)
+                .company(user.getBusCompany())
                 .build();
     }
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
@@ -70,7 +83,7 @@ public class AuthenticationService {
         String refreshToken = request.getRefreshToken();
         JwtInfo jwtInfo = jwtService.parseToken(refreshToken);
 
-        JwtAccount user = null;
+        InfoAccount user = null;
         if(jwtInfo.getRole().equals(RoleEnum.STAFF.name()) || jwtInfo.getRole().equals(RoleEnum.MANAGER.name())){
             user = companyUserRepository.findByEmail(jwtInfo.getSubject())
                     .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
@@ -78,7 +91,7 @@ public class AuthenticationService {
         else{
             user = new CompanyUser();
         }
-        saveInvalidToken(refreshToken);
+//        saveInvalidToken(refreshToken);
         String newAccessToken = jwtService.generateToken(user, accessTime);
         String newRefreshToken = jwtService.generateToken(user, refreshTime);
         return RefreshTokenResponse.builder()

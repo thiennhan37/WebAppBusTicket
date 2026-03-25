@@ -6,6 +6,7 @@ import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.service.JwtService;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -18,6 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.text.ParseException;
 import java.util.Objects;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomJwtDecoder implements JwtDecoder {
@@ -29,6 +31,7 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Override
     public Jwt decode(String token) throws JwtException {
         try {
+//            System.out.println("token in decode :" + token + "\n");
             JwtInfo jwtInfo = jwtService.parseToken(token);
             if(Objects.isNull(nimbusJwtDecoder)){
                 SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS256");
@@ -36,8 +39,8 @@ public class CustomJwtDecoder implements JwtDecoder {
                         .macAlgorithm(MacAlgorithm.HS256)
                         .build();
             }
-        } catch (JOSEException | ParseException e) {
-            throw new MyAppException(ErrorCode.INVALID_TOKEN);
+        } catch (JOSEException | ParseException | MyAppException e) {
+            throw new JwtException("INVALID_TOKEN_SECURITY");
         }
 
         return nimbusJwtDecoder.decode(token);

@@ -12,6 +12,7 @@ public enum ErrorCode {
     COMPANY_NOT_EXISTED(4001, "Company not existed", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(4002, "Email existed", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_EXISTED(4003, "Account not existed", HttpStatus.BAD_REQUEST),
+    ACCOUNT_BLOCKED(4004, "Account has been blocked", HttpStatus.FORBIDDEN)
     ;
     private int code;
     private String message;
