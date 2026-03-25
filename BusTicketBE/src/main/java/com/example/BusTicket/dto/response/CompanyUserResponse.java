@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -18,4 +19,5 @@ public class CompanyUserResponse {
     private String busCompanyId, email, phone, fullName;
     private LocalDate dob;
     private String gender, role, status;
+    private LocalDateTime createdAt;
 }

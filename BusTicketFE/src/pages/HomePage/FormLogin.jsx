@@ -1,6 +1,10 @@
 import {Mail, Lock, X, Eye, EyeOff} from "lucide-react"
 import { useState } from "react";
 import validator from 'validator';
+import authenticate from "../../Services/authenticate"
+import { useContext } from "react";
+import AuthContext from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 const FormLogin = ({setShowModal, setAuthMode}) => {
     const [showPassword, setShowPassword] = useState(true);
     const [email, setEmail] = useState("");
@@ -14,7 +18,31 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
     }
 
     const [password, setPassword] = useState("");
+    const[errorLogin, setErrorLogin] = useState("");
     
+    
+    const {login} = useContext(AuthContext);
+    const navigate = useNavigate();
+    const handleLogin = async (e) =>{
+        e.preventDefault();
+        // console.log("in login");
+        try{
+            const response = await authenticate.loginCompany({email, password});
+            // console.log(response);
+            login(response.data.result);
+            navigate("/nhaxe/overview");
+            
+        } catch(error){
+            const statusCode = error.response?.status;
+            let message;
+            if(statusCode === 401) message = "Email hoặc mật khẩu không chính xác";
+            else if(statusCode === 403) message = "Tài khoản của bạn đã bị khóa";
+            else message = "Đã có lỗi xảy ra, vui lòng thử lại sau";
+            
+            setErrorLogin(message);
+        }
+    }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
@@ -38,7 +66,7 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
                     </p>
                 </div>
 
-                <form className="" onSubmit={(e) => e.preventDefault()}>
+                <form className="" onSubmit={(e) => handleLogin(e)}>
 
                     <div className="relative">
                         <Mail className={`absolute left-4 top-4 transition-colors ${errorEmail ? 'text-red-500' : 'text-gray-400'}`} size={18}/>
@@ -82,6 +110,13 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
                         >
                             {showPassword ? (<EyeOff size={20} />) : (<Eye size={20} />)}
                         </button>
+                        <div className="min-h-[26px] pl-5 pt-3">
+                            {errorLogin && (
+                                <p className="text-sm text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                                    {errorLogin}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <button className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl 

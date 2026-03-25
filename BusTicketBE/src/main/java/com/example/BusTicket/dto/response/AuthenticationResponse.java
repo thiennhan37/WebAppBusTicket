@@ -1,5 +1,6 @@
 package com.example.BusTicket.dto.response;
 
+import com.example.BusTicket.entity.BusCompany;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class AuthenticationResponse {
+    private CompanyUserResponse user;
+    private BusCompany company;
     private String accessToken;
     private String refreshToken;
 

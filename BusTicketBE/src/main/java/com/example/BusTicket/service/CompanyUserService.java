@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -28,7 +30,11 @@ public class CompanyUserService {
     private final PasswordEncoder passwordEncoder;
 
     public List<CompanyUserResponse> getCompanyUserList(){
-        return companyUserMapper.toCompanyUserResponseList(companyUserRepository.findAll());
+        List<CompanyUser> companyUserList = companyUserRepository.findAll();
+        System.out.println(companyUserList);
+        List<CompanyUserResponse> companyUserResponseList = companyUserMapper.toCompanyUserResponseList(companyUserList);
+        System.out.println(companyUserResponseList);
+        return companyUserResponseList;
     }
 
     public CompanyUserResponse createCompanyUser(CompanyUserCrRequest request){
@@ -45,6 +51,7 @@ public class CompanyUserService {
         companyUser.setPassword(passwordEncoder.encode(companyUser.getPassword()));
         companyUser.setBusCompany(BusCompany.builder().id(request.getBusCompanyId()).build());
         companyUser.setStatus(StatusEnum.ACTIVE.name());
+        companyUser.setCreatedAt(LocalDateTime.now());
 
         companyUserRepository.save(companyUser);
         return companyUserMapper.toCompanyUserResponse(companyUser);

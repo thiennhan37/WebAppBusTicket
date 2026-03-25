@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { 
   LayoutDashboard, Users, Tickets, Route, 
   BarChart3, BusFront, ChartNoAxesCombined , Star 
 } from 'lucide-react';
 import { NavLink } from "react-router-dom";
+import AuthContext from "../../context/AuthContext";
+import UserProfile from "./UserProfile";
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Tổng quan', link:'', active: true },
+  { icon: LayoutDashboard, label: 'Tổng quan', link:'overview', active: true },
   { icon: BusFront, label: 'Chuyến đi', link:'trips', active: false },
   { icon: Tickets, label: 'Vé', link:'tickets', active: false },
   { icon: Route, label: 'Tuyến đường', link:'local-routes', active: false },
@@ -19,7 +21,7 @@ const SideBar = () =>{
     //     e.preventDefault(); 
     //     setActiveTab(navName);
     // };
-    
+    const {user} = useContext(AuthContext)
     return (
     <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col">
       {/* Logo Section */}
@@ -32,7 +34,7 @@ const SideBar = () =>{
         {menuItems.map((item, index) => (
           <NavLink
             key={item.link}
-            to={`/${item.link}`}
+            to={`/nhaxe/${item.link}`}
             // onClick={(e) => handleNavClick(e, item.link)}
             
             className={({isActive}) =>
@@ -55,19 +57,8 @@ const SideBar = () =>{
           </NavLink>
         ))}
       </nav>
-
-      {/* User Profile Section */}
-      <div className="p-4 border-t-2 border-slate-200 bg-gray-50/50">
-        <div className="flex items-center gap-3 p-2">
-          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-            JD
-          </div>
-          <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-semibold text-gray-800 truncate">John Doe</span>
-            <span className="text-xs text-gray-500 truncate">admin@company.com</span>
-          </div>
-        </div>
-      </div>
+      <UserProfile></UserProfile>
+      
     </div>
   );
 }

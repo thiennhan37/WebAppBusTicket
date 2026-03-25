@@ -8,6 +8,8 @@ import com.example.BusTicket.service.CompanyUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,10 @@ public class CompanyUserController {
     private final CompanyUserService companyUserService;
     @GetMapping("/member")
     ApiResponse<List<CompanyUserResponse>> getAllCompanyUser(){
+
+//        var authenticate = SecurityContextHolder.getContext().getAuthentication();
+//        log.info("username : {}", authenticate.getName());
+//        authenticate.getAuthorities().forEach(x -> log.info(x.getAuthority()));
         return ApiResponse.success(companyUserService.getCompanyUserList());
     }
     @PostMapping("/member")

@@ -13,5 +13,5 @@ spring:
       port: 6379
 jwt:
   signerKey: "NaW3jODSZ4yTtMj7s9CQFJvcLnrSgkq0"
-  accessTime: 300 #seconds;
+  accessTime: 30 #seconds;
   refreshTime: 3000 #seconds;

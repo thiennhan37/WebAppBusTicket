@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = Exception.class)
-    ResponseEntity<ApiResponse> handlingException(Exception exception){
+    ResponseEntity<ApiResponse> handleException(Exception exception){
         System.out.println("có lỗi " + exception.toString());
         return ResponseEntity.status(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode())
                 .body(ApiResponse.error(ErrorCode.UNCATEGORIZED_EXCEPTION));
@@ -20,6 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = MyAppException.class)
     public ResponseEntity<ApiResponse> handleMyAppException(MyAppException exception){
         ErrorCode errorCode = exception.getErrorCode();
+        System.out.println("xử lí MyAppException\n");
         return ResponseEntity.status(errorCode.getStatusCode())
                 .body(ApiResponse.error(errorCode));
     }

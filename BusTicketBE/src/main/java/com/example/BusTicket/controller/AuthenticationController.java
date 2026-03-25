@@ -24,7 +24,7 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
     @PostMapping("nhaxe/auth/login")
     ApiResponse<AuthenticationResponse> login(@RequestBody LoginRequest request) throws JOSEException{
-        log.info("in AuthenticationController ");
+        log.info("in loginController ");
         return ApiResponse.success(authenticationService.login(AccountType.COMPANY, request));
     }
     @PostMapping("nhaxe/auth/logout")
@@ -32,10 +32,11 @@ public class AuthenticationController {
         authenticationService.logout(request);
         return ApiResponse.success(true);
     }
-    @PostMapping("nhaxe/auth/refreshToken")
+    @PostMapping("auth/refresh-token")
     ApiResponse<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request)
             throws JOSEException, ParseException {
         log.info("in refreshToken controller");
-        return ApiResponse.success(authenticationService.refreshToken(request));
+        RefreshTokenResponse response = authenticationService.refreshToken(request);
+        return ApiResponse.success(response);
     }
 }

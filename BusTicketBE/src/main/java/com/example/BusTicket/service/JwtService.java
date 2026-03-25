@@ -1,6 +1,6 @@
 package com.example.BusTicket.service;
 
-import com.example.BusTicket.dto.JwtObject.JwtAccount;
+import com.example.BusTicket.dto.general.InfoAccount;
 import com.example.BusTicket.dto.JwtObject.JwtInfo;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
@@ -17,8 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -29,16 +28,19 @@ public class JwtService {
     private String signerKey;
 
 
-    public String generateToken(JwtAccount user, long timer) throws JOSEException {
+    public String generateToken(InfoAccount user, long timer) throws JOSEException {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS256);
         Date issueTime = new Date();
         Date expirationTime = new Date(issueTime.toInstant().plus(timer, ChronoUnit.SECONDS).toEpochMilli());
+
+
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .issuer("vexedat.com")
                 .subject(user.getEmail())
                 .issueTime(issueTime).expirationTime(expirationTime)
                 .jwtID(UUID.randomUUID().toString())
                 .claim("role", user.getRole())
+                .claim("scope", user.getRole())
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(jwsHeader, payload);
