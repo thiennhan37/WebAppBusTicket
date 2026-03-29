@@ -3,8 +3,10 @@ package com.example.BusTicket.mapper;
 import com.example.BusTicket.dto.request.CompanyUserCrRequest;
 import com.example.BusTicket.dto.response.CompanyUserResponse;
 import com.example.BusTicket.entity.CompanyUser;
+import jakarta.validation.constraints.NotNull;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 

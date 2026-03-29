@@ -10,9 +10,14 @@ import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.CompanyUserMapper;
 import com.example.BusTicket.repository.jpa.BusCompanyRepository;
 import com.example.BusTicket.repository.jpa.CompanyUserRepository;
+import com.example.BusTicket.specification.CompanyUserSpecification;
 import com.example.BusTicket.util.IdUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,12 +34,13 @@ public class CompanyUserService {
     private final CompanyUserMapper companyUserMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public List<CompanyUserResponse> getCompanyUserList(){
-        List<CompanyUser> companyUserList = companyUserRepository.findAll();
-        System.out.println(companyUserList);
-        List<CompanyUserResponse> companyUserResponseList = companyUserMapper.toCompanyUserResponseList(companyUserList);
-        System.out.println(companyUserResponseList);
-        return companyUserResponseList;
+    public Page<CompanyUserResponse> getAllCompanyUser(String status, String role, Pageable pageable){
+        Specification<CompanyUser> spec = Specification.where(CompanyUserSpecification.hasStatus(status))
+                .and(CompanyUserSpecification.hasRole(role));
+        Page<CompanyUser> page = companyUserRepository.findAll(spec, pageable);
+//        List<CompanyUserResponse> content = companyUserMapper.toCompanyUserResponseList(page.getContent());
+//        return new PageImpl<>(content, page.getPageable(), page.getTotalElements());
+        return page.map(companyUserMapper::toCompanyUserResponse);
     }
 
     public CompanyUserResponse createCompanyUser(CompanyUserCrRequest request){

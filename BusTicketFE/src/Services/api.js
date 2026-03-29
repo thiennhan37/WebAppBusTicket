@@ -38,7 +38,7 @@ api.interceptors.request.use(
 		return config;
 	}, 
 	(error) =>{
-		console.log(error);
+		console.log("loi request api", error);
 		return Promise.reject(error);
 	}
 )
@@ -82,7 +82,7 @@ api.interceptors.response.use(
 					onSuccess(accessToken); // Thông báo cho các request đang đợi
 					
 					// 2. Thực hiện lại request bị lỗi ban đầu với token mới
-					originalRequest.Authorization = `Bearer ${accessToken}`;
+					originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 					return api(originalRequest);
 				} catch (refreshError) {
 					// Nếu refresh token cũng hết hạn -> Logout luôn

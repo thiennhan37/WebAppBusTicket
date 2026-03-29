@@ -11,7 +11,21 @@ spring:
     redis:
       host: "localhost"
       port: 6379
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: "nhan88thien@gmail.com"
+    password: "vwda wpdq icbz ibeq"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 jwt:
   signerKey: "NaW3jODSZ4yTtMj7s9CQFJvcLnrSgkq0"
   accessTime: 30 #seconds;
   refreshTime: 3000 #seconds;
+
+#  spring.mail.properties.mail.smtp.auth=true
+#  spring.mail.properties.mail.smtp.starttls.enable=true

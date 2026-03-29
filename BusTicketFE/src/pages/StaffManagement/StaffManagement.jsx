@@ -7,7 +7,10 @@ import Pagination from './Pagination';
 import StaffService from '../../Services/StaffService';
 import { toVN } from '../../utils/translate';
 import StaffInfo from './StaffInfo';
+import StaffCreate from './StaffCreate';
 const StaffManagement = () => {
+  const [rightPanelMode, setRightPanelMode] = useState('none');
+
   const [selectedStaff, setSelectedStaff] = useState({
       id: '',
       fullName: '',
@@ -19,13 +22,10 @@ const StaffManagement = () => {
       createdAt: '',
   });
   const handleRowClick = (staff) => {
-    setViewInfo(true);
+    setRightPanelMode("view");
     setSelectedStaff(staff);
   };
-  const [isViewInfo, setViewInfo] = useState(false);
-  const handleInputChange = (field, value) => {
-    setSelectedStaff(prev => ({ ...prev, [field]: value }));
-  };
+
   const [currentPage, setCurrentPage] = useState(1);
   const handleSetCurrentPage = (page) => {
     setCurrentPage(page);
@@ -36,16 +36,20 @@ const StaffManagement = () => {
     try {
       const res = await StaffService.getAllStaff();
       setStaffList(res.data.result);
-      // console.log(res.data.result);
     } catch (error) { 
       console.error("Lỗi load staff", error);
     }
   }
   useEffect(() =>{
     // eslint-disable-next-line
-    loadStaff(); 
+    loadStaff();  
   }, [])
 
+  const [newStaff, setNewStaff] = useState({fullName: '',role: '',phone: '',email: '',dob: '', gender: ''});
+  const handleCreateStaff = (e) => {
+    // setRightPanelMode('create');
+  }
+  // const [updatedStaff, setUpdatedStaff] = 
   return (
 
     // Sử dụng w-full và min-h-screen để tràn hết màn hình
@@ -57,7 +61,7 @@ const StaffManagement = () => {
       <div className="flex flex-col xl:flex-row gap-6"> 
         {/* 2. Bảng Danh Sách - Chiếm không gian lớn */}
         <div className="flex-1 flex flex-col min-h-[494px] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <StaffListHeader></StaffListHeader>
+          <StaffListHeader setRightPanelMode={setRightPanelMode}></StaffListHeader>
           
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left">
@@ -98,7 +102,37 @@ const StaffManagement = () => {
           <Pagination page={currentPage} totalPages={10} onPageChange={handleSetCurrentPage}/>
         </div>
 
-        <StaffInfo selectedStaff={selectedStaff} handleInputChange={handleInputChange} isViewInfo={isViewInfo} setViewInfo={setViewInfo}></StaffInfo>
+        <div className="w-full xl:w-[400px] relative">
+            
+            {/* Component Xem/Sửa: Luôn trong DOM, ẩn bằng CSS */}
+            <div className={rightPanelMode === 'view' ? "block" : "hidden"}>
+              <StaffInfo 
+                selectedStaff={selectedStaff} 
+                setSelectedStaff={setSelectedStaff}
+                setRightPanelMode={setRightPanelMode}
+                rightPanelMode = {rightPanelMode}
+              />
+            </div>
+
+            {/* Component Tạo mới: Luôn trong DOM, ẩn bằng CSS */}
+            <div className={rightPanelMode === 'create' ? "block" : "hidden"}>
+              <StaffCreate 
+                newStaff={newStaff} 
+                setNewStaff={setNewStaff}
+                setRightPanelMode={setRightPanelMode}
+                rightPanelMode = {rightPanelMode}
+                handleCreateStaff = {handleCreateStaff}
+                
+              />
+            </div>
+
+            {/* Placeholder (Tùy chọn): Hiển thị khi không có mode nào để vùng 400px không bị trống trải */}
+            {rightPanelMode === 'none' && (
+              <div className="h-[500px] border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center text-slate-400">
+                Chọn một nhân viên để xem chi tiết
+              </div>
+            )}
+        </div>
          
       </div>
     </div>
