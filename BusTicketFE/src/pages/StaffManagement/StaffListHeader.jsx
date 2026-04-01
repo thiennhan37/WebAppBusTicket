@@ -1,8 +1,23 @@
 import React from 'react';
 import { Search, User, Award, Calendar, UserPlus, ChevronDown } from 'lucide-react';
-import InputGroup from './InputGroup';
+import InputGroup from '../../components/other/InputGroup';
 
-const StaffListHeader = ({setRightPanelMode}) => {
+const StaffListHeader = ({setRightPanelMode, filterParams, setFilterParams}) => {
+  console.log("reload listHeader")
+  const onChangeRole = (e) => {
+    const role = e.target.value;
+    setFilterParams((prev) =>({
+      ...prev, 
+      role: role, 
+    }))
+  }
+  const onChangeStatus = (e) => {
+    const status = e.target.value;
+    setFilterParams((prev) =>({
+      ...prev, 
+      status: status, 
+    }))
+  }
   return (
     <div className="px-6 border-b border-slate-100 pb-5 pt-3">
       {/* Hàng 1: Tiêu đề và Nút Thêm */}
@@ -28,8 +43,9 @@ const StaffListHeader = ({setRightPanelMode}) => {
         </div>
         
         <div className="flex-1 flex gap-8">
-            <InputGroup label="Chức vụ" type="select" options={['Tất Cả', 'Quản lí', 'Nhân viên']} />
-            <InputGroup label="Trạng thái" type="select" options={['Tất Cả', 'Đang hoạt động', 'Đã Khóa']} />
+            <InputGroup label="Chức vụ" type="select" options={['Tất Cả', 'Quản lí', 'Nhân viên']} onChange={onChangeRole} value={filterParams.role}/>
+            <InputGroup label="Trạng thái" type="select" options={['Tất Cả', 'Đang hoạt động', 'Đã khóa']} 
+              onChange={onChangeStatus} value={filterParams.status}/>
         </div>
 
       </div>

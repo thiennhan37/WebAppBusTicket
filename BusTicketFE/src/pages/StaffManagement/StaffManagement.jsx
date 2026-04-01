@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { UserPlus, Award, ShieldCheck, LockKeyhole, Tickets, Users, UserCog, Search, ChevronDown, Calendar } from 'lucide-react';
+import { UserPlus, Award, ShieldCheck, LockKeyhole, BookUser} from 'lucide-react';
 import StatCards from './StatCards';
 import StaffListHeader from './StaffListHeader';
-import InputGroup from './InputGroup';
+import InputGroup from '../../components/other/InputGroup';
 import Pagination from './Pagination';
 import StaffService from '../../Services/StaffService';
 import { toVN } from '../../utils/translate';
 import StaffInfo from './StaffInfo';
 import StaffCreate from './StaffCreate';
+import { useQuery, keepPreviousData, useQueryClient, useMutation } from '@tanstack/react-query';
+import StatusModal from '../../components/other/StatusModal';
+import LoadingOverlay from '../../components/other/LoadingOverlay';
 const StaffManagement = () => {
+  console.log("reload StaffManagement")
   const [rightPanelMode, setRightPanelMode] = useState('none');
 
   const [selectedStaff, setSelectedStaff] = useState({
@@ -26,42 +30,66 @@ const StaffManagement = () => {
     setSelectedStaff(staff);
   };
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const handleSetCurrentPage = (page) => {
-    setCurrentPage(page);
+  const [filterParams, setFilterParams]  = useState({page: 1, role: "Tất Cả", status: "Tất Cả"});
+  const onPageChange = (newPage) => {
+    setFilterParams((prev) => ({
+      ...prev, 
+      page: newPage, 
+    }));
   }
+  const {data, isLoading, isError, isPlaceholderData} = useQuery({
+    queryKey: ['staffs', filterParams], 
+    queryFn: async () => {
+      try{
+        const result = (await StaffService.getStaff(filterParams)).data.result;
+        return result;
+      }catch(error){
+        console.log(error);
+      }
+    }, 
+    placeholderData: keepPreviousData, // Giữ dữ liệu cũ trong khi tải trang mới (tránh nhấp nháy UI)
+    staleTime: 0, 
+  });
 
-  const [staffList, setStaffList] = useState([]);
-  const loadStaff = async () =>{
-    try {
-      const res = await StaffService.getAllStaff();
-      setStaffList(res.data.result);
-    } catch (error) { 
-      console.error("Lỗi load staff", error);
+  const staffList = data?.content || []; 
+  const totalPages = data?.totalPages || 1;
+
+  const [newStaff, setNewStaff] = useState({fullName: '',role: 'Quản lí',phone: '',email: '',dob: '', gender: 'MALE'});
+  const queryClient = useQueryClient();
+  const { mutate, isPendingCreate, isError: isErrorCreate, error : errorCreate, reset } = useMutation({
+    mutationFn: (newStaff) => StaffService.createStaff(newStaff),
+    onSuccess: () => {
+        setNewStaff({ fullName: '', role: '', phone: '', email: '', dob: '', gender: '' });
+        // Làm mới danh sách nhân viên
+        queryClient.invalidateQueries({ queryKey: ['staffs'] });
+        setReportCreate('success')
+      },
+    onError: (error) => {
+      setReportCreate('error')
+    }, 
+    onMutate: () => {
+      setReportCreate('pending')
     }
+  });
+  const [reportCreate, setReportCreate] = useState("") 
+  const hideReportCreate = () => {
+    setReportCreate("");
   }
-  useEffect(() =>{
-    // eslint-disable-next-line
-    loadStaff();  
-  }, [])
-
-  const [newStaff, setNewStaff] = useState({fullName: '',role: '',phone: '',email: '',dob: '', gender: ''});
-  const handleCreateStaff = (e) => {
-    // setRightPanelMode('create');
-  }
+  
+  const handleCreateStaff = () => {
+    mutate(newStaff);
+    
+  };
   // const [updatedStaff, setUpdatedStaff] = 
   return (
-
-    // Sử dụng w-full và min-h-screen để tràn hết màn hình
     <div className="w-full max-h-screen overflow-auto bg-slate-50 p-4 lg:p-4">
-      
-      {/* 1. Stats Panels - Thêm màu nền rực rỡ */}
       <StatCards></StatCards>
 
       <div className="flex flex-col xl:flex-row gap-6"> 
         {/* 2. Bảng Danh Sách - Chiếm không gian lớn */}
         <div className="flex-1 flex flex-col min-h-[494px] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <StaffListHeader setRightPanelMode={setRightPanelMode}></StaffListHeader>
+          <StaffListHeader setRightPanelMode={setRightPanelMode} 
+            filterParams={filterParams} setFilterParams={setFilterParams}></StaffListHeader>
           
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left">
@@ -79,7 +107,7 @@ const StaffManagement = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {staffList.map((staff) => (
-                  <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors" onClick={() => handleRowClick(staff)}>
+                  <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors" >
                     <td className="px-4 py-2 font-bold text-slate-700 text-center">{staff.id}</td>
                     <td className="px-1 py-2 font-medium text-slate-800">{staff.fullName}</td>
                     <td className="px-4 py-2 text-slate-600 text-ms">{toVN(staff.role)}</td>
@@ -89,8 +117,14 @@ const StaffManagement = () => {
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex justify-center gap-1">
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><ShieldCheck size={21}/></button>
-                        <button className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><LockKeyhole size={21}/></button>
+                        <button className="py-2 px-1 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                          onClick={() => handleRowClick(staff)} ><BookUser size={21}/></button>
+                        <button className="py-2 px-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors 
+                            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent" 
+                          disabled={staff.status === "ACTIVE"}> <ShieldCheck size={21}/> </button>
+                        <button className="py-2 px-1 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors
+                          disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          disabled={staff.status === "BLOCKED"}><LockKeyhole size={21}/></button>
                       </div>
                     </td>
                   </tr>
@@ -99,13 +133,14 @@ const StaffManagement = () => {
             </table>
           </div>
             
-          <Pagination page={currentPage} totalPages={10} onPageChange={handleSetCurrentPage}/>
+          <Pagination page={filterParams.page} totalPages={totalPages} onPageChange={onPageChange}/>
         </div>
 
         <div className="w-full xl:w-[400px] relative">
             
             {/* Component Xem/Sửa: Luôn trong DOM, ẩn bằng CSS */}
             <div className={rightPanelMode === 'view' ? "block" : "hidden"}>
+              
               <StaffInfo 
                 selectedStaff={selectedStaff} 
                 setSelectedStaff={setSelectedStaff}
@@ -115,7 +150,13 @@ const StaffManagement = () => {
             </div>
 
             {/* Component Tạo mới: Luôn trong DOM, ẩn bằng CSS */}
-            <div className={rightPanelMode === 'create' ? "block" : "hidden"}>
+            <div className={`${rightPanelMode === 'create' ? "block" : "hidden"} relative overflow-hidden`}>
+              {reportCreate == "error" && <StatusModal type="error" message={errorCreate.response.message} 
+                onClose={hideReportCreate}></StatusModal>}
+              {reportCreate == "pending" && <LoadingOverlay onClose={hideReportCreate}></LoadingOverlay>}
+              {reportCreate == "success" && <StatusModal type="success" message={"Đã đăng kí nhân viên thành công"} 
+                onClose={hideReportCreate}></StatusModal>}
+              
               <StaffCreate 
                 newStaff={newStaff} 
                 setNewStaff={setNewStaff}
@@ -128,7 +169,7 @@ const StaffManagement = () => {
 
             {/* Placeholder (Tùy chọn): Hiển thị khi không có mode nào để vùng 400px không bị trống trải */}
             {rightPanelMode === 'none' && (
-              <div className="h-[500px] border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center text-slate-400">
+              <div className="h-[490px] border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center text-slate-400">
                 Chọn một nhân viên để xem chi tiết
               </div>
             )}

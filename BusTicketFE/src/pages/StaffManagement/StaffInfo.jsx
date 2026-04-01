@@ -1,6 +1,6 @@
 import { toVN } from "../../utils/translate";
 import {X } from 'lucide-react';
-import InputGroup from "./InputGroup";
+import InputGroup from "../../components/other/InputGroup";
 const StaffInfo = ({selectedStaff, setSelectedStaff, rightPanelMode, setRightPanelMode, handleUpdateStaff }) => {
     const handleInputChange = (field, value) => {
         setSelectedStaff(prev => ({ ...prev, [field]: value }));
@@ -46,7 +46,7 @@ const StaffInfo = ({selectedStaff, setSelectedStaff, rightPanelMode, setRightPan
                             <InputGroup label="Thời điểm đăng kí" type="datetime-local" value={selectedStaff.createdAt} disabled={true}/>
                         </div>
 
-                        <div className={`pt-4 flex gap-3 ${isManager ? "opacity-0 pointer-events-none" : ""}`}>
+                        <div className={`pt-3 flex gap-3 ${isManager ? "opacity-0 pointer-events-none" : ""}`}>
                             <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-100"
                                 onClick={handleUpdateStaff}
                             >

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class MailService {
     private final JavaMailSender mailSender;
-
+    @Async
     public void sendSimpleMail(String to, String subject, String body) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -26,7 +27,7 @@ public class MailService {
             e.printStackTrace();
         }
     }
-
+    @Async
     public void sendHtmlMail(String to, String subject, String htmlBody, String[] cc, String[] bcc) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

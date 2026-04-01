@@ -11,8 +11,6 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
     const handlePhoneChange = (e) =>{
         const value = e.target.value.replace(/\D/g, "");
         setPhone(value);
-
-        // if(!e.target.value) setErrorPhone("");
     }
 
     const [email, setEmail] = useState("");
