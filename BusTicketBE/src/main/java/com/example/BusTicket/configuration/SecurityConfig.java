@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
+                        .requestMatchers(HttpMethod.PUT, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
                         .anyRequest().authenticated()
                         //Tất cả API khác → bắt buộc có JWT
         );

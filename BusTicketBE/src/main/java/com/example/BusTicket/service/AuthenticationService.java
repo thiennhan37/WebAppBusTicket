@@ -85,7 +85,7 @@ public class AuthenticationService {
 
         InfoAccount user = null;
         if(jwtInfo.getRole().equals(RoleEnum.STAFF.name()) || jwtInfo.getRole().equals(RoleEnum.MANAGER.name())){
-            user = companyUserRepository.findByEmail(jwtInfo.getSubject())
+            user = companyUserRepository.findById(jwtInfo.getSubject())
                     .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
         }
         else{
@@ -107,7 +107,7 @@ public class AuthenticationService {
         Date now = new Date();
         if(expirationTime.after(now)){
             long ttl = Duration.between(now.toInstant(), expirationTime.toInstant()).toSeconds();
-            String redisKey = "InvalidToken: {" + jwtId + "}";
+            String redisKey = "InvalidToken:" + jwtId;
             redisTemplate.opsForValue().set(redisKey, "1", Duration.ofSeconds(ttl));
         }
     }

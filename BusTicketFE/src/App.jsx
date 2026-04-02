@@ -21,7 +21,7 @@ function App() {
       <BrowserRouter>
         <Routes>
 
-          <Route path='/nhaxe/home' element={<HomePage/>}></Route>
+          <Route path='/nhaxe' element={<HomePage/>}></Route>
           <Route element={<ProtectedRoute type="company"/>}>
               <Route element={<CompanyLayout/>}>
                 <Route path="/nhaxe/overview" element={<Overview/>}></Route>

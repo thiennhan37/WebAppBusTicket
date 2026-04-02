@@ -16,4 +16,10 @@ public class CompanyUserSpecification {
             return criteriaBuilder.equal(root.get("role"), role);
         };
     }
+    public static Specification<CompanyUser> hasBusCompanyId(String busCompanyId){
+        return (root, query, criteriaBuilder) ->{
+            if(busCompanyId == null) return criteriaBuilder.conjunction();
+            return criteriaBuilder.equal(root.get("busCompany").get("id"), busCompanyId);
+        };
+    }
 }

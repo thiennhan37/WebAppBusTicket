@@ -89,9 +89,9 @@ api.interceptors.response.use(
 					isRefreshing = false;
 					let homeLink;
 					const role = localStorage.getItem("user").role;
-					if(role === "CUSTOMER") homeLink = "/customer/home";
-					else if(role === "ADMIN") homeLink = "/admin/home";
-					else homeLink = "/nhaxe/home";
+					if(role === "CUSTOMER") homeLink = "/customer";
+					else if(role === "ADMIN") homeLink = "/admin";
+					else homeLink = "/nhaxe";
 					window.location.href = homeLink;
 					localStorage.clear();
 					console.log(error);

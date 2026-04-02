@@ -30,9 +30,7 @@ const StaffCreate = ({newStaff, setNewStaff, setRightPanelMode, handleCreateStaf
 
     if (isEmailValid && isPhoneValid &&  isNameValid && isDobValid) {
       setShowConfirm(true);
-    } else {
-      console.log("Dữ liệu không hợp lệ, vui lòng kiểm tra lại");
-    }
+    } 
   }
 
   return (

@@ -13,6 +13,7 @@ import StatusModal from '../../components/other/StatusModal';
 import LoadingOverlay from '../../components/other/LoadingOverlay';
 const StaffManagement = () => {
   console.log("reload StaffManagement")
+  const queryClient = useQueryClient();
   const [rightPanelMode, setRightPanelMode] = useState('none');
 
   const [selectedStaff, setSelectedStaff] = useState({
@@ -27,7 +28,7 @@ const StaffManagement = () => {
   });
   const handleRowClick = (staff) => {
     setRightPanelMode("view");
-    setSelectedStaff(staff);
+    setSelectedStaff({...staff});
   };
 
   const [filterParams, setFilterParams]  = useState({page: 1, role: "Tất Cả", status: "Tất Cả"});
@@ -37,7 +38,7 @@ const StaffManagement = () => {
       page: newPage, 
     }));
   }
-  const {data, isLoading, isError, isPlaceholderData} = useQuery({
+  const {data: result, isLoading, isError, isPlaceholderData} = useQuery({
     queryKey: ['staffs', filterParams], 
     queryFn: async () => {
       try{
@@ -51,12 +52,12 @@ const StaffManagement = () => {
     staleTime: 0, 
   });
 
-  const staffList = data?.content || []; 
-  const totalPages = data?.totalPages || 1;
+  const staffList = result?.content || []; 
+  const totalPages = result?.page.totalPages || 1;
 
   const [newStaff, setNewStaff] = useState({fullName: '',role: 'Quản lí',phone: '',email: '',dob: '', gender: 'MALE'});
-  const queryClient = useQueryClient();
-  const { mutate, isPendingCreate, isError: isErrorCreate, error : errorCreate, reset } = useMutation({
+  
+  const { mutate:mutateCreate, error : errorCreate } = useMutation({
     mutationFn: (newStaff) => StaffService.createStaff(newStaff),
     onSuccess: () => {
         setNewStaff({ fullName: '', role: '', phone: '', email: '', dob: '', gender: '' });
@@ -64,7 +65,7 @@ const StaffManagement = () => {
         queryClient.invalidateQueries({ queryKey: ['staffs'] });
         setReportCreate('success')
       },
-    onError: (error) => {
+    onError: () => {
       setReportCreate('error')
     }, 
     onMutate: () => {
@@ -76,10 +77,27 @@ const StaffManagement = () => {
     setReportCreate("");
   }
   
-  const handleCreateStaff = () => {
-    mutate(newStaff);
-    
-  };
+  const handleCreateStaff = () => mutateCreate(newStaff);
+  
+  const { mutate:mutateUpdate, error : errorUpdate } = useMutation({
+    mutationFn: (selectedStaff) => StaffService.updateStaff(selectedStaff),
+    onSuccess: () => {
+        // Làm mới danh sách nhân viên
+        queryClient.invalidateQueries({ queryKey: ['staffs'] });
+        setReportUpdate('success')
+      },
+    onError: () => {
+      setReportCreate('error')
+    }, 
+    onMutate: () => {
+      setReportCreate('pending')
+    }
+  });
+  const [reportUpdate, setReportUpdate] = useState("") 
+  const hideReportUpdate = () => {
+    setReportUpdate("");
+  }
+  const handleUpdateStaff = () => mutateUpdate(selectedStaff)
   // const [updatedStaff, setUpdatedStaff] = 
   return (
     <div className="w-full max-h-screen overflow-auto bg-slate-50 p-4 lg:p-4">
@@ -121,10 +139,10 @@ const StaffManagement = () => {
                           onClick={() => handleRowClick(staff)} ><BookUser size={21}/></button>
                         <button className="py-2 px-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors 
                             disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent" 
-                          disabled={staff.status === "ACTIVE"}> <ShieldCheck size={21}/> </button>
+                          disabled={staff.status === "ACTIVE" || staff.role == "MANAGER"}> <ShieldCheck size={21}/> </button>
                         <button className="py-2 px-1 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors
                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                          disabled={staff.status === "BLOCKED"}><LockKeyhole size={21}/></button>
+                          disabled={staff.status === "BLOCKED" || staff.role == "MANAGER"}><LockKeyhole size={21}/></button>
                       </div>
                     </td>
                   </tr>
@@ -140,21 +158,27 @@ const StaffManagement = () => {
             
             {/* Component Xem/Sửa: Luôn trong DOM, ẩn bằng CSS */}
             <div className={rightPanelMode === 'view' ? "block" : "hidden"}>
-              
+                
+              {reportUpdate == "error" && <StatusModal type="error" message={errorUpdate.response.data.message} 
+                onClose={hideReportUpdate}></StatusModal>}
+              {reportUpdate == "pending" && <LoadingOverlay onClose={hideReportUpdate}></LoadingOverlay>}
+              {reportUpdate == "success" && <StatusModal type="success" message={"Cập nhật thành công"} 
+                onClose={hideReportUpdate}></StatusModal>}
               <StaffInfo 
                 selectedStaff={selectedStaff} 
                 setSelectedStaff={setSelectedStaff}
                 setRightPanelMode={setRightPanelMode}
                 rightPanelMode = {rightPanelMode}
+                handleUpdateStaff={handleUpdateStaff}
               />
             </div>
 
             {/* Component Tạo mới: Luôn trong DOM, ẩn bằng CSS */}
             <div className={`${rightPanelMode === 'create' ? "block" : "hidden"} relative overflow-hidden`}>
-              {reportCreate == "error" && <StatusModal type="error" message={errorCreate.response.message} 
+              {reportCreate == "error" && <StatusModal type="error" message={errorCreate.response.data.message} 
                 onClose={hideReportCreate}></StatusModal>}
               {reportCreate == "pending" && <LoadingOverlay onClose={hideReportCreate}></LoadingOverlay>}
-              {reportCreate == "success" && <StatusModal type="success" message={"Đã đăng kí nhân viên thành công"} 
+              {reportCreate == "success" && <StatusModal type="success" message={"Đăng kí nhân viên thành công"} 
                 onClose={hideReportCreate}></StatusModal>}
               
               <StaffCreate 

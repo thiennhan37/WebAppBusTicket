@@ -1,5 +1,5 @@
 import api from "./api";
-import {toVN, toEng} from "../utils/translate"
+import {toEng} from "../utils/translate"
 const StaffService = {
     getStaff(filterParams){
         const params = {...filterParams};
@@ -16,12 +16,15 @@ const StaffService = {
     createStaff(staff){
         const userRaw = localStorage.getItem("user")
         const user = userRaw ? JSON.parse(userRaw) : null;
-        staff.role = toEng(staff.role);
         
-        const newStaff = {...staff, busCompanyId:user.busCompanyId};
+        const newStaff = {...staff, busCompanyId:user.busCompanyId, role: toEng(staff.role)};
         console.log("create:", newStaff);
 
         return api.post("/nhaxe/member", newStaff);
+    }, 
+    updateStaff(staff){
+        const updatedStaff = {...staff}
+        return api.put(`/nhaxe/member/${staff.id}`, updatedStaff)
     }
 }
 

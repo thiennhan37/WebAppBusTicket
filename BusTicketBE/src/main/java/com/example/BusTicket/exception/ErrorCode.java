@@ -10,6 +10,7 @@ public enum ErrorCode {
     UNAUTHENTICATED(1001, "Unauthenticated exception", HttpStatus.UNAUTHORIZED),
     INVALID_TOKEN(1002, "Invalid token exception", HttpStatus.UNAUTHORIZED),
     VALIDATION_FAILED(1003, "Invalid condition", HttpStatus.BAD_REQUEST),
+    ACCESS_DENIED(1004, "Access denied: You do not have permission", HttpStatus.FORBIDDEN),
     COMPANY_NOT_EXISTED(4001, "Company not existed", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(4002, "Email existed", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_EXISTED(4003, "Account not existed", HttpStatus.BAD_REQUEST),

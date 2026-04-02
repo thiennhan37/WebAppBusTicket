@@ -24,6 +24,10 @@ public class CompanyUser implements InfoAccount {
     private BusCompany busCompany;
 
     @Override
+    public String getId(){
+        return this.id;
+    }
+    @Override
     public String getEmail(){
         return this.email;
     }
