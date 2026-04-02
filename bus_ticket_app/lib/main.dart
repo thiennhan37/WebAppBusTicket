@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/pages/account_info_pages.dart';
 import 'package:bus_ticket_app/pages/home_pages.dart';
 import 'package:flutter/material.dart';
 
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
         textTheme: TextTheme(),
         useMaterial3: true
       ),
-      home: HomePages(),
+      home: AccountInfoPage(),
     );
   }
 }

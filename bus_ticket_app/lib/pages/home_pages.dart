@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/widgets/custom_botton_nav.dart';
 import 'package:bus_ticket_app/widgets/home_pages_widgets/header.dart';
 import 'package:bus_ticket_app/widgets/home_pages_widgets/recent_list.dart';
 import 'package:bus_ticket_app/widgets/home_pages_widgets/service_tabs.dart';
@@ -15,6 +16,7 @@ class _HomePagesState extends State<HomePages> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
+      bottomNavigationBar: CustomBottonNav(),
       body: SingleChildScrollView(
         child: Column(
           children: [
