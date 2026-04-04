@@ -115,12 +115,12 @@ const StaffManagement = () => {
                 <tr className="bg-slate-50/80 text-slate-500 text-[11px] uppercase tracking-widest font-bold"
                   
                 >
-                  <th className="px-4 py-2 ">Mã NV</th>
+                  <th className="px-4 py-2 text-center">Mã NV</th>
                   <th className="px-4 py-2 ">Họ Tên</th>
-                  <th className="px-4 py-2 ">Chức vụ</th>
-                  <th className="px-4 py-2 ">Số điện thoại</th>
-                  <th className="px-4 py-2  text-center">Trạng thái</th>
-                  <th className="px-4 py-2  text-center">Hành động</th>
+                  <th className="px-1 py-2 ">Chức vụ</th>
+                  <th className="px-1 py-2 ">Số điện thoại</th>
+                  <th className="px-1 py-2  text-center">Trạng thái</th>
+                  <th className="px-1 py-2  text-center">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -128,9 +128,9 @@ const StaffManagement = () => {
                   <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors" >
                     <td className="px-4 py-2 font-bold text-slate-700 text-center">{staff.id}</td>
                     <td className="px-1 py-2 font-medium text-slate-800">{staff.fullName}</td>
-                    <td className="px-4 py-2 text-slate-600 text-ms">{toVN(staff.role)}</td>
-                    <td className="px-4 py-2 text-slate-500  text-ms">{staff.phone}</td>
-                    <td className="px-4 py-2 text-center">
+                    <td className="px-1 py-2 text-slate-600 text-ms">{toVN(staff.role)}</td>
+                    <td className="px-1 py-2 text-slate-500  text-ms">{staff.phone}</td>
+                    <td className="px-1 py-2 text-center">
                       <StatusBadge type={staff.status} />
                     </td>
                     <td className="px-4 py-2">

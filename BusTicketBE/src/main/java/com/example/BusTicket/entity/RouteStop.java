@@ -10,13 +10,17 @@ import lombok.NoArgsConstructor;
 @Entity
 @Builder @NoArgsConstructor
 @AllArgsConstructor
-public class Stop {
+public class RouteStop {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name, address;
+    private String type;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "province_id")
-    private Province province;
+    @JoinColumn(name = "route_id", referencedColumnName = "id")
+    private Route route;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stop_id", referencedColumnName = "id")
+    private Stop stop;
 }

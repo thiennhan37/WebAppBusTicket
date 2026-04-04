@@ -30,7 +30,8 @@ import java.util.stream.Collectors;
 @EnableWebSecurity //Bật cơ chế security của Spring, Nếu không có → tất cả API đều public
 @EnableMethodSecurity // cho phép dùng preAuthorize, postAuthorize
 public class SecurityConfig {
-    private final String[] PUBLIC_ENDPOINTS = {"/nhaxe/auth/login", "/nhaxe/auth/logout", "/auth/refresh-token"};
+    private final String[] PUBLIC_ENDPOINTS = {"/nhaxe/auth/login", "/nhaxe/auth/logout", "/auth/refresh-token",
+    "/provinces", "/stops"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member"};
     @Autowired
