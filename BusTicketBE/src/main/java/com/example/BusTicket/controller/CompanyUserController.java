@@ -2,17 +2,23 @@ package com.example.BusTicket.controller;
 
 
 import com.example.BusTicket.dto.request.CompanyUserCrRequest;
+import com.example.BusTicket.dto.request.CompanyUserUpRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.CompanyUserResponse;
 import com.example.BusTicket.service.CompanyUserService;
+import com.nimbusds.jose.JOSEException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.text.ParseException;
 
 @RestController
 @RequestMapping("/nhaxe")
@@ -21,12 +27,16 @@ import java.util.List;
 public class CompanyUserController {
     private final CompanyUserService companyUserService;
     @GetMapping("/member")
-    ApiResponse<List<CompanyUserResponse>> getAllCompanyUser(){
+    ApiResponse<PagedModel<CompanyUserResponse>> getAllCompanyUser(@RequestParam(required = false) String status,
+           @RequestParam(required = false) String role,
+           @PageableDefault(page = 0, size = 5) Pageable pageable){
 
 //        var authenticate = SecurityContextHolder.getContext().getAuthentication();
 //        log.info("username : {}", authenticate.getName());
 //        authenticate.getAuthorities().forEach(x -> log.info(x.getAuthority()));
-        return ApiResponse.success(companyUserService.getCompanyUserList());
+        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 5);
+        Page<CompanyUserResponse> pageResult = companyUserService.getAllCompanyUser(status, role, fixedPageable);
+        return ApiResponse.success(new PagedModel<>(pageResult));
     }
     @PostMapping("/member")
     ApiResponse<CompanyUserResponse> createCompanyUser(@RequestBody @Valid CompanyUserCrRequest request){
@@ -34,10 +44,13 @@ public class CompanyUserController {
         return ApiResponse.success(companyUserService.createCompanyUser(request));
 //        log.info("end controller");
     }
-    @PatchMapping("/updateStaff")
-    ApiResponse<CompanyUserResponse> updateCompanyUser(@RequestBody @Valid CompanyUserCrRequest request){
-
-        return ApiResponse.success(companyUserService.createCompanyUser(request));
+    @PutMapping("/member/{id}")
+    ApiResponse<CompanyUserResponse> updateCompanyUser(@PathVariable String id,
+          @RequestHeader("Authorization") String bearerToken, @RequestBody @Valid CompanyUserUpRequest request)
+            throws ParseException, JOSEException
+    {
+        String token = bearerToken.replace("Bearer ", "");
+        return ApiResponse.success(companyUserService.updateCompanyUser(token, request));
 //        log.info("end controller");
     }
 }

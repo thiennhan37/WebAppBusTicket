@@ -4,7 +4,8 @@ const object = {
     "CUSTOMER": "Khách hàng", 
     "ADMIN": "Quản trị viên", 
     "ACTIVE": "Đang hoạt động", 
-    "BLOCKED": "Đã khóa", 
+    "BLOCKED": "Đã khóa",
+    "ALL": "Tất Cả", 
 };
 
 const reverseObject = Object.fromEntries(
