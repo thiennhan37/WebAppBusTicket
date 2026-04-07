@@ -1,6 +1,7 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtInfo;
+import com.example.BusTicket.dto.request.CompanyRegisterRequest;
 import com.example.BusTicket.dto.request.LoginRequest;
 import com.example.BusTicket.dto.request.LogoutRequest;
 import com.example.BusTicket.dto.request.RefreshTokenRequest;
@@ -78,6 +79,9 @@ public class AuthenticationService {
         saveInvalidToken(refreshToken);
 
     }
+//    public void registerCompany(CompanyRegisterRequest request){
+//        if()
+//    }
     public RefreshTokenResponse refreshToken(RefreshTokenRequest request)
             throws ParseException, JOSEException {
         String refreshToken = request.getRefreshToken();

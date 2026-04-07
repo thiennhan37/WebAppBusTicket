@@ -27,9 +27,9 @@ public class ProvinceService {
         if(keyword == null) keyword = "";
         return provinceRepository.findByNameContainingIgnoreCase(keyword, fixedPageable);
     }
-    public List<Stop> findAllStops(String company, String keyword, Pageable pageable){
+    public List<Stop> findAllStops(String province, String keyword, Pageable pageable){
         Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 5);
-        Specification<Stop> spec = Specification.where(StopSpecification.hasProvinceId(company))
+        Specification<Stop> spec = Specification.where(StopSpecification.hasProvinceName(province))
                 .and(StopSpecification.containsKeyword(keyword));
         Page<Stop> stopPage =  stopRepository.findAll(spec, fixedPageable);
         return stopPage.getContent();

@@ -5,16 +5,25 @@ import com.example.BusTicket.entity.Stop;
 import org.springframework.data.jpa.domain.Specification;
 
 public class RouteSpecification {
-    public static Specification<Route> hasArrival(String provinceId) {
+    public static Specification<Route> hasArrival(String provinceName) {
         return (root, query, cb) -> {
-            if(provinceId == null) return cb.conjunction();
-            return cb.equal(root.get("province").get("id"), provinceId);
+            if(provinceName == null) return cb.conjunction();
+            return cb.equal(root.get("arrivalProvince").get("name"), provinceName);
         };
     }
-    public static Specification<Route> hasDestination(String provinceId) {
+    public static Specification<Route> hasDestination(String provinceName) {
         return (root, query, cb) -> {
-            if(provinceId == null) return cb.conjunction();
-            return cb.equal(root.get("province").get("id"), provinceId);
+            if(provinceName == null) return cb.conjunction();
+            return cb.equal(root.get("destinationProvince").get("name"), provinceName);
+        };
+    }
+    public static Specification<Route> containsKeyword(String keyword) {
+        return (root, query, cb) -> {
+            if(keyword == null) return cb.conjunction();
+            String pattern = "%" + keyword.toLowerCase() + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.get("name")), pattern)
+            );
         };
     }
     public static Specification<Route> hasBusCompany(String busCompanyId) {

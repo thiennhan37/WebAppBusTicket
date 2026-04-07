@@ -1,5 +1,6 @@
 const InputGroup = ({ label, placeholder, disabled, type = 'text', options = [], icon: Icon, value, onChange, error}) => {
   // console.log("reload inputgroup")
+
   return (
     
     <div className="w-full">

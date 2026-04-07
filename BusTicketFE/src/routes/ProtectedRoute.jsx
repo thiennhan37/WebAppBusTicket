@@ -13,7 +13,7 @@ const ProtectedRoute = (props) => {
   let homeLink;
   if(type === "customer") homeLink = "/customer/home";
 	else if(type === "admin") homeLink = "/admin/home";
-	else homeLink = "/nhaxe/home";
+	else homeLink = "/nhaxe";
   if(!user){
     return <Navigate to={homeLink} replace></Navigate>
   }

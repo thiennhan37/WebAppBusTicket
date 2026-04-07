@@ -1,109 +1,93 @@
-import React, { useState, useEffect, useRef } from 'react';
-import ProvinceService from '../../Services/provinceService';
-const SearchProvinces = () => {
-  const [inputValue, setInputValue] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const wrapperRef = useRef(null);
+import React, { useState, useRef, useEffect } from 'react';
+import ProvinceService from "../../Services/ProvinceService";
 
-  // Danh sách mẫu
+const SearchProvinces = ({ onChange, field, label, placeholder }) => {
+  const [inputValue, setInputValue] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const [provinces, setProvinces] = useState([]);
+  const searchRef = useRef(null);
+
+  // Fetch provinces with a small debounce while typing
   useEffect(() => {
-    const loadProvinces = async() => {
-        try{
-            const params = {keyword: inputValue};
-            const result = (await ProvinceService.getProvinces(params))?.data?.result || [];
-            console.log(result);
-            setProvinces(result);
-        }catch(error){
-            console.log(error);
-        }
-    }
-    loadProvinces();
-    
+    const controller = new AbortController();
+    const handle = setTimeout(async () => {
+      try {
+        const params = { keyword: inputValue };
+        const result = (await ProvinceService.getProvinces({ filterParams: params }))?.data?.result || [];
+        setProvinces(result);
+      } catch (err) {
+        if (err.name !== 'AbortError') console.error(err);
+      }
+    }, 250);
+
+    return () => {
+      clearTimeout(handle);
+      controller.abort();
+    };
   }, [inputValue]);
 
-  // Xử lý khi nhập text
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setInputValue(value);
-
-    if (value.length > 0) {
-      const filtered = provinces.filter(p =>
-        p.toLowerCase().includes(value.toLowerCase())
-      );
-      setSuggestions(filtered);
-      setIsOpen(true);
-    } else {
-      setSuggestions([]);
-      setIsOpen(false);
-    }
+  // Select and notify parent. We only send { name } (no id) per request.
+  const handleSelect = (provinceOrObj) => {
+    const name = provinceOrObj && provinceOrObj.name ? provinceOrObj.name : '';
+    setInputValue(name);
+    setIsOpen(false);
+    if (onChange) onChange(field, { name });
   };
 
-  // Đóng dropdown khi click ra ngoài
+  // Click outside: if list has items and inputValue non-empty, commit first; else clear
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        if (provinces.length && inputValue) {
+          handleSelect(provinces[0]);
+        } else {
+          handleSelect({ name: '' });
+        }
         setIsOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
-  const selectProvince = (name) => {
-    setInputValue(name);
-    setIsOpen(false);
-  };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [provinces, inputValue]);
 
   return (
-    <div className="p-10 bg-gray-100 min-h-screen">
-      <div className="relative w-80 mx-auto" ref={wrapperRef}>
-        {/* Input Field */}
-        <div className="flex items-center border-2 border-blue-500 rounded-md bg-white p-2 shadow-sm">
-          <div className="text-blue-500 mr-2">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11H9v2H7v2h2v2h2v-2h2V9h-2V7z"/></svg>
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-gray-400">Nơi xuất phát</p>
-            <input
-              type="text"
-              className="w-full outline-none text-lg font-semibold"
-              value={inputValue}
-              onChange={handleInputChange}
-              onFocus={() => inputValue && setIsOpen(true)}
-            />
-          </div>
+    <div className="flex flex-col items-center max-h-[70px]">
+      <div ref={searchRef} className="relative w-full max-w-md">
+        <label className="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1">
+          {label}
+        </label>
+
+        <div className="relative">
+          <input
+            type="text"
+            className="w-full rounded-xl p-1.5 text-sm outline-none transition-all border border-slate-200 bg-slate-50 focus:border-blue-400"
+            placeholder={placeholder}
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+          />
         </div>
 
-        {/* Dropdown Suggestions */}
-        {isOpen && suggestions.length > 0 && (
-          <div className="absolute w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
-            {/* Note Section */}
-            <div className="p-3 bg-orange-50 border-b border-orange-100">
-              <p className="text-sm text-gray-700">
-                <span className="text-red-500 font-bold">*Lưu ý:</span> Sử dụng tên địa phương trước sáp nhập
-              </p>
-            </div>
-
-            {/* Header */}
-            <div className="p-2 text-sm text-gray-400 bg-gray-50">
-              Tỉnh - Thành Phố
-            </div>
-
-            {/* List */}
-            <ul>
-              {suggestions.map((item, index) => (
+        {isOpen && (
+          <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            {provinces.length > 0 ? (
+              provinces.map((province) => (
                 <li
-                  key={index}
-                  className="px-4 py-3 hover:bg-blue-50 cursor-pointer text-gray-700 border-b border-gray-50 last:border-none"
-                  onClick={() => selectProvince(item)}
+                  key={province.id ?? province.name}
+                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-gray-700 border-b last:border-none border-gray-100"
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); handleSelect(province); }}
                 >
-                  {item}
+                  {province.name}
                 </li>
-              ))}
-            </ul>
-          </div>
+              ))
+            ) : (
+              <li className="px-4 py-2 text-gray-500 italic">Không tìm thấy kết quả</li>
+            )}
+          </ul>
         )}
       </div>
     </div>

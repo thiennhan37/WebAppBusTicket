@@ -1,5 +1,6 @@
 package com.example.BusTicket.controller;
 
+import com.example.BusTicket.dto.request.CompanyRegisterRequest;
 import com.example.BusTicket.dto.request.LoginRequest;
 import com.example.BusTicket.dto.request.LogoutRequest;
 import com.example.BusTicket.dto.request.RefreshTokenRequest;
@@ -22,16 +23,6 @@ import java.text.ParseException;
 @RequiredArgsConstructor
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
-    @PostMapping("nhaxe/auth/login")
-    ApiResponse<AuthenticationResponse> login(@RequestBody LoginRequest request) throws JOSEException{
-        log.info("in loginController ");
-        return ApiResponse.success(authenticationService.login(AccountType.COMPANY, request));
-    }
-    @PostMapping("nhaxe/auth/logout")
-    ApiResponse<Boolean> logout(@RequestBody LogoutRequest request) throws JOSEException, ParseException {
-        authenticationService.logout(request);
-        return ApiResponse.success(true);
-    }
     @PostMapping("auth/refresh-token")
     ApiResponse<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request)
             throws JOSEException, ParseException {
