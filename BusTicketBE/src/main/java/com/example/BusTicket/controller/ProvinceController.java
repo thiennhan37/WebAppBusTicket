@@ -25,9 +25,8 @@ public class ProvinceController {
     }
     @GetMapping("/stops")
     ApiResponse<List<Stop>> findAllStops(@RequestParam(required = true) String province,
-                                         @RequestParam(required = false) String keyword,
-                                         Pageable pageable){
-        return ApiResponse.success(provinceService.findAllStops(province, keyword, pageable));
+                                         @RequestParam(required = false) String keyword){
+        return ApiResponse.success(provinceService.findAllStops(province, keyword));
     }
     //    @GetMapping("/route")
 //    ApiResponse<PagedModel<Route>> getAllCompanyUser(@RequestParam(required = false) String status,

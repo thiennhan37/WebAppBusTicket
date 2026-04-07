@@ -13,6 +13,6 @@ import java.util.List;
 @Repository
 public interface StopRepository extends JpaRepository<Stop, Long> {
     List<Stop> findALlByProvinceId(String provinceId);
-    Page<Stop> findAll(Specification<Stop> specification, Pageable pageable);
+    List<Stop> findAll(Specification<Stop> specification);
     // spec -> list, spec + pageable -> page
 }

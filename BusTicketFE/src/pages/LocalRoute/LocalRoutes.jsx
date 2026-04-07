@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, keepPreviousData, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from 'react-router-dom';
 import RouteService from "../../Services/routeService";
@@ -6,16 +6,17 @@ import Pagination from "../StaffManagement/Pagination";
 import { Search } from "lucide-react";
 import RouteStops from "./RouteStops";
 import RouteHeader from "./RouteHeader";
-// import CreateRoute from "./CreateRoute";
+import CreateRoute from "./CreateRoute";
+import StatusModal from "../../components/other/StatusModal";
+import LoadingOverlay from "../../components/other/LoadingOverlay";
+
 const LocalRoutes = () => {
   // Use URL search params instead of local state for filter params
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Helper to read params with defaults
   const page = Number(searchParams.get('page') || 1);
-  // const arrivalId = searchParams.get('arrivalId') || '';
   const arrivalName = searchParams.get('arrivalName') || '';
-  // const destinationId = searchParams.get('destinationId') || '';
   const destinationName = searchParams.get('destinationName') || '';
   const keyword = searchParams.get('keyword') || '';
 
@@ -27,23 +28,17 @@ const LocalRoutes = () => {
   });
 
   const onChangeFilter = (field, value) => {
-    // Update URL params depending on field type
-    console.log(`Changing filter ${field} to value: `, value);
-    const params = new URLSearchParams(searchParams.toString());
 
+    const params = new URLSearchParams(searchParams.toString());
     if (field === 'arrival' && value && typeof value === 'object') {
-      // params.set('arrivalId', value.id || '');
       params.set('arrivalName', value.name || '');
-      // reset page to 1 when changing filter
       params.set('page', '1');
     } else if (field === 'destination' && value && typeof value === 'object') {
-      // params.set('destinationId', value.id || '');
       params.set('destinationName', value.name || '');
       params.set('page', '1');
     } else if (field === 'page') {
       params.set('page', String(value || 1));
     } else {
-      // generic fields like 'keyword'
       if (!value) params.delete(field);
       else params.set(field, String(value));
       params.set('page', '1');
@@ -73,15 +68,41 @@ const LocalRoutes = () => {
   };
   const [isOpenCreate, setOpenCreate] = useState(false);
   const [crRoute, setCrRoute] = useState({name:"", arrival: {id:"", name:""}, destination: {id:"", name:""}, upStopList: [], downStopList: []})
-  const onChangeCrRoute = (field, value) => {
-    setCrRoute((prev) => ({
-      ...prev, 
-      [field]:value
-    }));
+  const handleOpenCreate = (isOpen) => {
+    setCrRoute({name:"", arrival: {id:"", name:""}, destination: {id:"", name:""}, upStopList: [], downStopList: []});
+    setOpenCreate(isOpen);
   }
+  const onChangeCrRoute = (field, value) => {
+    setCrRoute((prev) => {
+      let updated = { ...prev };
+      updated[field] = value;
+      if (field === 'arrival' && value.name != prev.arrival.name) updated.upStopList = [];
+      if (field === 'destination' && value.name != prev.destination.name) updated.downStopList = [];
+      return updated;
+  })}; 
+
+  const [reportCreate, setReportCreate] = useState("") 
+  const hideReportCreate = () => {
+    setReportCreate("");
+  }
+  const { mutate:mutateCreate, error : errorCreate} = useMutation({
+    mutationFn: ({newRoute}) => RouteService.createRoute({newRoute}),
+    onSuccess: () => {
+      setReportCreate("success");
+    }, 
+    onMutate: () => {
+      setReportCreate("pending");
+    }, 
+    onError: (error) => {
+      console.log("Error creating route: ", error);
+      setReportCreate("error");
+    }
+  });
+  const handleCreateRoute = () => mutateCreate({newRoute: crRoute});
+
   if (isLoading) return <div>Đang tải...</div>;
   if (isError) return <div>Đã xảy ra lỗi khi lấy dữ liệu!</div>;
-  
+   
 
   return(
     
@@ -125,11 +146,24 @@ const LocalRoutes = () => {
         </div>
 
             {/* Component Tạo mới: Luôn trong DOM, ẩn bằng CSS */}
-            {/* <div className={`flex-1 ${isOpenCreate ? "" : "hidden"} relative w-full max-w-2xl pr-4 ml-4 h-fit animate-in fade-in slide-in-from-right-4 duration-300`}>
+            <div className={`flex-1 ${isOpenCreate ? "" : "hidden"} relative w-full max-w-2xl pr-4 ml-4 h-fit animate-in fade-in slide-in-from-right-4 duration-300`}>
               {isOpenCreate && (
-                <CreateRoute onChangeCrRoute={onChangeCrRoute} crRoute={crRoute} setOpen={setOpenCreate}></CreateRoute>
+                <>
+                  {reportCreate === "error" && <StatusModal type="error" message={errorCreate.response.data.message} 
+                  onClose={hideReportCreate}></StatusModal>}
+                  {reportCreate === "pending" && <LoadingOverlay ></LoadingOverlay>}
+                  {reportCreate === "success" && <StatusModal type="success" message={"Thêm mới thành công"} 
+                    onClose={() => {
+                      hideReportCreate();
+                      handleOpenCreate(false); 
+                    }}></StatusModal>}
+                  <CreateRoute onChangeCrRoute={onChangeCrRoute} 
+                    crRoute={crRoute} 
+                    setOpen={handleOpenCreate}
+                    handleCreateRoute={handleCreateRoute}></CreateRoute>
+                </>
               )}
-            </div> */}
+            </div>
 
             {/* Placeholder (Tùy chọn): Hiển thị khi không có mode nào để vùng 400px không bị trống trải */}
             {/* {rightPanelMode === 'none' && (

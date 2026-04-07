@@ -41,6 +41,6 @@ spring:
 
 jwt:
   signerKey: "NaW3jODSZ4yTtMj7s9CQFJvcLnrSgkq0"
-  accessTime: 30 #seconds;
-  refreshTime: 7200 #seconds;
+  accessTime: 900 #seconds;
+  refreshTime: 10800 #seconds;
 

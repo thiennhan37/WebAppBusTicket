@@ -31,17 +31,17 @@ const SearchProvinces = ({ onChange, field, label, placeholder }) => {
     const name = provinceOrObj && provinceOrObj.name ? provinceOrObj.name : '';
     setInputValue(name);
     setIsOpen(false);
-    if (onChange) onChange(field, { name });
+    if (onChange) onChange(field, provinceOrObj);
   };
 
   // Click outside: if list has items and inputValue non-empty, commit first; else clear
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      if (isOpen && searchRef.current && !searchRef.current.contains(event.target)) {
         if (provinces.length && inputValue) {
           handleSelect(provinces[0]);
         } else {
-          handleSelect({ name: '' });
+          handleSelect({name: '' });
         }
         setIsOpen(false);
       }
@@ -49,7 +49,7 @@ const SearchProvinces = ({ onChange, field, label, placeholder }) => {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [provinces, inputValue]);
+  }, [provinces, inputValue, isOpen]);
 
   return (
     <div className="flex flex-col items-center max-h-[70px]">

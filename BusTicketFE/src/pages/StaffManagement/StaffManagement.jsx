@@ -159,10 +159,10 @@ const StaffManagement = () => {
             {/* Component Xem/Sửa: Luôn trong DOM, ẩn bằng CSS */}
             <div className={rightPanelMode === 'view' ? "block" : "hidden"}>
                 
-              {reportUpdate == "error" && <StatusModal type="error" message={errorUpdate.response.data.message} 
+              {reportUpdate === "error" && <StatusModal type="error" message={errorUpdate.response.data.message} 
                 onClose={hideReportUpdate}></StatusModal>}
-              {reportUpdate == "pending" && <LoadingOverlay onClose={hideReportUpdate}></LoadingOverlay>}
-              {reportUpdate == "success" && <StatusModal type="success" message={"Cập nhật thành công"} 
+              {reportUpdate === "pending" && <LoadingOverlay onClose={hideReportUpdate}></LoadingOverlay>}
+              {reportUpdate === "success" && <StatusModal type="success" message={"Cập nhật thành công"} 
                 onClose={hideReportUpdate}></StatusModal>}
               <StaffInfo 
                 selectedStaff={selectedStaff} 
@@ -175,10 +175,10 @@ const StaffManagement = () => {
 
             {/* Component Tạo mới: Luôn trong DOM, ẩn bằng CSS */}
             <div className={`${rightPanelMode === 'create' ? "block" : "hidden"} relative overflow-hidden`}>
-              {reportCreate == "error" && <StatusModal type="error" message={errorCreate.response.data.message} 
+              {reportCreate === "error" && <StatusModal type="error" message={errorCreate.response.data.message} 
                 onClose={hideReportCreate}></StatusModal>}
-              {reportCreate == "pending" && <LoadingOverlay onClose={hideReportCreate}></LoadingOverlay>}
-              {reportCreate == "success" && <StatusModal type="success" message={"Đăng kí nhân viên thành công"} 
+              {reportCreate === "pending" && <LoadingOverlay onClose={hideReportCreate}></LoadingOverlay>}
+              {reportCreate === "success" && <StatusModal type="success" message={"Đăng kí nhân viên thành công"} 
                 onClose={hideReportCreate}></StatusModal>}
               
               <StaffCreate 

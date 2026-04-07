@@ -11,12 +11,17 @@ const RouteService = {
     },
     getRouteStop({routeId, params}){
         return api.get(`/nhaxe/routes/${routeId}`, {params:params});
-    }, 
-    getStops({filterParams}){
-        const params = {...filterParams, page:0};
-        if(!params.keyword) params.keyword = null;
-        if(!params.province) return Promise.resolve({data:{result: []}}); // nếu không có tỉnh thì trả về mảng rỗng luôn, tránh gọi API không cần thiết
-        return api.get(`/stops`, {params:params});
+    },
+    createRoute({newRoute}){
+        let route = {};
+        route.name = newRoute.name;
+        route.upStopIdList = newRoute.upStopList.map(stop => (stop.id));
+        route.downStopIdList = newRoute.downStopList.map(stop => (stop.id));
+        route.arrivalId = newRoute.arrival.id;
+        route.destinationId = newRoute.destination.id;
+        route.busCompanyId = JSON.parse(localStorage.getItem("company")).id;
+        // console.log("Creating route with data: ", route);
+        return api.post("/nhaxe/routes", route);
     }
 }
 

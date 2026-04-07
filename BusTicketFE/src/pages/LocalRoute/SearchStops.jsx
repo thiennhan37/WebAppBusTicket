@@ -33,11 +33,9 @@ const [stops, setStops] = useState([]);
     const handleClickOutside = (event) => {
       // Nếu click KHÔNG nằm trong vùng của searchRef
       if (searchRef.current && !searchRef.current.contains(event.target)) {
-        // Nếu đang có kết quả lọc, set input thành kết quả đầu tiên
+
         if(stops.length && inputValue) handleSelect(stops[0]);
         else handleSelect({id:"", name:""});
-        
-        // Đóng danh sách
         setIsOpen(false);
       }
     };

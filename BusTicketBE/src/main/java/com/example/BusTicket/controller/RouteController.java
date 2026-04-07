@@ -30,7 +30,7 @@ public class RouteController {
         return ApiResponse.success(routeService.createRoute(request));
     }
     @GetMapping("/routes")
-    ApiResponse<PagedModel<RouteResponse>> getRouteList(@RequestParam(required = false) String arrival,
+    ApiResponse<PagedModel<RouteResponse>> getRoutePage(@RequestParam(required = false) String arrival,
                                                         @RequestParam(required = false) String destination,
                                                         @RequestParam(required = false) String keyword,  Pageable pageable){
         Page<RouteResponse> responsePage = routeService.getRoutePage(arrival, destination, keyword, pageable);
