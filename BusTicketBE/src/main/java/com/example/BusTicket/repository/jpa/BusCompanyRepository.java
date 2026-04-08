@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BusCompanyRepository extends JpaRepository<BusCompany, String> {
     boolean existsByEmail(String email);
+    boolean existsByHotline(String hotline);
 }

@@ -5,6 +5,7 @@ import com.example.BusTicket.dto.request.LoginRequest;
 import com.example.BusTicket.dto.request.LogoutRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.AuthenticationResponse;
+import com.example.BusTicket.entity.CompanyRegister;
 import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
@@ -31,9 +32,8 @@ public class CompanyAuthController {
         authenticationService.logout(request);
         return ApiResponse.success(true);
     }
-//    @PostMapping("nhaxe/auth/register")
-//    ApiResponse<Boolean> register(@RequestBody CompanyRegisterRequest request) throws JOSEException, ParseException {
-//        authenticationService.logout(request);
-//        return ApiResponse.success(true);
-//    }
+    @PostMapping("nhaxe/auth/register")
+    ApiResponse<CompanyRegister> register(@RequestBody CompanyRegisterRequest request) throws JOSEException, ParseException {
+        return ApiResponse.success(authenticationService.registerCompany(request));
+    }
 }

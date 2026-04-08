@@ -1,4 +1,7 @@
 const object = {
+    "MALE": "Nam",
+    "FEMALE": "Nữ",
+    "OTHER": "Khác",
     "MANAGER": "Quản lí",
     "STAFF": "Nhân viên", 
     "CUSTOMER": "Khách hàng", 

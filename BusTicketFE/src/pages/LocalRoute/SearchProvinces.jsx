@@ -49,7 +49,7 @@ const SearchProvinces = ({ onChange, field, label, placeholder }) => {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [provinces, inputValue, isOpen]);
+  }, [provinces, inputValue, isOpen, searchRef]);
 
   return (
     <div className="flex flex-col items-center max-h-[70px]">

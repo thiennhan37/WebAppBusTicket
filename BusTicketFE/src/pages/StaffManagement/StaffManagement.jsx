@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { UserPlus, Award, ShieldCheck, LockKeyhole, BookUser} from 'lucide-react';
 import StatCards from './StatCards';
 import StaffListHeader from './StaffListHeader';
 import InputGroup from '../../components/other/InputGroup';
 import Pagination from './Pagination';
 import StaffService from '../../Services/StaffService';
-import { toVN } from '../../utils/translate';
 import StaffInfo from './StaffInfo';
 import StaffCreate from './StaffCreate';
 import { useQuery, keepPreviousData, useQueryClient, useMutation } from '@tanstack/react-query';
 import StatusModal from '../../components/other/StatusModal';
 import LoadingOverlay from '../../components/other/LoadingOverlay';
+import ConfirmModal from '../../components/other/ConfirmModal';
+import { useSearchParams } from 'react-router-dom';
+import { toEng, toVN } from '../../utils/translate';
 const StaffManagement = () => {
   console.log("reload StaffManagement")
   const queryClient = useQueryClient();
@@ -25,20 +27,35 @@ const StaffManagement = () => {
       dob: '',
       gender: '',
       createdAt: '',
+      status: '',
   });
   const handleRowClick = (staff) => {
+    // queryClient.invalidateQueries({ queryKey: ['staffStats'] });
     setRightPanelMode("view");
     setSelectedStaff({...staff});
   };
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filterParams, setFilterParams]  = useState({page: 1, role: "Tất Cả", status: "Tất Cả"});
+  const getFilterParams = () => ({
+    page: Number(searchParams.get('page')) || 1,
+    role: searchParams.get('role') ? toVN(searchParams.get('role')) : 'Tất Cả',
+    status: searchParams.get('status') ? toVN(searchParams.get('status')) : 'Tất Cả',
+  });
+
+  const filterParams = getFilterParams();
+
+  const updateFilterParams = (updater) => {
+    const params = {
+      page: String(updater.page || 1),
+      role: updater.role ? toEng(updater.role) : 'ALL',
+      status: updater.status ? toEng(updater.status) : 'ALL',
+    };
+    setSearchParams(params);
+  };
   const onPageChange = (newPage) => {
-    setFilterParams((prev) => ({
-      ...prev, 
-      page: newPage, 
-    }));
+    updateFilterParams({...filterParams, page: newPage });
   }
-  const {data: result, isLoading, isError, isPlaceholderData} = useQuery({
+  const {data: result} = useQuery({
     queryKey: ['staffs', filterParams], 
     queryFn: async () => {
       try{
@@ -63,6 +80,7 @@ const StaffManagement = () => {
         setNewStaff({ fullName: '', role: '', phone: '', email: '', dob: '', gender: '' });
         // Làm mới danh sách nhân viên
         queryClient.invalidateQueries({ queryKey: ['staffs'] });
+        queryClient.invalidateQueries({ queryKey: ['staffStats'] });
         setReportCreate('success')
       },
     onError: () => {
@@ -83,14 +101,16 @@ const StaffManagement = () => {
     mutationFn: (selectedStaff) => StaffService.updateStaff(selectedStaff),
     onSuccess: () => {
         // Làm mới danh sách nhân viên
+      
         queryClient.invalidateQueries({ queryKey: ['staffs'] });
+        queryClient.invalidateQueries({ queryKey: ['staffStats'] });
         setReportUpdate('success')
       },
     onError: () => {
-      setReportCreate('error')
+      setReportUpdate('error')
     }, 
     onMutate: () => {
-      setReportCreate('pending')
+      setReportUpdate('pending')
     }
   });
   const [reportUpdate, setReportUpdate] = useState("") 
@@ -98,16 +118,18 @@ const StaffManagement = () => {
     setReportUpdate("");
   }
   const handleUpdateStaff = () => mutateUpdate(selectedStaff)
-  // const [updatedStaff, setUpdatedStaff] = 
+  const [showConfirm, setShowConfirm] = useState(false);
+
   return (
     <div className="w-full max-h-screen overflow-auto bg-slate-50 p-4 lg:p-4">
       <StatCards></StatCards>
 
-      <div className="flex flex-col xl:flex-row gap-6"> 
+      <div className="flex flex-col relative xl:flex-row gap-6"> 
         {/* 2. Bảng Danh Sách - Chiếm không gian lớn */}
-        <div className="flex-1 flex flex-col min-h-[494px] bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-[494px] bg-white 
+        rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <StaffListHeader setRightPanelMode={setRightPanelMode} 
-            filterParams={filterParams} setFilterParams={setFilterParams}></StaffListHeader>
+            filterParams={filterParams} setFilterParams={updateFilterParams}></StaffListHeader>
           
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left">
@@ -139,16 +161,26 @@ const StaffManagement = () => {
                           onClick={() => handleRowClick(staff)} ><BookUser size={21}/></button>
                         <button className="py-2 px-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors 
                             disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent" 
-                          disabled={staff.status === "ACTIVE" || staff.role == "MANAGER"}> <ShieldCheck size={21}/> </button>
+                          disabled={staff.status === "ACTIVE" || staff.role == "MANAGER"}
+                          onClick={() => {setSelectedStaff({...staff, status: "ACTIVE"}); setShowConfirm(true);}}><ShieldCheck size={21}/> </button>
                         <button className="py-2 px-1 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors
                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                          disabled={staff.status === "BLOCKED" || staff.role == "MANAGER"}><LockKeyhole size={21}/></button>
+                          disabled={staff.status === "BLOCKED" || staff.role == "MANAGER"}
+                          onClick={() => {setSelectedStaff({...staff, status: "BLOCKED"}); setShowConfirm(true);}}><LockKeyhole size={21}/></button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <ConfirmModal 
+                view={"absolute"}
+                isOpen={showConfirm}
+                onClose={() => setShowConfirm(false)}
+                onConfirm={handleUpdateStaff}
+                title="Cập nhật thông tin"
+                message={`Bạn có chắc chắn muốn ${selectedStaff.status === "BLOCKED" ? "khóa" : "kích hoạt"} tài khoản này?`}
+                />
           </div>
             
           <Pagination page={filterParams.page} totalPages={totalPages} onPageChange={onPageChange}/>
@@ -159,11 +191,7 @@ const StaffManagement = () => {
             {/* Component Xem/Sửa: Luôn trong DOM, ẩn bằng CSS */}
             <div className={rightPanelMode === 'view' ? "block" : "hidden"}>
                 
-              {reportUpdate === "error" && <StatusModal type="error" message={errorUpdate.response.data.message} 
-                onClose={hideReportUpdate}></StatusModal>}
-              {reportUpdate === "pending" && <LoadingOverlay onClose={hideReportUpdate}></LoadingOverlay>}
-              {reportUpdate === "success" && <StatusModal type="success" message={"Cập nhật thành công"} 
-                onClose={hideReportUpdate}></StatusModal>}
+              
               <StaffInfo 
                 selectedStaff={selectedStaff} 
                 setSelectedStaff={setSelectedStaff}
@@ -175,11 +203,7 @@ const StaffManagement = () => {
 
             {/* Component Tạo mới: Luôn trong DOM, ẩn bằng CSS */}
             <div className={`${rightPanelMode === 'create' ? "block" : "hidden"} relative overflow-hidden`}>
-              {reportCreate === "error" && <StatusModal type="error" message={errorCreate.response.data.message} 
-                onClose={hideReportCreate}></StatusModal>}
-              {reportCreate === "pending" && <LoadingOverlay onClose={hideReportCreate}></LoadingOverlay>}
-              {reportCreate === "success" && <StatusModal type="success" message={"Đăng kí nhân viên thành công"} 
-                onClose={hideReportCreate}></StatusModal>}
+              
               
               <StaffCreate 
                 newStaff={newStaff} 
@@ -198,7 +222,17 @@ const StaffManagement = () => {
               </div>
             )}
         </div>
-         
+         {reportUpdate === "error" && <StatusModal type="error" message={errorUpdate.response.data.message} 
+            onClose={hideReportUpdate}></StatusModal>}
+          {reportUpdate === "pending" && <LoadingOverlay onClose={hideReportUpdate}></LoadingOverlay>}
+          {reportUpdate === "success" && <StatusModal type="success" message={"Cập nhật thành công"} 
+            onClose={hideReportUpdate}></StatusModal>}
+
+          {reportCreate === "error" && <StatusModal type="error" message={errorCreate.response.data.message} 
+              onClose={hideReportCreate}></StatusModal>}
+          {reportCreate === "pending" && <LoadingOverlay onClose={hideReportCreate}></LoadingOverlay>}
+          {reportCreate === "success" && <StatusModal type="success" message={"Đăng kí nhân viên thành công"} 
+            onClose={hideReportCreate}></StatusModal>}
       </div>
     </div>
   );

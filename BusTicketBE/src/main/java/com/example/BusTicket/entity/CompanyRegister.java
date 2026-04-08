@@ -1,26 +1,24 @@
 package com.example.BusTicket.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.example.BusTicket.dto.general.InfoAccount;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-
-public class BusCompany {
+@Builder @NoArgsConstructor @AllArgsConstructor
+public class CompanyRegister {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
-    private String hostName, companyName, hotline, avatarUrl, email, policy;
+    private String hostName, companyName, hotline, email;
     private LocalDateTime createdAt;
 
 }

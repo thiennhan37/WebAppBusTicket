@@ -16,15 +16,13 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
     const [email, setEmail] = useState("");
     const [errorEmail, setErrorEmail] = useState("");
     const validateEmail = () =>{
-        // console.log(1);
         if(validator.isEmail(email) || !email) setErrorEmail("");
         else setErrorEmail("Email không hợp lệ")
     }
     const handleEmailChange = (e) =>{
-        // console.log(2);
         setEmail(e.target.value);
     }
-
+    // const {mutate: register} = useRegister();
     
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

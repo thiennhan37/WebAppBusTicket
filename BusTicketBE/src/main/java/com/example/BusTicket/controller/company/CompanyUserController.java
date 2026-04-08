@@ -1,4 +1,4 @@
-package com.example.BusTicket.controller;
+package com.example.BusTicket.controller.company;
 
 
 import com.example.BusTicket.dto.request.CompanyUserCrRequest;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -45,12 +44,10 @@ public class CompanyUserController {
 //        log.info("end controller");
     }
     @PutMapping("/member/{id}")
-    ApiResponse<CompanyUserResponse> updateCompanyUser(@PathVariable String id,
-          @RequestHeader("Authorization") String bearerToken, @RequestBody @Valid CompanyUserUpRequest request)
+    ApiResponse<CompanyUserResponse> updateCompanyUser(@PathVariable String id, @RequestBody @Valid CompanyUserUpRequest request)
             throws ParseException, JOSEException
     {
-        String token = bearerToken.replace("Bearer ", "");
-        return ApiResponse.success(companyUserService.updateCompanyUser(token, request));
+        return ApiResponse.success(companyUserService.updateCompanyUser(request));
 //        log.info("end controller");
     }
 }

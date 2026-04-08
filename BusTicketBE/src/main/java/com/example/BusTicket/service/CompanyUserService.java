@@ -1,5 +1,6 @@
 package com.example.BusTicket.service;
 
+import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.JwtObject.JwtInfo;
 import com.example.BusTicket.dto.request.CompanyUserCrRequest;
 import com.example.BusTicket.dto.request.CompanyUserUpRequest;
@@ -84,11 +85,12 @@ public class CompanyUserService {
 
         return companyUserMapper.toCompanyUserResponse(companyUser);
     }
-    public CompanyUserResponse updateCompanyUser(String token, CompanyUserUpRequest request)
+    public CompanyUserResponse updateCompanyUser(CompanyUserUpRequest request)
             throws ParseException, JOSEException {
         String busCompanyId = request.getBusCompanyId();
-        JwtInfo info = jwtService.parseToken(token);
-        CompanyUser manager = companyUserRepository.findById(info.getSubject())
+        Jwt jwt = JwtHelper.getJwt();
+        String id = jwt.getSubject();
+        CompanyUser manager = companyUserRepository.findById(id)
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
         if(!manager.getBusCompany().getId().equals(busCompanyId)) throw new MyAppException(ErrorCode.ACCESS_DENIED);
 
@@ -103,6 +105,9 @@ public class CompanyUserService {
         if(gender != null && !gender.isBlank()) staff.setGender(gender);
         LocalDate dob = request.getDob();
         if(dob != null) staff.setDob(dob);
+        String status = request.getStatus();
+        if(status != null && (status.equals(StatusEnum.ACTIVE.name()) || status.equals(StatusEnum.BLOCKED.name())) )
+            staff.setStatus(status);
 
         companyUserRepository.save(staff);
         return companyUserMapper.toCompanyUserResponse(staff);
