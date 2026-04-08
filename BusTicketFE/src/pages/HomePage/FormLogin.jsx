@@ -10,11 +10,11 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
     const [email, setEmail] = useState("");
     const [errorEmail, setErrorEmail] = useState("");
     const validateEmail = () =>{
-        if(validator.isEmail(email) || !email) setErrorEmail("");
-        else setErrorEmail("Email không hợp lệ")
-    }
-    const handleEmailChange = (e) =>{
-        setEmail(e.target.value);
+        let message = "";
+        if(validator.isEmail(email)) message = "";
+        else message = "Email không hợp lệ";
+        setErrorEmail(message);
+        return message;
     }
 
     const [password, setPassword] = useState("");
@@ -25,7 +25,8 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
     const navigate = useNavigate();
     const handleLogin = async (e) =>{
         e.preventDefault();
-        // console.log("in login");
+        const errorEmail = validateEmail();
+        if(errorEmail)  return;
         try{
             const response = await authenticate.loginCompany({email, password});
             // console.log(response);
@@ -79,8 +80,7 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
                                 : 'border-gray-100 focus:ring-2 focus:ring-blue-500 focus:bg-white'
                                 }`}
                             value={email}
-                            onBlur={validateEmail}
-                            onChange={handleEmailChange}
+                            onChange={(e) => setEmail(e.target.value)}
                             onFocus={() => {setErrorEmail("")}}
                         />
                         <div className="min-h-[26px] pl-4">
@@ -110,7 +110,7 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
                         >
                             {showPassword ? (<EyeOff size={20} />) : (<Eye size={20} />)}
                         </button>
-                        <div className="min-h-[26px] pl-5 pt-3">
+                        <div className="min-h-[30px] pl-5 pt-3">
                             {errorLogin && (
                                 <p className="text-sm text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
                                     {errorLogin}

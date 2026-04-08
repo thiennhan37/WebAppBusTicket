@@ -10,5 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface CompanyRegisterRepository extends JpaRepository<CompanyRegister, String>{
-
+    boolean existsByEmailOrHotline(String email, String hotline);
 }

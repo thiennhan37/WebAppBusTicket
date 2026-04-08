@@ -13,7 +13,7 @@ public class CompanyRegisterRequest {
 
     @NotNull(message = "Email must be not null")
     private String email;
-    private String name, hotline;
+    private String hostName, companyName, hotline;
 
 
 }

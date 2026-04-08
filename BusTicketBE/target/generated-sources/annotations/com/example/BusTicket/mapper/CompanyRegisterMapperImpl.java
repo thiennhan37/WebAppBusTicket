@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-04-08T14:32:29+0700",
+    date = "2026-04-08T20:06:32+0700",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 24.0.2 (Oracle Corporation)"
 )
 @Component
@@ -19,13 +19,13 @@ public class CompanyRegisterMapperImpl implements CompanyRegisterMapper {
             return null;
         }
 
-        CompanyRegister companyRegister = new CompanyRegister();
+        CompanyRegister.CompanyRegisterBuilder companyRegister = CompanyRegister.builder();
 
-        companyRegister.setName( request.getName() );
-        companyRegister.setHotline( request.getHotline() );
-        companyRegister.setEmail( request.getEmail() );
-        companyRegister.setCreatedAt( request.getCreatedAt() );
+        companyRegister.hostName( request.getHostName() );
+        companyRegister.companyName( request.getCompanyName() );
+        companyRegister.hotline( request.getHotline() );
+        companyRegister.email( request.getEmail() );
 
-        return companyRegister;
+        return companyRegister.build();
     }
 }

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @EnableMethodSecurity // cho phép dùng preAuthorize, postAuthorize
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {"/nhaxe/auth/login", "/nhaxe/auth/logout", "/auth/refresh-token",
-    "/provinces", "/stops"};
+        "/nhaxe/auth/register", "/provinces", "/stops"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member"};
     @Autowired

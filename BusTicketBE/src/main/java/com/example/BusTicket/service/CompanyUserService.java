@@ -80,7 +80,7 @@ public class CompanyUserService {
 
         companyUserRepository.save(companyUser);
         String companyName = busCompanyRepository.findById(companyId)
-                        .orElseThrow(() -> new MyAppException(ErrorCode.COMPANY_NOT_EXISTED)).getName();
+                        .orElseThrow(() -> new MyAppException(ErrorCode.COMPANY_NOT_EXISTED)).getCompanyName();
         accountMailService.sendCredentials(companyUser.getEmail(), password, companyName);
 
         return companyUserMapper.toCompanyUserResponse(companyUser);

@@ -90,7 +90,8 @@ public class AuthenticationService {
     public CompanyRegister registerCompany(CompanyRegisterRequest request){
         if(busCompanyRepository.existsByEmail(request.getEmail())) throw new MyAppException(ErrorCode.EMAIL_EXISTED);
         if(busCompanyRepository.existsByHotline(request.getHotline())) throw new MyAppException(ErrorCode.HOTLINE_EXISTED);
-
+        if(companyRegisterRepository.existsByEmailOrHotline(request.getEmail(), request.getHotline()))
+            throw new MyAppException(ErrorCode.INFO_EXISTED);
         return companyRegisterRepository.save(companyRegisterMapper.toCompanyRegister(request));
     }
     public RefreshTokenResponse refreshToken(RefreshTokenRequest request)
