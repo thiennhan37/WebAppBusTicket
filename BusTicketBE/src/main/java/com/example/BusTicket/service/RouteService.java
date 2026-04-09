@@ -107,13 +107,11 @@ public class RouteService {
         CompanyUser user = companyUserRepository.findById(id)
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
         BusCompany busCompany = user.getBusCompany();
-        Route route = routeRepository.getReferenceById(routeId);
-        try{
-            if( ! busCompany.getId().equals(route.getBusCompany().getId()))
-                throw new MyAppException(ErrorCode.ACCESS_DENIED);
-        }catch(Exception exception){
-            throw new MyAppException(ErrorCode.COMPANY_NOT_EXISTED);
-        }
+        Route route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_NOT_EXISTED));
+        if( ! busCompany.getId().equals(route.getBusCompany().getId()))
+            throw new MyAppException(ErrorCode.ACCESS_DENIED);
+
         return routeStopRepository.findAllByRouteIdAndType(routeId, type)
                 .stream().map(routeStopMapper::toRouteStopResponse).toList();
     }

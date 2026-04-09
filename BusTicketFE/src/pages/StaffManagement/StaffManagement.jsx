@@ -3,7 +3,7 @@ import { UserPlus, Award, ShieldCheck, LockKeyhole, BookUser} from 'lucide-react
 import StatCards from './StatCards';
 import StaffListHeader from './StaffListHeader';
 import InputGroup from '../../components/other/InputGroup';
-import Pagination from './Pagination';
+import Pagination from '../../components/other/Pagination';
 import StaffService from '../../Services/StaffService';
 import StaffInfo from './StaffInfo';
 import StaffCreate from './StaffCreate';

@@ -99,7 +99,7 @@ const UserProfile = () => {
         </div>
         <div className="flex flex-col overflow-hidden text-left">
           <span className="text-sm font-bold text-gray-800 truncate">{user?.email}</span>
-          <span className="text-xs text-gray-500 truncate">{company?.name}</span>
+          <span className="text-xs text-gray-500 truncate">{company?.companyName}</span>
         </div>
       </div>
     </div>

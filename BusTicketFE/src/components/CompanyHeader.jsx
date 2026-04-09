@@ -3,7 +3,7 @@ import { Search, Bell, Handshake } from 'lucide-react';
 
 const CompanyHeader = () => {
   const companyRaw = localStorage.getItem("company");
-  const companyName = companyRaw ? JSON.parse(companyRaw).name : "";
+  const companyName = companyRaw ? JSON.parse(companyRaw).companyName : "";
   return (
     <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8">
       {/* Search Bar */}

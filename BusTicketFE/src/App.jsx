@@ -5,7 +5,7 @@ import HomePage from './pages/HomePage/HomePage'
 import AuthProvider from './Provider/AuthProvider'
 import ProtectedRoute from './routes/ProtectedRoute'
 import Overview from './pages/Overview'
-import Trips from './pages/Trips'
+import Trips from "./pages/Trip/Trips"
 import Tickets from './pages/Tickets'
 import LocalRoutes from './pages/LocalRoute/LocalRoutes'
 import Report from './pages/Report'

@@ -2,7 +2,7 @@ import { useQuery, keepPreviousData, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useSearchParams } from 'react-router-dom';
 import RouteService from "../../Services/routeService";
-import Pagination from "../StaffManagement/Pagination";
+import Pagination from "../../components/other/Pagination";
 import { Search } from "lucide-react";
 import RouteStops from "./RouteStops";
 import RouteHeader from "./RouteHeader";
@@ -165,12 +165,6 @@ const LocalRoutes = () => {
               )}
             </div>
 
-            {/* Placeholder (Tùy chọn): Hiển thị khi không có mode nào để vùng 400px không bị trống trải */}
-            {/* {rightPanelMode === 'none' && (
-              <div className="h-[490px] border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center text-slate-400">
-                ... 
-              </div>
-            )} */}
         </div>
     </div>
   );

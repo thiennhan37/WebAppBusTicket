@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -33,6 +34,7 @@ public class CompanyUserController {
 //        var authenticate = SecurityContextHolder.getContext().getAuthentication();
 //        log.info("username : {}", authenticate.getName());
 //        authenticate.getAuthorities().forEach(x -> log.info(x.getAuthority()));
+
         Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 5);
         Page<CompanyUserResponse> pageResult = companyUserService.getAllCompanyUser(status, role, fixedPageable);
         return ApiResponse.success(new PagedModel<>(pageResult));

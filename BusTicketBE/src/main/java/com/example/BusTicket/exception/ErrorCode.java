@@ -13,16 +13,19 @@ public enum ErrorCode {
     ACCESS_DENIED(1004, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_PARAMETER(1005, "Invalid request parameters", HttpStatus.BAD_REQUEST),
     MISSING_REQUIRED_FIELD(1006, "Required field is missing", HttpStatus.BAD_REQUEST),
-
+    INVALID_STATE(1007, "Invalid state", HttpStatus.BAD_REQUEST),
 
 
 
     COMPANY_NOT_EXISTED(4001, "Company not existed", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(4002, "Email existed", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_EXISTED(4003, "Account not existed", HttpStatus.BAD_REQUEST),
-    ACCOUNT_BLOCKED(4004, "Account has been existed", HttpStatus.FORBIDDEN),
+    ACCOUNT_BLOCKED(4004, "Account has been blocked", HttpStatus.FORBIDDEN),
     HOTLINE_EXISTED(4004, "Hotline has been existed", HttpStatus.BAD_REQUEST),
     INFO_EXISTED(4005, "Information has been existed", HttpStatus.BAD_REQUEST),
+    NOT_EXISTED(4006, "Not existed", HttpStatus.BAD_REQUEST),
+    ROUTE_NOT_EXISTED(4007, "Route not existed", HttpStatus.BAD_REQUEST),
+    INVALID_DEPARTURE_TIME(4008, "Invalid departure time", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;
