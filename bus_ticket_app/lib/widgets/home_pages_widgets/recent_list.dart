@@ -8,6 +8,14 @@ class RecentList extends StatefulWidget {
 }
 
 class _RecentListState extends State<RecentList> {
+  List<Map<String, String>> _recentSearches = [
+    {"from": "Đắk Lắk", "to": "Hồ Chí Minh", "date": "19/9/2026"},
+    {"from": "Hà Nội", "to": "Đà Nẵng", "date": "20/9/2026"},
+    {"from": "Nha Trang", "to": "Đà Lạt", "date": "21/9/2026"},
+    {"from": "Đà Nẵng", "to": "Hội An", "date": "22/9/2026"},
+    {"from": "Cần Thơ", "to": "Cà Mau", "date": "23/9/2026"},
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -20,36 +28,54 @@ class _RecentListState extends State<RecentList> {
             children: [
               const Text(
                 'Tìm kiếm gần đây',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               TextButton(
-                  onPressed: (){},
-                  child: const Text('Xóa tất cả', style: TextStyle(color: Colors.blue, fontSize: 16, fontWeight: FontWeight.bold, decoration: TextDecoration.underline),)
+                onPressed: () {
+                  setState(() {
+                    _recentSearches.clear();
+                  });
+                },
+                child: const Text(
+                  'Xóa tất cả',
+                  style: TextStyle(
+                    color: Colors.blue,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 4,),
+        const SizedBox(height: 4),
         SizedBox(
           height: 100,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(left: 16),
-            itemCount: 5,
-            itemBuilder: (context, index){
-              return _buildRecentCard(from: "Đắk Lắk", to: "Hồ Chí Minh" , date: "19/9/2026");
+            itemCount: _recentSearches.length,
+            itemBuilder: (context, index) {
+              final item = _recentSearches[index];
+              return _buildRecentCard(
+                from: item["from"]!,
+                to: item["to"]!,
+                date: item["date"]!,
+              );
             },
           ),
-        )
+        ),
       ],
     );
   }
+
   // Hàm build từng thẻ card
   Widget _buildRecentCard({
     required String from,
     required String to,
     required String date,
-  }){
+  }) {
     return Container(
       width: 220,
       padding: const EdgeInsets.all(12),
@@ -58,17 +84,15 @@ class _RecentListState extends State<RecentList> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(
-          color: Colors.black26,
-          blurRadius: 4,
-          offset: Offset(0, 2),
-        )],
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 4,),
+            padding: EdgeInsets.only(top: 4),
             child: Column(
               children: [
                 _buildCircleDot(Colors.blue),
@@ -77,7 +101,7 @@ class _RecentListState extends State<RecentList> {
               ],
             ),
           ),
-          const SizedBox(width: 12,),
+          const SizedBox(width: 12),
           //Cột chứa text địa điểm và thời gian
           Expanded(
             child: Column(
@@ -89,12 +113,12 @@ class _RecentListState extends State<RecentList> {
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
-                    fontWeight: FontWeight.w600
+                    fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8,),
+                const SizedBox(height: 8),
                 Text(
                   to,
                   style: const TextStyle(
@@ -111,19 +135,15 @@ class _RecentListState extends State<RecentList> {
                   style: const TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
-                    fontWeight: FontWeight.w500
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 8,),
-            child: Icon(
-              Icons.arrow_forward,
-              size: 20,
-              color: Colors.black87,
-            ),
+            padding: const EdgeInsets.only(top: 8),
+            child: Icon(Icons.arrow_forward, size: 20, color: Colors.black87),
           ),
         ],
       ),
@@ -131,7 +151,7 @@ class _RecentListState extends State<RecentList> {
   }
 
   // Hàm vẽ dấu chấm tròn ở giữa
-  Widget _buildCircleDot(Color color){
+  Widget _buildCircleDot(Color color) {
     return Container(
       width: 12,
       height: 12,
@@ -144,7 +164,7 @@ class _RecentListState extends State<RecentList> {
   }
 
   //Hàm vẽ đường nét đức giữa hai vòng tròn
-  Widget _buildDottedLine(){
+  Widget _buildDottedLine() {
     return Column(
       children: List.generate(
         3,

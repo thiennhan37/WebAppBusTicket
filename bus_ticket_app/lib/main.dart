@@ -1,6 +1,9 @@
 import 'package:bus_ticket_app/pages/account_info_pages.dart';
+import 'package:bus_ticket_app/pages/favorite_pages.dart';
 import 'package:bus_ticket_app/pages/home_pages.dart';
+import 'package:bus_ticket_app/pages/my_tickets_pages.dart';
 import 'package:bus_ticket_app/pages/notification_pages.dart';
+import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -30,7 +33,7 @@ class MyApp extends StatelessWidget {
         textTheme: TextTheme(),
         useMaterial3: true,
       ),
-      home: NotificationPages(),
+      home: CustomBottonNav(),
     );
   }
 }

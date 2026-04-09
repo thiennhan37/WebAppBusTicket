@@ -1,3 +1,5 @@
+import 'package:bus_ticket_app/pages/account_info_pages.dart';
+import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -20,16 +22,32 @@ class HeaderHomePage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SvgPicture.asset(
-                'assets/images/busIcon.svg',
-                height: 40,
-                colorFilter: const ColorFilter.mode(
-                  Colors.yellow,
-                  BlendMode.srcIn,
-                ),
+              Row(
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/busIcon.svg',
+                    height: 40,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.yellow,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  Text(
+                    'VEXEDAT',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  final bottomNav = context
+                      .findAncestorStateOfType<CustomBottonNavState>();
+                  bottomNav?.changeTab(4);
+                },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

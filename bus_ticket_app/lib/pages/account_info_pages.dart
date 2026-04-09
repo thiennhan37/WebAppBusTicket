@@ -1,17 +1,44 @@
+import 'package:bus_ticket_app/pages/home_pages.dart';
 import 'package:bus_ticket_app/widgets/account_info_widgets/custom_input_field.dart';
 import 'package:bus_ticket_app/widgets/account_info_widgets/infor_banner.dart';
+import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/account_info_widgets/gender_selector_state.dart';
 
-class AccountInfoPage extends StatefulWidget {
-  const AccountInfoPage({super.key});
+class AccountInfoPages extends StatefulWidget {
+  const AccountInfoPages({super.key});
 
   @override
-  State<AccountInfoPage> createState() => _AccountInfoPageState();
+  State<AccountInfoPages> createState() => _AccountInfoPageState();
 }
 
-class _AccountInfoPageState extends State<AccountInfoPage> {
+class _AccountInfoPageState extends State<AccountInfoPages> {
+  String _fullName = 'Trần Tấn Phát';
+  String _phoneNumber = '0706110630';
+  String _email = '';
+  String _dob = '17/01/2005';
+  String _gender = 'Nam';
+
+  final List<Map<String, String>> _countries = [
+    {'code': '+84', 'flag': '🇻🇳', 'name': 'Việt Nam'},
+    {'code': '+1', 'flag': '🇺🇸', 'name': 'Hoa Kỳ'},
+    {'code': '+44', 'flag': '🇬🇧', 'name': 'Vương quốc Anh'},
+    {'code': '+81', 'flag': '🇯🇵', 'name': 'Nhật Bản'},
+    {'code': '+82', 'flag': '🇰🇷', 'name': 'Hàn Quốc'},
+    {'code': '+66', 'flag': '🇹🇭', 'name': 'Thái Lan'},
+    {'code': '+65', 'flag': '🇸🇬', 'name': 'Singapore'},
+  ];
+
+  late Map<String, String> _selectedCountry;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _selectedCountry = _countries[0];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +49,11 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
         centerTitle: false,
         titleSpacing: 0,
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () {
+            final bottomNav = context
+                .findAncestorStateOfType<CustomBottonNavState>();
+            bottomNav?.changeTab(0);
+          },
           icon: Icon(Icons.arrow_back, color: Colors.white),
         ),
         title: Text(
@@ -88,64 +119,63 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             CustomInputField(
               label: 'Họ và tên',
               isRequired: true,
-              initValue: 'ABC',
+              initValue: _fullName,
+              onChanged: (value) => _fullName = value,
             ),
 
             const SizedBox(height: 24),
             Row(
               children: [
                 // Ô mã quốc gia
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      // Bạn có thể dùng CircleAvatar kết hợp Image.asset cho lá cờ thực tế
-                      Container(
-                        width: 20,
-                        height: 14,
-                        color: Colors.red, // Mô phỏng cờ VN
-                        child: const Center(
-                          child: Icon(
-                            Icons.star,
-                            color: Colors.yellow,
-                            size: 10,
-                          ),
+                InkWell(
+                  onTap: _showCountryPicker,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          _selectedCountry['flag']!,
+                          style: const TextStyle(fontSize: 18),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        '(+84)',
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_drop_down, size: 20),
-                    ],
+                        const SizedBox(width: 8.0),
+                        Text(
+                          '${_selectedCountry['code']}',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(width: 4.0),
+                        const Icon(Icons.arrow_drop_down, size: 20),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 // Ô nhập số
-                const Expanded(
+                Expanded(
                   child: CustomInputField(
                     label: 'Số điện thoại',
                     isRequired: true,
-                    initValue: '0706110630',
+                    initValue: _phoneNumber,
                     keyboardInputType: TextInputType.phone,
+                    onChanged: (value) => _phoneNumber = value,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            const CustomInputField(
+            CustomInputField(
               label: 'Email',
               isRequired: true,
-              hintText: '',
+              hintText: _email,
+              onChanged: (value) => _email = value,
             ),
             const SizedBox(height: 16),
             InforBanner(
@@ -157,14 +187,15 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
               iconColor: Colors.green,
             ),
             const SizedBox(height: 16),
-            const CustomInputField(
+            CustomInputField(
               isRequired: true,
               label: 'Ngày sinh',
-              initValue: '17/01/2005',
+              initValue: _dob,
               suffixIcon: Icon(
                 Icons.calendar_today_outlined,
                 color: Colors.black87,
               ),
+              onChanged: (value) => _dob = value,
             ),
 
             const SizedBox(height: 24),
@@ -192,7 +223,7 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
                   elevation: 0,
                 ),
                 onPressed: () {
-                  // Xử lý lưu thông tin
+                  _handleSave();
                 },
                 child: const Text(
                   'Lưu',
@@ -207,6 +238,35 @@ class _AccountInfoPageState extends State<AccountInfoPage> {
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showCountryPicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Container();
+      },
+    );
+  }
+
+  void _handleSave() {
+    print('--- THÔNG TIN ĐÃ LƯU ---');
+    print('Tên: $_fullName');
+    print('SĐT: ${_selectedCountry['code']} $_phoneNumber');
+    print('Email: $_email');
+    print('Ngày sinh: $_dob');
+    print('Giới tính: $_gender');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Lưu thông tin thành công!'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
       ),
     );
   }
