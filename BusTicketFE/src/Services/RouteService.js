@@ -9,6 +9,9 @@ const RouteService = {
         if(!params.keyword) params.keyword = null;
         return api.get("/nhaxe/routes", {params:params});
     },
+    getRouteList(){
+        return api.get("/nhaxe/routes/all-routes");
+    }, 
     getRouteStop({routeId, params}){
         return api.get(`/nhaxe/routes/${routeId}`, {params:params});
     },

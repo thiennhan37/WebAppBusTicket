@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,9 @@ public class BusService {
     public BusType getBusType(Long id){
         return busTypeRepository.findById(id)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+    }
+    public List<BusType> getBusTypeList(){
+        return busTypeRepository.findAll();
     }
 
 }

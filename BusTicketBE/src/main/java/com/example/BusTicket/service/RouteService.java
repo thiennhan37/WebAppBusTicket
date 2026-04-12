@@ -101,6 +101,16 @@ public class RouteService {
                 .and(RouteSpecification.hasBusCompany(busCompany.getId()));
         return routeRepository.findAll(spec, fixedPageable).map(routeMapper::toRouteResponse);
     }
+    public List<RouteResponse> getRouteList(){
+        Jwt jwt = JwtHelper.getJwt();
+        String id = jwt.getSubject();
+        CompanyUser user = companyUserRepository.findById(id)
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+        BusCompany busCompany = user.getBusCompany();
+
+        List<Route> responseList = routeRepository.findAll();
+        return responseList.stream().map(routeMapper::toRouteResponse).collect(Collectors.toList());
+    }
     public List<RouteStopResponse> getRouteStopList(Long routeId, String type){
         Jwt jwt = JwtHelper.getJwt();
         String id = jwt.getSubject();

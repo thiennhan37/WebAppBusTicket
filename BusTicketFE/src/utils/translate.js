@@ -8,6 +8,10 @@ const object = {
     "ADMIN": "Quản trị viên", 
     "ACTIVE": "Đang hoạt động", 
     "BLOCKED": "Đã khóa",
+    "OPEN" : "Đang mở", 
+    "CLOSED": "Đã đóng", 
+    "CANCELLED": "Đã hủy", 
+    "SCHEDULED": "Đang lên lịch", 
     "ALL": "Tất Cả", 
 };
 

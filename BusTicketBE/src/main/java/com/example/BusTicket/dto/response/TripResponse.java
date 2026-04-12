@@ -16,11 +16,11 @@ import java.time.LocalDateTime;
 @Builder
 public class TripResponse {
 
-    private String busCompanyId;
+    private String id;
     private String licensePlate, driver;
     private String status;
     private LocalDateTime departureTime;
-    private Long routeId;
-    private Long busTypeId;
+    private RouteResponse route;
+    private String busType;
     private Long price;
 }

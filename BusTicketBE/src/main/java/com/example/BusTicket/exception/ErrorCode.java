@@ -17,15 +17,15 @@ public enum ErrorCode {
 
 
 
-    COMPANY_NOT_EXISTED(4001, "Company not existed", HttpStatus.BAD_REQUEST),
-    EMAIL_EXISTED(4002, "Email existed", HttpStatus.BAD_REQUEST),
-    ACCOUNT_NOT_EXISTED(4003, "Account not existed", HttpStatus.BAD_REQUEST),
-    ACCOUNT_BLOCKED(4004, "Account has been blocked", HttpStatus.FORBIDDEN),
-    HOTLINE_EXISTED(4004, "Hotline has been existed", HttpStatus.BAD_REQUEST),
-    INFO_EXISTED(4005, "Information has been existed", HttpStatus.BAD_REQUEST),
-    NOT_EXISTED(4006, "Not existed", HttpStatus.BAD_REQUEST),
-    ROUTE_NOT_EXISTED(4007, "Route not existed", HttpStatus.BAD_REQUEST),
-    INVALID_DEPARTURE_TIME(4008, "Invalid departure time", HttpStatus.BAD_REQUEST),
+    COMPANY_NOT_EXISTED(4001, "Nhà xe không tồn tại", HttpStatus.BAD_REQUEST),
+    EMAIL_EXISTED(4002, "Email này đã được sử dụng", HttpStatus.BAD_REQUEST),
+    ACCOUNT_NOT_EXISTED(4003, "Tài khoản không tồn tại", HttpStatus.BAD_REQUEST),
+    ACCOUNT_BLOCKED(4004, "Tài khoản đã bị khóa", HttpStatus.FORBIDDEN),
+    HOTLINE_EXISTED(4004, "Số hotline đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
+    INFO_EXISTED(4005, "Thông tin đã tồn tại", HttpStatus.BAD_REQUEST),
+    NOT_EXISTED(4006, "Dữ liệu không tồn tại", HttpStatus.BAD_REQUEST),
+    ROUTE_NOT_EXISTED(4007, "Tuyến đường không tồn tại", HttpStatus.BAD_REQUEST),
+    INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành không hợp lệ", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

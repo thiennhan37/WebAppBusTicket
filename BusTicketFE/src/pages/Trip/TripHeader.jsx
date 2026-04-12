@@ -1,7 +1,19 @@
 import React from 'react';
-import { Search, Plus, Calendar, Filter } from 'lucide-react';
-
-const TripHeader = ({ setIsAddModalOpen, searchQuery, setSearchQuery }) => {
+import { Search, Plus, Calendar, Filter, ChevronDown } from 'lucide-react';
+import InputGroup from '../../components/other/InputGroup';
+import { useState, useEffect } from 'react';
+import BusService from '../../Services/BusService';
+const TripHeader = ({setIsAddModalOpen, searchParams, updateFilter, dateValue, setDateValue }) => {
+  // test = "da thay doi";
+  const [busTypeList, setBusTypeList] = useState([]);
+  useEffect(() => {
+    const fetchData = async() => {
+      const result = (await BusService.getBusTypeList()).data.result;
+      const busTypeList = result.map((busType) => busType.name);
+      setBusTypeList(busTypeList);
+    }
+    fetchData();
+  }, []);
     return (
     <div>
         {/* Header Section */}
@@ -21,28 +33,25 @@ const TripHeader = ({ setIsAddModalOpen, searchQuery, setSearchQuery }) => {
 
       {/* Filter & Search Bar - App-like card */}
       <div className="bg-white py-2 px-4 rounded-2xl shadow-sm border border-slate-100 mb-0 flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-slate-400" />
+          
+          <div className='flex-1'>
+            <InputGroup label="Tìm kiếm" placeholder="Tìm kiếm theo chuyến đi, tuyến đường" icon={Search} 
+              value={searchParams.get("keyword")} onChange={(e) => updateFilter({field: "keyword", value: e.target.value})} />
           </div>
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm theo ID, Tuyến đường..." 
-            className="block w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
-            <Calendar size={18} />
-            <span className="hidden sm:inline">Ngày đi</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
-            <Filter size={18} />
-            <span className="hidden sm:inline">Lọc</span>
-          </button>
-        </div>
+          
+          <div className='flex-1 flex gap-3'>
+            <InputGroup label="Thời gian xuất bến" type="date" value={dateValue} 
+              onChange={(e) => {
+                setDateValue(e.target.value)
+                updateFilter({field: "date", value: e.target.value})}} />
+            
+            <InputGroup label="Trạng thái" type="select" options={['Tất Cả', "Đang mở", 'Đã hủy', "Đang lên lịch", "Đã đóng"]}
+              onChange={(e) => updateFilter({field: "status", value: e.target.value})} value={searchParams.get("status")}/>
+            
+            <InputGroup label="Phương tiện" type="select" options={['Tất Cả', ...busTypeList]} 
+              onChange={(e) => updateFilter({field: "busType", value: e.target.value})} value={searchParams.get("busType")}/>
+          </div>
+          
       </div>
     </div>
           

@@ -14,14 +14,14 @@ import java.time.LocalDateTime;
 @Getter
 public class TripCrRequest {
     @NotNull
-    private String busCompanyId;
-    private String licensePlate, driver;
-    @NotNull
     private LocalDateTime departureTime;
     @NotNull
     private Long routeId;
     @NotNull
     private Long busTypeId;
+    @NotNull
     private Long price;
+    private String licensePlate, driver;
+
 
 }

@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 
 @RequiredArgsConstructor
@@ -22,5 +24,9 @@ public class BusController {
     @GetMapping("/bus-type/{id}")
     ApiResponse<BusType> getBusType(@PathVariable("id") Long id){
         return ApiResponse.success(busService.getBusType(id));
+    }
+    @GetMapping("/bus-type")
+    ApiResponse<List<BusType>> getBusTypeList(){
+        return ApiResponse.success(busService.getBusTypeList());
     }
 }

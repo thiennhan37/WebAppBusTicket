@@ -36,6 +36,11 @@ public class RouteController {
         Page<RouteResponse> responsePage = routeService.getRoutePage(arrival, destination, keyword, pageable);
         return ApiResponse.success(new PagedModel<>(responsePage));
     }
+    @GetMapping("/routes/all-routes")
+    ApiResponse<List<RouteResponse>> getRouteList(){
+        List<RouteResponse> responseList = routeService.getRouteList();
+        return ApiResponse.success(responseList);
+    }
     @GetMapping("/routes/{id}")
     ApiResponse<List<RouteStopResponse>> getRouteStopList(@PathVariable("id") Long routeId, @RequestParam(required = true) String type){
         return ApiResponse.success(routeService.getRouteStopList(routeId, type));

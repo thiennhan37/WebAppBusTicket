@@ -7,11 +7,11 @@ import com.example.BusTicket.entity.Trip;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {RouteMapper.class})
 public interface TripMapper {
-    @Mapping(target = "routeId", source = "route.id")
-    @Mapping(target = "busCompanyId", source = "busCompany.id")
-    @Mapping(target = "busTypeId", source = "busType.id")
+    @Mapping(target = "route", source = "route")
+    @Mapping(target = "busType", source = "busType.name")
+//    @Mapping(target = "id", source = "id")
     TripResponse toTripResponse(Trip trip);
 
 

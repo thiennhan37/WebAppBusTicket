@@ -13,4 +13,5 @@ import java.util.List;
 @Repository
 public interface RouteRepository extends JpaRepository<Route, Long> {
     Page<Route> findAll(Specification specification, Pageable pageable);
+    List<Route> findAll();
 }
