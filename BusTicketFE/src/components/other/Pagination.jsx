@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Pagination = ({ page, totalPages = 10, onPageChange }) => {
   const [inputValue, setInputValue] = useState(page);
 
   // Sync input khi page thay đổi từ parent
-  React.useEffect(() => {
+  useEffect(() => {
     setInputValue(page);
   }, [page]);
 
@@ -22,7 +22,6 @@ const Pagination = ({ page, totalPages = 10, onPageChange }) => {
         handleSubmit(Number(inputValue));
         
     }
-     
   };
 
   const handleBlur = () => handleSubmit(Number(inputValue));

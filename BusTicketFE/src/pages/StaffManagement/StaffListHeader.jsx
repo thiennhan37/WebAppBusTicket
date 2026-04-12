@@ -5,18 +5,12 @@ import InputGroup from '../../components/other/InputGroup';
 const StaffListHeader = ({setRightPanelMode, filterParams, setFilterParams}) => {
   console.log("reload listHeader")
   const onChangeRole = (e) => {
-    const role = e.target.value;
-    setFilterParams((prev) =>({
-      ...prev, 
-      role: role, 
-    }))
+    const newParams = {...filterParams, role: e.target.value}
+    setFilterParams(newParams)
   }
   const onChangeStatus = (e) => {
-    const status = e.target.value;
-    setFilterParams((prev) =>({
-      ...prev, 
-      status: status, 
-    }))
+    const newParams = {...filterParams, status: e.target.value}
+    setFilterParams(newParams)
   }
   return (
     <div className="px-6 border-b border-slate-100 pb-5 pt-3">

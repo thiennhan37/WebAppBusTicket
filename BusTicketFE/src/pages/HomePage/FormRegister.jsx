@@ -1,12 +1,19 @@
 import {Mail, Lock, User, X, Building2, Building, PhoneCall, Phone} from "lucide-react"
 import { useState } from "react";
 import validator from 'validator';
+import { useMutation } from "@tanstack/react-query";
+import AuthenticateService from "../../Services/authenticate";
+import LoadingOverlay from "../../components/other/LoadingOverlay";
+import StatusModal from "../../components/other/StatusModal";
 const FormRegister = ({setShowModal, setAuthMode}) => {
     const [phone, setPhone] = useState("");
     const [errorPhone, setErrorPhone] = useState("");
     const validatePhone = () =>{
-        if(validator.isMobilePhone(phone, "vi-VN") || !phone) setErrorPhone("");
-        else setErrorPhone("Số điện thoại không hợp lệ")
+        let message = "";
+        if(validator.isMobilePhone(phone, "vi-VN")) message = "";
+        else message = "Số điện thoại không hợp lệ";
+        setErrorPhone(message);
+        return message;
     }
     const handlePhoneChange = (e) =>{
         const value = e.target.value.replace(/\D/g, "");
@@ -16,16 +23,77 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
     const [email, setEmail] = useState("");
     const [errorEmail, setErrorEmail] = useState("");
     const validateEmail = () =>{
-        // console.log(1);
-        if(validator.isEmail(email) || !email) setErrorEmail("");
-        else setErrorEmail("Email không hợp lệ")
+        let message = "";
+        if(validator.isEmail(email)) message = "";
+        else message = "Email không hợp lệ";
+        setErrorEmail(message);
+        return message;
     }
     const handleEmailChange = (e) =>{
-        // console.log(2);
         setEmail(e.target.value);
     }
+    const [hostName, setHostName] = useState("");
+    const [errorHostName, setErrorHostName] = useState("");
+    const validateHostName = () =>{
+        let message = "";
+        if(hostName && validator.isLength(hostName, { min: 2, max: 100 })) message = "";
+        else message = "Tên không hợp lệ";
+        setErrorHostName(message);
+        return message;
+    }
+    const [companyName, setCompanyName] = useState("");
+    const [errorCompanyName, setErrorCompanyName] = useState("");
+    const validateCompanyName = () =>{
+        let message = "";
+        if(companyName && validator.isLength(companyName, { min: 2, max: 100 })) message = "";
+        else message = "Tên công ty không hợp lệ";
+        setErrorCompanyName(message);
+        return message;
+    }
+    const [reportRegister, setReportRegister] = useState("");
+    const hideReportRegister = () =>  setReportRegister("");
+    const [errorRegister, setErrorRegister] = useState("");
+    const handleErrorRegister = (message) => {
+        setErrorRegister(message);
+        setTimeout(() => {
+            setErrorRegister("");
+        }, 3000);
+    }
+    const handleRegister = () => {
+        const errorHostName = validateHostName();
+        const errorCompanyName = validateCompanyName();
+        const errorEmail = validateEmail();
+        const errorPhone = validatePhone();
 
+        if(errorHostName || errorCompanyName || errorEmail || errorPhone){
+            // console.log("validation errors", {errorHostName, errorCompanyName, errorEmail, errorPhone});
+            return;
+        }
+        // console.log("registering with", {email, phone, companyName, hostName});
+        register({email, hotline:phone, companyName, hostName});
+    }
+    const {mutate: register, } = useMutation({
+        mutationFn: async (data) => {
+            const result = await AuthenticateService.registerCompany(data);
+            return result;
+        }, 
+        onMutate: () => {
+            setReportRegister("pending");
+        },
+        onError: () => {
+            hideReportRegister();
+            handleErrorRegister('Thông tin đăng ký không hợp lệ hoặc đã tồn tại');
+        }, 
+        onSuccess: () => {
+            setEmail("");
+            setPhone("");
+            setCompanyName("");
+            setHostName("");
+            setReportRegister("success");
+        }
+    });
     
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div 
@@ -49,30 +117,58 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                     </p>
                 </div>
 
-                <form className="" onSubmit={(e) => e.preventDefault()}>
-
+                <form className="" onSubmit={(e) => {
+                    e.preventDefault();
+                    handleRegister();
+                }}>
                     <div className="relative">
-                        <User className="absolute left-4 top-4 text-gray-400" size={18} />
+                        <User className={`absolute left-4 top-4 transition-colors ${errorHostName ? 'text-red-500' : 'text-gray-400'}`} size={18} />
                         <input 
-                        type="text" 
-                        placeholder="Full Name"
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl 
-                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                            type="text" 
+                            placeholder="Host Name"
+                            className={`w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all
+                            ${errorHostName 
+                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 bg-red-50' 
+                                : 'border-gray-100 focus:ring-2 focus:ring-blue-500 focus:bg-white'
+                                }`}
+                            value={hostName}
+                            onChange={(e) => setHostName(e.target.value)}
+                            onFocus={() => {setErrorHostName("")}}
                         />
-                        <div className="min-h-[20px]"></div>
+                        <div className="min-h-[26px] pl-4">
+                            {errorHostName && (
+                                <p className="text-sm text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                                    {errorHostName}
+                                </p>
+                            )}
+                        </div>
                     </div>
                     
 
                     <div className="relative">
 
-                        <Building2 className="absolute left-4 top-4 text-gray-400" size={18} />
+                        <Building2 className={`absolute left-4 top-4 transition-colors ${errorCompanyName ? 'text-red-500' : 'text-gray-400'}`} size={18} />
                         <input 
                             type="text" 
                             placeholder="Company Name"
-                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl 
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                            className={`w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl 
+                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all
+                            ${errorCompanyName 
+                                ? 'border-red-500 focus:ring-2 focus:ring-red-500 bg-red-50' 
+                                : 'border-gray-100 focus:ring-2 focus:ring-blue-500 focus:bg-white'
+                                }`}
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                            onFocus={() => {setErrorCompanyName("")}}
                         />
-                        <div className="min-h-[20px]"></div>
+                        <div className="min-h-[26px] pl-4">
+                            {errorCompanyName && (
+                                <p className="text-sm text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                                    {errorCompanyName}
+                                </p>
+                            )}
+                        </div>
                     </div>
                     
 
@@ -88,7 +184,6 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                                 : 'border-gray-100 focus:ring-2 focus:ring-blue-500 focus:bg-white'
                                 }`}
                             value={email}
-                            onBlur={validateEmail}
                             onChange={handleEmailChange}
                             onFocus={() => {setErrorEmail("")}}
                         />
@@ -112,7 +207,6 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                                 ? 'border-red-500 focus:ring-2 focus:ring-red-200 bg-red-50' 
                                 : 'border-gray-100 focus:ring-2 focus:ring-blue-500 focus:bg-white'
                                 }`}
-                            onBlur={validatePhone}
                             onChange={handlePhoneChange}
                             onFocus={() => {setErrorPhone("")}}
                         />
@@ -125,9 +219,16 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                         </div>
                     </div>
 
-
-                    <button className="mt-3 w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all transform active:scale-[0.98] ">
-                    Create Account
+                    <div className="min-h-[30px] pt-3">
+                        {errorRegister && (
+                            <p className="text-sm text-left text-red-500 font-medium animate-in fade-in slide-in-from-top-1">
+                                {errorRegister}
+                            </p>
+                        )}
+                    </div>
+                    <button className="mt-3 w-full py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all transform active:scale-[0.98] "
+                    >
+                        Create Account
                     </button>
                 </form>
 
@@ -139,6 +240,10 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
                 </div>
                 </div>
             </div>
+
+          {/* {reportRegister === "pending" && <LoadingOverlay ></LoadingOverlay>} */}
+          {reportRegister === "success" && <StatusModal type="success" message={"Đăng ký thành công"} 
+            onClose={() => {hideReportRegister(); setShowModal(false)}}></StatusModal>}
         </div>
     )
 }

@@ -60,10 +60,10 @@ const StaffCreate = ({newStaff, setNewStaff, setRightPanelMode, handleCreateStaf
                   <InputGroup label="Số điện thoại" value={newStaff.phone}  
                     onChange={(e) => handleInputChange("phone", e.target.value.replace(/\D/g, ""))} error={errorPhone}/>
 
-                  <InputGroup label="Chức vụ" type="select" options={["QUẢN LÍ", "NHÂN VIÊN"]} value={newStaff.role} onChange={(e) => handleInputChange('role', e.target.value)} />
+                  <InputGroup label="Chức vụ" type="select" options={["Quản lí", "Nhân viên"]} value={newStaff.role} onChange={(e) => handleInputChange('role', e.target.value)} />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <InputGroup label="Giới tính" type="select" options={["MALE", "FEMALE"]} 
+                <InputGroup label="Giới tính" type="select" options={["Nam", "Nữ", "Khác"]} 
                     value={newStaff.gender} onChange={(e) => handleInputChange("gender", e.target.value)}/>
                 <InputGroup label="Ngày sinh" type="date" value={newStaff.dob}
                   onChange={(e) => handleInputChange("dob", e.target.value)} error={errorDob}/>   

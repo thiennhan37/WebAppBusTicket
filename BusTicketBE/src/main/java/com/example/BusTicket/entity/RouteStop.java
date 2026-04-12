@@ -8,8 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Entity
-@Builder @NoArgsConstructor
-@AllArgsConstructor
+@Builder @NoArgsConstructor @AllArgsConstructor
 public class RouteStop {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

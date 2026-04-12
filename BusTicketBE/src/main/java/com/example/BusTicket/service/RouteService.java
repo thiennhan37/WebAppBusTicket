@@ -87,7 +87,7 @@ public class RouteService {
         routeStopRepository.saveAll(allRouteStop);
         return route;
     }
-    public Page<RouteResponse> getRoutePage(String arrival, String destination, Pageable pageable){
+    public Page<RouteResponse> getRoutePage(String arrival, String destination, String keyword, Pageable pageable){
         Jwt jwt = JwtHelper.getJwt();
         String id = jwt.getSubject();
         CompanyUser user = companyUserRepository.findById(id)
@@ -97,8 +97,19 @@ public class RouteService {
         Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 5);
         Specification<Route> spec = Specification.where(RouteSpecification.hasArrival(arrival))
                 .and(RouteSpecification.hasDestination(destination))
+                .and(RouteSpecification.containsKeyword(keyword))
                 .and(RouteSpecification.hasBusCompany(busCompany.getId()));
         return routeRepository.findAll(spec, fixedPageable).map(routeMapper::toRouteResponse);
+    }
+    public List<RouteResponse> getRouteList(){
+        Jwt jwt = JwtHelper.getJwt();
+        String id = jwt.getSubject();
+        CompanyUser user = companyUserRepository.findById(id)
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+        BusCompany busCompany = user.getBusCompany();
+
+        List<Route> responseList = routeRepository.findAll();
+        return responseList.stream().map(routeMapper::toRouteResponse).collect(Collectors.toList());
     }
     public List<RouteStopResponse> getRouteStopList(Long routeId, String type){
         Jwt jwt = JwtHelper.getJwt();
@@ -106,16 +117,30 @@ public class RouteService {
         CompanyUser user = companyUserRepository.findById(id)
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
         BusCompany busCompany = user.getBusCompany();
-        Route route = routeRepository.getReferenceById(routeId);
-        try{
-            if( ! busCompany.getId().equals(route.getBusCompany().getId()))
-                throw new MyAppException(ErrorCode.ACCESS_DENIED);
-        }catch(Exception exception){
-            throw new MyAppException(ErrorCode.COMPANY_NOT_EXISTED);
-        }
+        Route route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_NOT_EXISTED));
+        if( ! busCompany.getId().equals(route.getBusCompany().getId()))
+            throw new MyAppException(ErrorCode.ACCESS_DENIED);
+
         return routeStopRepository.findAllByRouteIdAndType(routeId, type)
                 .stream().map(routeStopMapper::toRouteStopResponse).toList();
     }
+//    public List<RouteStopResponse> getStopBy(Long routeId, String type){
+//        Jwt jwt = JwtHelper.getJwt();
+//        String id = jwt.getSubject();
+//        CompanyUser user = companyUserRepository.findById(id)
+//                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+//        BusCompany busCompany = user.getBusCompany();
+//        Route route = routeRepository.getReferenceById(routeId);
+//        try{
+//            if( ! busCompany.getId().equals(route.getBusCompany().getId()))
+//                throw new MyAppException(ErrorCode.ACCESS_DENIED);
+//        }catch(Exception exception){
+//            throw new MyAppException(ErrorCode.COMPANY_NOT_EXISTED);
+//        }
+//        return routeStopRepository.findAllByRouteIdAndType(routeId, type)
+//                .stream().map(routeStopMapper::toRouteStopResponse).toList();
+//    }
 
 
 }

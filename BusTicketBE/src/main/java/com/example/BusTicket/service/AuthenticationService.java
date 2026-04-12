@@ -1,6 +1,7 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtInfo;
+import com.example.BusTicket.dto.request.CompanyRegisterRequest;
 import com.example.BusTicket.dto.request.LoginRequest;
 import com.example.BusTicket.dto.request.LogoutRequest;
 import com.example.BusTicket.dto.request.RefreshTokenRequest;
@@ -8,13 +9,17 @@ import com.example.BusTicket.dto.response.AuthenticationResponse;
 import com.example.BusTicket.dto.general.InfoAccount;
 import com.example.BusTicket.dto.response.CompanyUserResponse;
 import com.example.BusTicket.dto.response.RefreshTokenResponse;
+import com.example.BusTicket.entity.CompanyRegister;
 import com.example.BusTicket.entity.CompanyUser;
 import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.enums.RoleEnum;
 import com.example.BusTicket.enums.StatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
+import com.example.BusTicket.mapper.CompanyRegisterMapper;
 import com.example.BusTicket.mapper.CompanyUserMapper;
+import com.example.BusTicket.repository.jpa.BusCompanyRepository;
+import com.example.BusTicket.repository.jpa.CompanyRegisterRepository;
 import com.example.BusTicket.repository.jpa.CompanyUserRepository;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +41,10 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
     private final CompanyUserMapper companyUserMapper;
+    private final CompanyRegisterRepository companyRegisterRepository;
+    private final BusCompanyRepository busCompanyRepository;
+    private final CompanyRegisterMapper companyRegisterMapper;
+
     @Value("${jwt.accessTime}")
     private long accessTime;
     @Value("${jwt.refreshTime}")
@@ -77,6 +86,13 @@ public class AuthenticationService {
         saveInvalidToken(accessToken);
         saveInvalidToken(refreshToken);
 
+    }
+    public CompanyRegister registerCompany(CompanyRegisterRequest request){
+        if(busCompanyRepository.existsByEmail(request.getEmail())) throw new MyAppException(ErrorCode.EMAIL_EXISTED);
+        if(busCompanyRepository.existsByHotline(request.getHotline())) throw new MyAppException(ErrorCode.HOTLINE_EXISTED);
+        if(companyRegisterRepository.existsByEmailOrHotline(request.getEmail(), request.getHotline()))
+            throw new MyAppException(ErrorCode.INFO_EXISTED);
+        return companyRegisterRepository.save(companyRegisterMapper.toCompanyRegister(request));
     }
     public RefreshTokenResponse refreshToken(RefreshTokenRequest request)
             throws ParseException, JOSEException {

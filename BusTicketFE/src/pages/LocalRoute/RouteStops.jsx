@@ -21,7 +21,7 @@ const RouteStops = ({ routeId }) => {
 
   const upRouteStop = data?.upResponse || [];
   const downRouteStop = data?.downResponse || [];
-  console.log("upRouteStop", upRouteStop);
+
 
   // Đóng dropdown khi click ra ngoài
   useEffect(() => {
@@ -35,7 +35,7 @@ const RouteStops = ({ routeId }) => {
   }, [isOpen]);
   return (
     <div className="relative inline-block" ref={dropdownRef}>
-      
+
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`p-2 transition-all duration-200 rounded-full hover:bg-blue-50 focus:outline-none ring-offset-2 ${
@@ -48,13 +48,13 @@ const RouteStops = ({ routeId }) => {
       {/* Dropdown Menu */}
       {isOpen && (
         <div 
-          className="absolute right-0 mt-3 w-72 md:w-80 bg-white rounded-xl shadow-2xl border border-gray-100 ring-1 ring-black ring-opacity-5 focus:outline-none z-[999]"
+          className="absolute left-0 bottom-full mb-3 w-[350px] md:w-[450px] bg-white rounded-xl shadow-2xl border border-gray-100 ring-1 ring-black ring-opacity-5 focus:outline-none z-[999]"
           style={{ filter: 'drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1))' }}
         >
           {/* Mũi tên nhỏ (Tooltip Arrow) */}
-          <div className="absolute -top-1.5 left-4 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45 transform"></div>
+          <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-white border-b border-r border-gray-100 rotate-45 transform"></div>
 
-          <div className="relative p-4 max-h-[400px] overflow-y-auto">
+          <div className="relative p-4 overflow-y-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-4 space-x-2">
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
@@ -62,9 +62,9 @@ const RouteStops = ({ routeId }) => {
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="flex w-full gap-2">
                 {/* Nhóm Điểm Đón */}
-                <section>
+                <section className="flex-1">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700">Điểm đón khách</h4>
@@ -82,7 +82,7 @@ const RouteStops = ({ routeId }) => {
                 <div className="border-t border-gray-50" />
 
                 {/* Nhóm Điểm Trả */}
-                <section>
+                <section className="flex-1">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-rose-700">Điểm trả khách</h4>

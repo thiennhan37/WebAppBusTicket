@@ -4,10 +4,10 @@ import com.example.BusTicket.entity.Stop;
 import org.springframework.data.jpa.domain.Specification;
 
 public class StopSpecification {
-    public static Specification<Stop> hasProvinceId(String provinceId) {
+    public static Specification<Stop> hasProvinceName(String provinceName) {
         return (root, query, cb) -> {
-            if(provinceId == null) return cb.conjunction();
-            return cb.equal(root.get("province").get("id"), provinceId);
+            if(provinceName == null) return cb.conjunction();
+            return cb.equal(root.get("province").get("name"), provinceName);
         };
     }
 
@@ -16,8 +16,7 @@ public class StopSpecification {
             if(keyword == null) return cb.conjunction();
             String pattern = "%" + keyword.toLowerCase() + "%";
             return cb.or(
-                    cb.like(cb.lower(root.get("name")), pattern),
-                    cb.like(cb.lower(root.get("address")), pattern)
+                    cb.like(cb.lower(root.get("name")), pattern)
             );
         };
     }

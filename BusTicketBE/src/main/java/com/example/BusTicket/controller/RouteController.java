@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,9 +30,16 @@ public class RouteController {
         return ApiResponse.success(routeService.createRoute(request));
     }
     @GetMapping("/routes")
-    ApiResponse<Page<RouteResponse>> getRouteList(@RequestParam(required = false) String arrival,
-                                                  @RequestParam(required = false) String destination, Pageable pageable){
-        return ApiResponse.success(routeService.getRoutePage(arrival, destination, pageable));
+    ApiResponse<PagedModel<RouteResponse>> getRoutePage(@RequestParam(required = false) String arrival,
+                                                        @RequestParam(required = false) String destination,
+                                                        @RequestParam(required = false) String keyword,  Pageable pageable){
+        Page<RouteResponse> responsePage = routeService.getRoutePage(arrival, destination, keyword, pageable);
+        return ApiResponse.success(new PagedModel<>(responsePage));
+    }
+    @GetMapping("/routes/all-routes")
+    ApiResponse<List<RouteResponse>> getRouteList(){
+        List<RouteResponse> responseList = routeService.getRouteList();
+        return ApiResponse.success(responseList);
     }
     @GetMapping("/routes/{id}")
     ApiResponse<List<RouteStopResponse>> getRouteStopList(@PathVariable("id") Long routeId, @RequestParam(required = true) String type){

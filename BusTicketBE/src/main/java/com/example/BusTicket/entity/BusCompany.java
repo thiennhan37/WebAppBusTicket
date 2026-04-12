@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 public class BusCompany {
     @Id
     private String id;
-    private String name, hotline, avatarUrl, email, policy;
+    private String hostName, companyName, hotline, avatarUrl, email, policy;
     private LocalDateTime createdAt;
+
 }

@@ -10,22 +10,24 @@ const StaffService = {
         params.status = (status === "Tất Cả" ? null : toEng(status));
         const page = params.page;
         params.page = (page > 0 ? page - 1 : 0);
-        console.log(params);
+        // console.log(params);
         return api.get("/nhaxe/member", {params: params});
     },
     createStaff(staff){
         const userRaw = localStorage.getItem("user")
         const user = userRaw ? JSON.parse(userRaw) : null;
         
-        const newStaff = {...staff, busCompanyId:user.busCompanyId, role: toEng(staff.role)};
-        console.log("create:", newStaff);
+        const newStaff = {...staff, 
+            busCompanyId:user.busCompanyId, 
+            role: toEng(staff.role), gender: toEng(staff.gender)};
+
+        // console.log("create:", newStaff);  
 
         return api.post("/nhaxe/member", newStaff);
     }, 
     updateStaff(staff){
-        const updatedStaff = {...staff}
-        return api.put(`/nhaxe/member/${staff.id}`, updatedStaff)
+        console.log("update:", staff);
+        return api.put(`/nhaxe/member/${staff.id}`, staff)
     }
 }
-
 export default StaffService
