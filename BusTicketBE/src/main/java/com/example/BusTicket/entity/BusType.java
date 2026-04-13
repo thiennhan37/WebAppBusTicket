@@ -18,6 +18,7 @@ public class BusType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    private Long totalSeat;
 
     @Convert(converter = DiagramConverter.class)
     @Column(columnDefinition = "json") // định dạng object type cho column

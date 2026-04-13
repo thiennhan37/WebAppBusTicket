@@ -26,6 +26,7 @@ public enum ErrorCode {
     NOT_EXISTED(4006, "Dữ liệu không tồn tại", HttpStatus.BAD_REQUEST),
     ROUTE_NOT_EXISTED(4007, "Tuyến đường không tồn tại", HttpStatus.BAD_REQUEST),
     INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành không hợp lệ", HttpStatus.BAD_REQUEST),
+    BUS_BUSY(4009, "Xe đã có lịch trình khác trong khoảng thời gian này", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

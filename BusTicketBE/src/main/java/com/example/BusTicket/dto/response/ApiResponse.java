@@ -26,5 +26,4 @@ public class ApiResponse<T> {
                 .message(errorCode.getMessage())
                 .build();
     }
-
 }

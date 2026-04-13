@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+
 import { 
   LayoutDashboard, Users, Tickets, Route, 
   BarChart3, BusFront, ChartNoAxesCombined , Star 
@@ -9,7 +9,7 @@ import UserProfile from "./UserProfile";
 const menuItems = [
   { icon: LayoutDashboard, label: 'Tổng quan', link:'overview', active: true },
   { icon: BusFront, label: 'Chuyến đi', link:'trips', active: false },
-  { icon: Tickets, label: 'Vé', link:'tickets', active: false },
+  { icon: Tickets, label: 'Vé', link:'ticket', active: false },
   { icon: Route, label: 'Tuyến đường', link:'local-routes', active: false },
   { icon: Users, label: 'Nhân sự', link:'staff', active: false },
   { icon: ChartNoAxesCombined, label: 'Thống kê', link:'report', active: false },
@@ -21,7 +21,7 @@ const SideBar = () =>{
     //     e.preventDefault(); 
     //     setActiveTab(navName);
     // };
-    const {user} = useContext(AuthContext)
+    // const {user} = useContext(AuthContext)
     return (
     <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col">
       {/* Logo Section */}
@@ -31,7 +31,7 @@ const SideBar = () =>{
 
       {/* Navigation Links */}
       <nav className="flex-1 px-4 space-y-1">
-        {menuItems.map((item, index) => (
+        {menuItems.map((item) => (
           <NavLink
             key={item.link}
             to={`/nhaxe/${item.link}`}

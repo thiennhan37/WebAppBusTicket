@@ -79,13 +79,11 @@ public class AuthenticationService {
                 .company(user.getBusCompany())
                 .build();
     }
-    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+    public void logout(LogoutRequest request, String refreshToken) throws ParseException, JOSEException {
         String accessToken = request.getAccessToken();
-        String refreshToken = request.getRefreshToken();
 
         saveInvalidToken(accessToken);
         saveInvalidToken(refreshToken);
-
     }
     public CompanyRegister registerCompany(CompanyRegisterRequest request){
         if(busCompanyRepository.existsByEmail(request.getEmail())) throw new MyAppException(ErrorCode.EMAIL_EXISTED);
@@ -94,9 +92,9 @@ public class AuthenticationService {
             throw new MyAppException(ErrorCode.INFO_EXISTED);
         return companyRegisterRepository.save(companyRegisterMapper.toCompanyRegister(request));
     }
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest request)
+    public RefreshTokenResponse refreshToken(String refreshToken)
             throws ParseException, JOSEException {
-        String refreshToken = request.getRefreshToken();
+
         JwtInfo jwtInfo = jwtService.parseToken(refreshToken);
 
         InfoAccount user = null;

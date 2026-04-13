@@ -65,7 +65,7 @@ const StaffManagement = () => {
         console.log(error);
       }
     }, 
-    placeholderData: keepPreviousData, // Giữ dữ liệu cũ trong khi tải trang mới (tránh nhấp nháy UI)
+    placeholderData: keepPreviousData,
     staleTime: 0, 
   });
 

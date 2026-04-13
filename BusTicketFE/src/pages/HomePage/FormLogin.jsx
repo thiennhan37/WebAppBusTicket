@@ -30,6 +30,7 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
         try{
             const response = await authenticate.loginCompany({email, password});
             // console.log(response);
+            console.log("login response: ", response.data);
             login(response.data.result);
             navigate("/nhaxe/overview");
             

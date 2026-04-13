@@ -5,24 +5,23 @@ const timeout = 5000;
 export const publicApi = axios.create({
 	baseURL: appURL, 
 	timeout: timeout, 
+	withCredentials: true, 
 	headers: {
 		"Content-Type": "application/json"
 	}
 });
 publicApi.interceptors.response.use(
 	(config) => {
-		// console.log(config)
 		return config;
 	}, 
 	(error) =>{
-		// console.log(error);
 		return Promise.reject(error);
 	}
 )
 
 const api = axios.create({
 	baseURL: appURL,
-	//   withCredentials: true,
+	// withCredentials: true,
 	timeout: timeout,
 	headers: {
 		"Content-Type": "application/json"
@@ -73,7 +72,7 @@ api.interceptors.response.use(
 
 				try {
 				// 1. Gọi API lấy token mới (thường dùng Refresh Token lưu trong Cookie hoặc LocalStorage)
-					const res = await publicApi.post("/auth/refresh-token", {refreshToken: localStorage.getItem("refreshToken")})
+					const res = await publicApi.post("/auth/refresh-token", {})
 					// console.log(res);
 					const { accessToken } = res.data.result;
 					localStorage.setItem("accessToken", accessToken);
@@ -113,7 +112,7 @@ api.interceptors.response.use(
 				);
 			});
 		}
-		// else if()
+	
 
 		return Promise.reject(error);
 	}

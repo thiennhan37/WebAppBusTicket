@@ -1,5 +1,4 @@
 import { toEng } from "../utils/translate";
-import { publicApi } from "./api";
 import api from "./api";
 
 const TripService = {

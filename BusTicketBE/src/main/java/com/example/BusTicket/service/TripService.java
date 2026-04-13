@@ -46,6 +46,9 @@ public class TripService {
         BusCompany busCompany = companyUser.getBusCompany();
 //        if( !busCompany.getId().equals(request.getBusCompanyId()))
 //            throw new MyAppException(ErrorCode.ACCESS_DENIED);
+        if(tripRepository.existsByLicensePlateAndDepartureTime(request.getLicensePlate(), request.getDepartureTime()))
+            throw new MyAppException(ErrorCode.BUS_BUSY);
+
         Trip trip = Trip.builder()
                 .id(IdUtil.generateID())
                 .busCompany(busCompany)
@@ -55,6 +58,7 @@ public class TripService {
                 .driver(request.getDriver())
                 .status(TripStatusEnum.SCHEDULED.name())
                 .departureTime(request.getDepartureTime())
+                .price(request.getPrice())
                 .build();
         try{
             tripRepository.save(trip);
