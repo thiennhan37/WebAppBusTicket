@@ -249,7 +249,47 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return Container();
+        return Container(
+          padding: const EdgeInsets.only(top: 16),
+          height: 400,
+          child: Column(
+            children: [
+              const Text(
+                'Chọn quốc gia/ Vùng lãnh thổ',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _countries.length,
+                  itemBuilder: (context, index) {
+                    final country = _countries[index];
+                    return ListTile(
+                      leading: Text(
+                        country['flag']!,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      title: Text(country['name']!),
+                      trailing: Text(
+                        country['code']!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          _selectedCountry = country;
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
