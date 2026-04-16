@@ -9,7 +9,6 @@ const AuthenticateService = {
         return publicApi.post("/nhaxe/auth/login", {email, password});
     }, 
     logout({accessToken}){
-        console.log(accessToken);
         return publicApi.post("/auth/logout", {accessToken});
     }, 
     registerCompany({email, hostName, companyName, hotline}){

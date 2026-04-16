@@ -18,7 +18,7 @@ public class TripSpecification {
 
     public static Specification<Trip> hasStatus(String status) {
         return (root, query, cb) -> {
-            if(status == null || status.isEmpty()) return cb.conjunction();
+            if(status == null || status.isBlank()) return cb.conjunction();
             return cb.equal(root.get("status"), status);
         };
     }

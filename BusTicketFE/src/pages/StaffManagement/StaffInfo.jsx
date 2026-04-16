@@ -60,7 +60,7 @@ const StaffInfo = ({selectedStaff, setSelectedStaff, rightPanelMode, setRightPan
                         <div className="grid grid-cols-2 gap-4">
                             <InputGroup label="Số điện thoại" type="text" value={selectedStaff.phone} 
                             onChange={(e) => handleInputChange('phone', e.target.value)} disabled={isManager} error={errorPhone}/>
-                            <InputGroup label="Giới tính" type="select" options={["MALE", "FEMALE"]} 
+                            <InputGroup label="Giới tính" type="select" options={["Nam", "Nữ", "Khác"]} 
                             value={selectedStaff.gender} onChange={(e) => handleInputChange("gender", e.target.value)} disabled={isManager}/>
                         </div>
                         <div className="grid grid-cols-2 gap-4">

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import LoadingOverlay from "../../components/other/LoadingOverlay";
 const StatCards = () =>{
 
-  const { data: info, isLoading } = useQuery({
+  const { data: info, isLoading, isError } = useQuery({
     queryKey: ['staffStats'], 
     queryFn: async () => {
       // console.log("Fetching staff stats...");
@@ -24,7 +24,7 @@ const StatCards = () =>{
   });
     return (
       <div className="relative">
-        {isLoading ? <div /> :
+        {isLoading || isError ? <div /> :
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-4">
             <StatCard title="Tổng Nhân viên" count={info.totalStaff} icon={<Users />} colorClass="bg-blue-600" textColor="text-white" />
             <StatCard title="Nhân viên bán vé" count={info.staffsCount} icon={<Tickets />} colorClass="bg-emerald-500" textColor="text-white" />

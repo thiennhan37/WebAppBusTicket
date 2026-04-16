@@ -13,6 +13,7 @@ import com.example.BusTicket.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,10 @@ import java.text.ParseException;
 public class CompanyAuthController {
     private final AuthenticationService authenticationService;
     private final AuthenticationMapper authenticationMapper;
+
+    @Value("${jwt.refreshTime}")
+    private long refreshTime;
+
     @PostMapping("nhaxe/auth/login")
     ResponseEntity<ApiResponse<LogoutResponse>> login(@RequestBody LoginRequest request) throws JOSEException{
         log.info("in loginController ");
@@ -39,7 +44,7 @@ public class CompanyAuthController {
                 .httpOnly(true) // ngăn ko cho JS đọc được, ngăn chặn XSS
                 .secure(false) // localhost
                 .path("/vexedat/auth")
-                .maxAge(60 * 60)
+                .maxAge(refreshTime)
                 .sameSite("Lax")
                 .build();
         return ResponseEntity.ok()
