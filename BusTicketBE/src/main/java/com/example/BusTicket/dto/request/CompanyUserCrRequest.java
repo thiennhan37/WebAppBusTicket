@@ -18,8 +18,7 @@ public class CompanyUserCrRequest {
     @NotNull(message = "Email must be not null")
     private String email;
     private String phone;
-    @Size(min = 6, message = "Password must be at least 6 character")
-    @NotNull(message = "password must be not null")
+
     private String password;
     @NotNull(message = "fullName must be not null")
     private String fullName;

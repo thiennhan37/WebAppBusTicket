@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-03-25T20:45:59+0700",
+    date = "2026-04-09T21:03:18+0700",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 24.0.2 (Oracle Corporation)"
 )
 @Component
@@ -59,17 +59,17 @@ public class CompanyUserMapperImpl implements CompanyUserMapper {
             return null;
         }
 
-        CompanyUser companyUser = new CompanyUser();
+        CompanyUser.CompanyUserBuilder companyUser = CompanyUser.builder();
 
-        companyUser.setEmail( request.getEmail() );
-        companyUser.setPhone( request.getPhone() );
-        companyUser.setPassword( request.getPassword() );
-        companyUser.setFullName( request.getFullName() );
-        companyUser.setDob( request.getDob() );
-        companyUser.setGender( request.getGender() );
-        companyUser.setRole( request.getRole() );
+        companyUser.email( request.getEmail() );
+        companyUser.phone( request.getPhone() );
+        companyUser.password( request.getPassword() );
+        companyUser.fullName( request.getFullName() );
+        companyUser.dob( request.getDob() );
+        companyUser.gender( request.getGender() );
+        companyUser.role( request.getRole() );
 
-        return companyUser;
+        return companyUser.build();
     }
 
     private String companyUserBusCompanyId(CompanyUser companyUser) {

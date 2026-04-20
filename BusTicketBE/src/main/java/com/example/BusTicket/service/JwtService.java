@@ -36,7 +36,7 @@ public class JwtService {
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .issuer("vexedat.com")
-                .subject(user.getEmail())
+                .subject(user.getId())
                 .issueTime(issueTime).expirationTime(expirationTime)
                 .jwtID(UUID.randomUUID().toString())
                 .claim("role", user.getRole())
@@ -58,7 +58,7 @@ public class JwtService {
         boolean isValid = signedJWT.verify(verifier);
         Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
         String jwtId = signedJWT.getJWTClaimsSet().getJWTID();
-        String redisKey = "InvalidToken: {" + jwtId + "}";
+        String redisKey = "InvalidToken:" + jwtId;
         if(redisTemplate.opsForValue().get(redisKey) != null){
             throw new MyAppException(ErrorCode.INVALID_TOKEN);
         }
