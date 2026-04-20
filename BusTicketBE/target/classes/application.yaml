@@ -41,6 +41,11 @@ spring:
 
 jwt:
   signerKey: "NaW3jODSZ4yTtMj7s9CQFJvcLnrSgkq0"
-  accessTime: 900 #seconds;
+  accessTime: 9000 #seconds;
   refreshTime: 10800 #seconds;
 
+booking:
+  holdingSeatTime: 600
+  holdingSeatPrefixKey: "trip_seat_hold:"
+  tempOrderPrefixKey: "temp_order_hold:"
+  compMakeOrderPrefixKey: "comp_make_order:"

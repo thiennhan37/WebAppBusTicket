@@ -11,7 +11,6 @@ import org.mapstruct.Mapping;
 public interface TripMapper {
     @Mapping(target = "route", source = "route")
     @Mapping(target = "busType", source = "busType.name")
-//    @Mapping(target = "id", source = "id")
     TripResponse toTripResponse(Trip trip);
 
 

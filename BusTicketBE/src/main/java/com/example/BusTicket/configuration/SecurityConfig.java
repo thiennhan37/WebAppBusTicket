@@ -32,7 +32,8 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open"};
-    private final String[] COMPANY_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes"};
+    private final String[] COMPANY_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes", "/nhaxe/orders/hold-seats",
+            "/nhaxe/orders/delete-order", "/nhaxe/orders/book-order"};
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
     @Autowired

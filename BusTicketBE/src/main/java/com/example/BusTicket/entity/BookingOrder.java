@@ -16,6 +16,7 @@ public class BookingOrder {
     private String id;
     private LocalDateTime createdAt;
     private String customerName,customerPhone, customerEmail;
+    private Long totalCost;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", referencedColumnName = "id")

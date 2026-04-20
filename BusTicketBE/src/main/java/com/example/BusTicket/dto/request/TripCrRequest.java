@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 @Getter
 public class TripCrRequest {
     @NotNull
+    private String busCompanyId;
+    @NotNull
     private LocalDateTime departureTime;
     @NotNull
     private Long routeId;

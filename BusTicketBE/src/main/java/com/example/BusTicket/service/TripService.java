@@ -1,12 +1,15 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
+import com.example.BusTicket.dto.general.BusDiagram;
 import com.example.BusTicket.dto.request.TripCrRequest;
 import com.example.BusTicket.dto.request.TripUpRequest;
 import com.example.BusTicket.dto.response.TripResponse;
 import com.example.BusTicket.entity.BusCompany;
 import com.example.BusTicket.entity.CompanyUser;
 import com.example.BusTicket.entity.Trip;
+import com.example.BusTicket.entity.TripSeat;
+import com.example.BusTicket.enums.TripSeatEnum;
 import com.example.BusTicket.enums.TripStatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
@@ -23,9 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -36,16 +42,17 @@ public class TripService {
     private final BusCompanyRepository busCompanyRepository;
     private final RouteRepository routeRepository;
     private final BusTypeRepository busTypeRepository;
+    private final TripSeatRepository tripSeatRepository;
     private final TripMapper tripMapper;
 
-
+    @Transactional
     public TripResponse createTrip(TripCrRequest request){
         Jwt jwt = JwtHelper.getJwt();
         CompanyUser companyUser = companyUserRepository.findById(jwt.getSubject())
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
         BusCompany busCompany = companyUser.getBusCompany();
-//        if( !busCompany.getId().equals(request.getBusCompanyId()))
-//            throw new MyAppException(ErrorCode.ACCESS_DENIED);
+        if( !busCompany.getId().equals(request.getBusCompanyId()))
+            throw new MyAppException(ErrorCode.ACCESS_DENIED);
         if(tripRepository.existsByLicensePlateAndDepartureTime(request.getLicensePlate(), request.getDepartureTime()))
             throw new MyAppException(ErrorCode.BUS_BUSY);
 
@@ -62,10 +69,26 @@ public class TripService {
                 .build();
         try{
             tripRepository.save(trip);
-            return tripMapper.toTripResponse(trip);
         } catch (Exception e){
             throw new MyAppException(ErrorCode.NOT_EXISTED);
         }
+        BusDiagram busDiagram = trip.getBusType().getDiagram();
+        if(busDiagram == null) throw new MyAppException(ErrorCode.NOT_EXISTED);
+        List<List<List<String>>> seatList = busDiagram.getSeatList();
+        List<TripSeat> tripSeatList = new ArrayList<>();
+        for(var floor : seatList){
+            for(var row : floor){
+                for(var seat : row){
+                    if(seat != null && !seat.isBlank()){
+                        TripSeat tripSeat = TripSeat.builder().id(IdUtil.generateID()).trip(trip).seat(seat)
+                                .price(trip.getPrice()).status(TripSeatEnum.AVAILABLE.name()).build();
+                        tripSeatList.add(tripSeat);
+                    }
+                }
+            }
+        }
+        tripSeatRepository.saveAll(tripSeatList);
+        return tripMapper.toTripResponse(trip);
     }
     public TripResponse getTrip(String tripId){
         Jwt jwt = JwtHelper.getJwt();

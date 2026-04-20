@@ -14,6 +14,8 @@ public enum ErrorCode {
     INVALID_PARAMETER(1005, "Invalid request parameters", HttpStatus.BAD_REQUEST),
     MISSING_REQUIRED_FIELD(1006, "Required field is missing", HttpStatus.BAD_REQUEST),
     INVALID_STATE(1007, "Invalid state", HttpStatus.BAD_REQUEST),
+    ERROR_REDIS(1008, "Hệ thống không phản hồi", HttpStatus.INTERNAL_SERVER_ERROR),
+    ERROR_SAVED(1009, "Lưu thông tin thất bại", HttpStatus.BAD_REQUEST),
 
 
 
@@ -27,6 +29,12 @@ public enum ErrorCode {
     ROUTE_NOT_EXISTED(4007, "Tuyến đường không tồn tại", HttpStatus.BAD_REQUEST),
     INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành không hợp lệ", HttpStatus.BAD_REQUEST),
     BUS_BUSY(4009, "Xe đã có lịch trình khác trong khoảng thời gian này", HttpStatus.BAD_REQUEST),
+    TRIP_SEAT_BOOKED(4010, "Ghế đã bị đặt", HttpStatus.BAD_REQUEST),
+    TRIP_SEAT_INVALID(4011, "Ghế không hợp lệ", HttpStatus.BAD_REQUEST),
+    ORDER_EXISTED(4012, "Đơn hàng đã tồn tại", HttpStatus.BAD_REQUEST),
+    BOOKING_ANOTHER_ORDER(4013, "Bạn đang xử lí 1 đơn hàng khác", HttpStatus.BAD_REQUEST),
+    ROUTE_STOP_INVALID(4014, "Điểm đón trả không hợp lệ", HttpStatus.BAD_REQUEST),
+    ROUTE_INVALID(4014, "Tuyến đường không hợp lệ", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

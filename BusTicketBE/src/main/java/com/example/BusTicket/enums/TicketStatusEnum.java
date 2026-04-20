@@ -1,9 +1,9 @@
 package com.example.BusTicket.enums;
 
 public enum TicketStatusEnum {
-    PENDING,
-    PAID,
+    HOLDING,
+    SUCCESS,
     CANCELLED,
-    EXPIRED
+    EXPIRED,
     ;
 }

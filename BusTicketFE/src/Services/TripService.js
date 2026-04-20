@@ -19,6 +19,7 @@ const TripService = {
         trip.price = (Number.isFinite(newTrip.price) ? newTrip.price : null)
         trip.licensePlate = (newTrip.licensePlate ? newTrip.licensePlate : null)
         trip.driver = (newTrip.driver ? newTrip.driver : null)
+        trip.busCompanyId = JSON.parse(localStorage.getItem("company")).id;
         return api.post("/nhaxe/trips", trip)
     }, 
     updateTrip(selectedTrip){
