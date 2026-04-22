@@ -52,4 +52,16 @@ public class TripSpecification {
             return cb.equal(root.get("busType").get("name"), busType);
         };
     }
+    public static Specification<Trip> hasArrivalProvince(String arrivalProvince) {
+        return (root, query, cb) -> {
+            if(arrivalProvince == null || arrivalProvince.isEmpty()) return cb.conjunction();
+            return cb.equal(root.get("route").get("arrivalProvince").get("name"), arrivalProvince);
+        };
+    }
+    public static Specification<Trip> hasDestinationProvince(String destinationProvince) {
+        return (root, query, cb) -> {
+            if(destinationProvince == null || destinationProvince.isEmpty()) return cb.conjunction();
+            return cb.equal(root.get("route").get("destinationProvince").get("name"), destinationProvince);
+        };
+    }
 }

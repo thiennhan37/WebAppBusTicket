@@ -146,14 +146,16 @@ const Trips = () =>{
                       <div>
                         <div className="font-semibold text-slate-900">{trip.id}</div>
                         <div className="text-sm text-slate-500 mt-0.5">
-                          {`Route: ${trip.route.name}(${trip.route.arrivalProvince.name} - ${trip.route.destinationProvince.name})` }</div>
+                          {`Tuyến đường: ${trip.route.name}`}</div>
+                        <div className="text-sm text-slate-500 mt-0.5">
+                        {`${trip.route.arrivalProvince.name} - ${trip.route.destinationProvince.name}`}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-2 text-slate-700">
                       <Bus size={16} className="text-slate-400" />
-                      <span className="text-sm">{trip.busType}</span>
+                      <span className="text-sm">{trip.busType.name}</span>
                     </div>
                     <div className="flex items-center gap-2 text-emerald-600 font-semibold mt-1">
                       <Tag size={16} />

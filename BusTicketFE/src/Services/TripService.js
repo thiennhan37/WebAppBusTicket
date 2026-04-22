@@ -10,6 +10,15 @@ const TripService = {
         if(params.busType === "Tất Cả" || !params.busType) params.busType = null;
         return api.get("/nhaxe/trips", {params:params});
     }, 
+    getSimpleTripList(params){
+        if(!params.date || !params.arrival || !params.destination) return;
+        console.log("params", params)
+        return api.get("/nhaxe/trips/simple-list", {params:params});
+    }, 
+    getTripById(tripId){
+        if(!tripId) return;
+        return api.get(`/nhaxe/trips/${tripId}`);
+    }, 
     createTrip(newTrip){
         const trip = {
             routeId: newTrip.route.id, 

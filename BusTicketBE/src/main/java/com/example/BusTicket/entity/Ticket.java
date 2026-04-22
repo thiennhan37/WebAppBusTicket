@@ -16,6 +16,7 @@ public class Ticket {
     private String id;
     private Long price;
     private String status;
+    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_seat_id", referencedColumnName = "id")

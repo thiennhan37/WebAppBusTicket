@@ -19,7 +19,7 @@ public class BookingOrderResponse {
     private LocalDateTime createdAt;
     private String customerName,customerPhone, customerEmail;
     private Long totalCost;
-    private TripResponse trip;
+    private String tripId;
     private Customer bookingUser;
     private String creatingStaffId;
 }

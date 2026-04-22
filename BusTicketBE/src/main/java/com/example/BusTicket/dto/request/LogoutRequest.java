@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LogoutRequest {
     private String accessToken;
-    private String refreshToken;
+//    private String refreshToken;
 
 }

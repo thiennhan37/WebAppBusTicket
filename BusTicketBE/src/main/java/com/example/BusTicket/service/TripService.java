@@ -4,16 +4,18 @@ import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.general.BusDiagram;
 import com.example.BusTicket.dto.request.TripCrRequest;
 import com.example.BusTicket.dto.request.TripUpRequest;
+import com.example.BusTicket.dto.response.TicketResponse;
 import com.example.BusTicket.dto.response.TripResponse;
-import com.example.BusTicket.entity.BusCompany;
-import com.example.BusTicket.entity.CompanyUser;
-import com.example.BusTicket.entity.Trip;
-import com.example.BusTicket.entity.TripSeat;
+import com.example.BusTicket.dto.response.TripSeatResponse;
+import com.example.BusTicket.dto.response.TripSimpleResponse;
+import com.example.BusTicket.entity.*;
 import com.example.BusTicket.enums.TripSeatEnum;
 import com.example.BusTicket.enums.TripStatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
+import com.example.BusTicket.mapper.TicketMapper;
 import com.example.BusTicket.mapper.TripMapper;
+import com.example.BusTicket.mapper.TripSeatMapper;
 import com.example.BusTicket.repository.jpa.*;
 import com.example.BusTicket.specification.TripSpecification;
 import com.example.BusTicket.util.IdUtil;
@@ -27,23 +29,27 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TripService {
+    private final TicketMapper ticketMapper;
+    private final TicketRepository ticketRepository;
     private final TripRepository tripRepository;
     private final CompanyUserRepository companyUserRepository;
-    private final BusCompanyRepository busCompanyRepository;
     private final RouteRepository routeRepository;
     private final BusTypeRepository busTypeRepository;
     private final TripSeatRepository tripSeatRepository;
     private final TripMapper tripMapper;
+    private final TripSeatMapper tripSeatMapper;
+
 
     @Transactional
     public TripResponse createTrip(TripCrRequest request){
@@ -90,7 +96,7 @@ public class TripService {
         tripSeatRepository.saveAll(tripSeatList);
         return tripMapper.toTripResponse(trip);
     }
-    public TripResponse getTrip(String tripId){
+    public TripResponse getTripById(String tripId){
         Jwt jwt = JwtHelper.getJwt();
         CompanyUser companyUser = companyUserRepository.findById(jwt.getSubject())
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
@@ -98,7 +104,34 @@ public class TripService {
         Trip trip = tripRepository.findById(tripId).orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         if( !busCompany.getId().equals(trip.getBusCompany().getId()))
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
-        return tripMapper.toTripResponse(trip);
+
+        TripResponse tripResponse = tripMapper.toTripResponse(trip);
+
+        // đếm số lượng ghế đang giữ và đã đặt (thanh toán)
+        Object[] result = tripSeatRepository.countHeldAndBooked(trip.getId());
+        Object[] firstRow = (Object[]) result[0];
+        Long heldSeats = firstRow[0] == null ? 0 : ((Number) firstRow[0]).longValue();
+        Long bookedSeats = firstRow[1] == null ? 0 : ((Number) firstRow[1]).longValue();
+        tripResponse.setHeldSeats(heldSeats);
+        tripResponse.setBookedSeats(bookedSeats);
+
+        // load lịch sử đặt vé(toàn bộ danh sách vé)
+        List<Ticket> ticketList = ticketRepository.findAllByTripId(trip.getId());
+        List<TicketResponse> historyBooking = ticketList.stream().map(ticketMapper::toTicketResponse).toList();
+        tripResponse.setHistoryBooking(historyBooking);
+
+        // load trạng thái ghế và vé đang giữ ghế
+        List<Object[]> tripSeatList = tripSeatRepository.findSeatsWithLatestTicket(trip.getId());
+        List<TripSeatResponse> seatMap = new ArrayList<>();
+        for(var object :tripSeatList){
+            TripSeat ts = object[0] != null ? (TripSeat)object[0] : null;
+            Ticket tk = object[1] != null ? (Ticket)object[1] : null;
+            TripSeatResponse tripSeatResponse = tripSeatMapper.toTripSeatResponse(ts);
+            tripSeatResponse.setTicket(ticketMapper.toTicketResponse(tk));
+            seatMap.add(tripSeatResponse);
+        }
+        tripResponse.setSeatMap(seatMap);
+        return tripResponse;
     }
     public TripResponse updateTrip(String tripId, TripUpRequest request){
         Jwt jwt = JwtHelper.getJwt();
@@ -170,5 +203,36 @@ public class TripService {
 
         return tripRepository.findAll(spec, fixedPageable).map(tripMapper::toTripResponse);
     }
+    public List<TripSimpleResponse> getSimpleTripList(String arrivalProvince, String destinationProvince, LocalDate date){
+        Jwt jwt = JwtHelper.getJwt();
+        CompanyUser companyUser = companyUserRepository.findById(jwt.getSubject())
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+        BusCompany busCompany = companyUser.getBusCompany();
+
+        Sort sort = Sort.by("departureTime").ascending();
+        Specification<Trip>  spec = Specification
+                .where(TripSpecification.hasBuscompanyId(busCompany.getId()))
+                .and(TripSpecification.hasArrivalProvince(arrivalProvince))
+                .and(TripSpecification.hasDestinationProvince(destinationProvince))
+                .and(TripSpecification.hasDate(date))
+                .and(TripSpecification.hasStatus(TripStatusEnum.OPEN.name()));
+
+        List<Trip> tripList = tripRepository.findAll(spec, sort);
+        List<TripSimpleResponse> tripSimpleResponses = tripList.stream().map(tripMapper::toTripSimpleResponse).toList();
+        List<String> tripIds = tripList.stream().map(Trip::getId).toList();
+        List<Object[]> results = tripSeatRepository.countBookedSeats(tripIds);
+        Map<String, Long> countMap = results.stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> row[1] == null ? 0L : ((Number) row[1]).longValue()
+                ));
+        for (TripSimpleResponse x : tripSimpleResponses) {
+            x.setBookedSeats(countMap.getOrDefault(x.getId(), 0L));
+        }
+        return tripSimpleResponses;
+    }
+//    private Long getBookedSeat(String tripId){
+//        return bookedSeat = ;
+//    }
     
 }

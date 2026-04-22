@@ -9,7 +9,7 @@ import com.example.BusTicket.entity.*;
 import com.example.BusTicket.enums.TicketStatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
-import com.example.BusTicket.mapper.OrderMapper;
+import com.example.BusTicket.mapper.BookingOrderMapper;
 import com.example.BusTicket.repository.jpa.*;
 import com.example.BusTicket.util.IdUtil;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class BookingOrderService {
     private final CompanyUserRepository companyUserRepository;
     private final RouteStopRepository routeStopRepository;
     private final TicketRepository ticketRepository;
-    private final OrderMapper orderMapper;
+    private final BookingOrderMapper orderMapper;
     private final RedisTemplate<String, String> redisTemplate;
 
     @Value("${booking.holdingSeatTime}")
@@ -121,6 +121,7 @@ public class BookingOrderService {
                     .arrival(arrival)
                     .destination(destination)
                     .status(TicketStatusEnum.HOLDING.name())
+                    .updatedAt(bookingOrder.getCreatedAt())
                     .build();
             ticketList.add(ticket);
         }

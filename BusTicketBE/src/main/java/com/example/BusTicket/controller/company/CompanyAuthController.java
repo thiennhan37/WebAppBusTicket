@@ -2,10 +2,9 @@ package com.example.BusTicket.controller.company;
 
 import com.example.BusTicket.dto.request.CompanyRegisterRequest;
 import com.example.BusTicket.dto.request.LoginRequest;
-import com.example.BusTicket.dto.request.LogoutRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.AuthenticationResponse;
-import com.example.BusTicket.dto.response.LogoutResponse;
+import com.example.BusTicket.dto.response.LoginResponse;
 import com.example.BusTicket.entity.CompanyRegister;
 import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.mapper.AuthenticationMapper;
@@ -17,8 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,7 +33,7 @@ public class CompanyAuthController {
     private long refreshTime;
 
     @PostMapping("nhaxe/auth/login")
-    ResponseEntity<ApiResponse<LogoutResponse>> login(@RequestBody LoginRequest request) throws JOSEException{
+    ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) throws JOSEException{
         log.info("in loginController ");
         AuthenticationResponse authResponse = authenticationService.login(AccountType.COMPANY, request);
 
@@ -49,7 +46,7 @@ public class CompanyAuthController {
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(ApiResponse.success(authenticationMapper.toLogoutResponse(authResponse)));
+                .body(ApiResponse.success(authenticationMapper.toLoginResponse(authResponse)));
     }
     @PostMapping("nhaxe/auth/register")
     ApiResponse<CompanyRegister> register(@RequestBody CompanyRegisterRequest request) throws JOSEException, ParseException {

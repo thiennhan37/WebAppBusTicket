@@ -1,30 +1,30 @@
 package com.example.BusTicket.mapper;
 
 import com.example.BusTicket.dto.response.AuthenticationResponse;
-import com.example.BusTicket.dto.response.LogoutResponse;
+import com.example.BusTicket.dto.response.LoginResponse;
 import javax.annotation.processing.Generated;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-04-15T20:04:11+0700",
+    date = "2026-04-22T16:04:29+0700",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 24.0.2 (Oracle Corporation)"
 )
 @Component
 public class AuthenticationMapperImpl implements AuthenticationMapper {
 
     @Override
-    public LogoutResponse toLogoutResponse(AuthenticationResponse response) {
+    public LoginResponse toLoginResponse(AuthenticationResponse response) {
         if ( response == null ) {
             return null;
         }
 
-        LogoutResponse.LogoutResponseBuilder logoutResponse = LogoutResponse.builder();
+        LoginResponse.LoginResponseBuilder loginResponse = LoginResponse.builder();
 
-        logoutResponse.user( response.getUser() );
-        logoutResponse.company( response.getCompany() );
-        logoutResponse.accessToken( response.getAccessToken() );
+        loginResponse.user( response.getUser() );
+        loginResponse.company( response.getCompany() );
+        loginResponse.accessToken( response.getAccessToken() );
 
-        return logoutResponse.build();
+        return loginResponse.build();
     }
 }
