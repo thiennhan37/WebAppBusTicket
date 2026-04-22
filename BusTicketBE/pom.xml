@@ -125,6 +125,14 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.16.2</version> <!-- hoặc version mới nhất -->
         </dependency>
+
+        <dependency>
+            <groupId>com.aventrix.jnanoid</groupId>
+            <artifactId>jnanoid</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>

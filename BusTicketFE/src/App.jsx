@@ -6,7 +6,7 @@ import AuthProvider from './Provider/AuthProvider'
 import ProtectedRoute from './routes/ProtectedRoute'
 import Overview from './pages/Overview'
 import Trips from "./pages/Trip/Trips"
-import Tickets from './pages/Tickets'
+import Ticket from './pages/Ticket/Ticket'
 import LocalRoutes from './pages/LocalRoute/LocalRoutes'
 import Report from './pages/Report'
 import Rating from './pages/Rating'
@@ -26,7 +26,7 @@ function App() {
               <Route element={<CompanyLayout/>}>
                 <Route path="/nhaxe/overview" element={<Overview/>}></Route>
                 <Route path="/nhaxe/trips" element={<Trips/>}></Route>
-                <Route path="/nhaxe/tickets" element={<Tickets/>}></Route>
+                <Route path="/nhaxe/ticket" element={<Ticket/>}></Route>
                 <Route path="/nhaxe/local-routes" element={<LocalRoutes/>}></Route>
                 <Route path="/nhaxe/staff" element={<StaffManagement/>}></Route>
                 <Route path="/nhaxe/report" element={<Report/>}></Route>

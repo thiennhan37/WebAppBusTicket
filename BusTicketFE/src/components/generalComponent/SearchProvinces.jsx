@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ProvinceService from "../../Services/ProvinceService";
 
-const SearchProvinces = ({ onChange, field, label, placeholder }) => {
-  const [inputValue, setInputValue] = useState("");
+const SearchProvinces = ({ onChange, field, label, placeholder, initial }) => {
+  const [inputValue, setInputValue] = useState(initial || "");
   const [isOpen, setIsOpen] = useState(false);
   const [provinces, setProvinces] = useState([]);
   const searchRef = useRef(null);
@@ -61,7 +61,8 @@ const SearchProvinces = ({ onChange, field, label, placeholder }) => {
         <div className="relative">
           <input
             type="text"
-            className="w-full rounded-xl p-1.5 text-sm outline-none transition-all border border-slate-200 bg-slate-50 focus:border-blue-400"
+            className="w-full rounded-[10px] p-2 text-sm outline-none transition-all 
+              border border-slate-200 bg-white-100 focus:border-blue-400"
             placeholder={placeholder}
             value={inputValue}
             onChange={(e) => {

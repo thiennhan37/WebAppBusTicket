@@ -1,5 +1,4 @@
 import { toEng } from "../utils/translate";
-import { publicApi } from "./api";
 import api from "./api";
 
 const TripService = {
@@ -11,6 +10,15 @@ const TripService = {
         if(params.busType === "Tất Cả" || !params.busType) params.busType = null;
         return api.get("/nhaxe/trips", {params:params});
     }, 
+    getSimpleTripList(params){
+        if(!params.date || !params.arrival || !params.destination) return;
+        console.log("params", params)
+        return api.get("/nhaxe/trips/simple-list", {params:params});
+    }, 
+    getTripById(tripId){
+        if(!tripId) return;
+        return api.get(`/nhaxe/trips/${tripId}`);
+    }, 
     createTrip(newTrip){
         const trip = {
             routeId: newTrip.route.id, 
@@ -20,6 +28,7 @@ const TripService = {
         trip.price = (Number.isFinite(newTrip.price) ? newTrip.price : null)
         trip.licensePlate = (newTrip.licensePlate ? newTrip.licensePlate : null)
         trip.driver = (newTrip.driver ? newTrip.driver : null)
+        trip.busCompanyId = JSON.parse(localStorage.getItem("company")).id;
         return api.post("/nhaxe/trips", trip)
     }, 
     updateTrip(selectedTrip){

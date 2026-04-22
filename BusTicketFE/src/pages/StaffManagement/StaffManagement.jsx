@@ -32,7 +32,7 @@ const StaffManagement = () => {
   const handleRowClick = (staff) => {
     // queryClient.invalidateQueries({ queryKey: ['staffStats'] });
     setRightPanelMode("view");
-    setSelectedStaff({...staff});
+    setSelectedStaff({...staff, gender:toVN(staff.gender)});
   };
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -40,6 +40,7 @@ const StaffManagement = () => {
     page: Number(searchParams.get('page')) || 1,
     role: searchParams.get('role') ? toVN(searchParams.get('role')) : 'Tất Cả',
     status: searchParams.get('status') ? toVN(searchParams.get('status')) : 'Tất Cả',
+    keyword: searchParams.get('keyword'),
   });
 
   const filterParams = getFilterParams();
@@ -49,6 +50,7 @@ const StaffManagement = () => {
       page: String(updater.page || 1),
       role: updater.role ? toEng(updater.role) : 'ALL',
       status: updater.status ? toEng(updater.status) : 'ALL',
+      keyword: updater.keyword || ""
     };
     setSearchParams(params);
   };
@@ -65,7 +67,7 @@ const StaffManagement = () => {
         console.log(error);
       }
     }, 
-    placeholderData: keepPreviousData, // Giữ dữ liệu cũ trong khi tải trang mới (tránh nhấp nháy UI)
+    placeholderData: keepPreviousData,
     staleTime: 0, 
   });
 

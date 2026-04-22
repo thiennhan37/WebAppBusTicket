@@ -10,7 +10,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.*;
 
-@Slf4j
 @Configuration
 public class RedisConfiguration {
     @Value("${spring.data.redis.host}")
@@ -40,10 +39,12 @@ public class RedisConfiguration {
 
 //        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
 //        RedisSerializer<Object> jjrs = new JacksonJsonRedisSerializer<Object>();
-        redisTemplate.setValueSerializer(RedisSerializer.json());
-        redisTemplate.setHashValueSerializer(RedisSerializer.json());
 
+//        redisTemplate.setValueSerializer(RedisSerializer.json());
+//        redisTemplate.setHashValueSerializer(RedisSerializer.json());
+
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
         return redisTemplate;
     }
-
 }

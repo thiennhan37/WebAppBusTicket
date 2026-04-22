@@ -19,6 +19,7 @@ import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -43,46 +45,45 @@ public class CompanyUserService {
     private final JwtService jwtService;
 
 
-    public Page<CompanyUserResponse> getAllCompanyUser(String status, String role, Pageable pageable){
+    public Page<CompanyUserResponse> getAllCompanyUser(String status, String role, String keyword, Pageable pageable){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) auth.getPrincipal();
         CompanyUser manager =  companyUserRepository.findById(jwt.getSubject())
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
-        String busCompanyId = manager.getBusCompany().getId();
 
+        String busCompanyId = manager.getBusCompany().getId();
         Specification<CompanyUser> spec = Specification.where(CompanyUserSpecification.hasStatus(status))
                 .and(CompanyUserSpecification.hasRole(role))
-                .and(CompanyUserSpecification.hasBusCompanyId(busCompanyId));
-        Page<CompanyUser> page = companyUserRepository.findAll(spec, pageable);
-//        List<CompanyUserResponse> content = companyUserMapper.toCompanyUserResponseList(page.getContent());
-//        return new PageImpl<>(content, page.getPageable(), page.getTotalElements());
+                .and(CompanyUserSpecification.hasBusCompanyId(busCompanyId))
+                .and(CompanyUserSpecification.containsKeyword(keyword));
+        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 5);
+        Page<CompanyUser> page = companyUserRepository.findAll(spec, fixedPageable);
         return page.map(companyUserMapper::toCompanyUserResponse);
     }
 
     public CompanyUserResponse createCompanyUser(CompanyUserCrRequest request){
+        Jwt jwt = JwtHelper.getJwt();
+        String id = jwt.getSubject();
+        CompanyUser manager = companyUserRepository.findById(id)
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
         String companyId = request.getBusCompanyId();
-        if(!busCompanyRepository.existsById(companyId)){
-            throw new MyAppException(ErrorCode.COMPANY_NOT_EXISTED);
-        }
-        if(companyUserRepository.existsByEmail(request.getEmail())){
+        BusCompany busCompany = busCompanyRepository.findById(companyId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.COMPANY_NOT_EXISTED));
+        if( !manager.getBusCompany().getId().equals(busCompany.getId()))
+            throw new MyAppException(ErrorCode.ACCESS_DENIED);
+        if(companyUserRepository.existsByEmail(request.getEmail()))
             throw new MyAppException(ErrorCode.EMAIL_EXISTED);
-        }
-        String password = request.getPassword();
+
         CompanyUser companyUser = companyUserMapper.toCompanyUser(request);
         companyUser.setId(IdUtil.generateID());
-        if(password == null)
-            password = "123456";
-
+        String password = UUID.randomUUID().toString().substring(0, 8);
         companyUser.setPassword(passwordEncoder.encode(password));
-        companyUser.setBusCompany(BusCompany.builder().id(request.getBusCompanyId()).build());
+        companyUser.setBusCompany(busCompany);
         companyUser.setStatus(StatusEnum.ACTIVE.name());
         companyUser.setCreatedAt(LocalDateTime.now());
 
         companyUserRepository.save(companyUser);
-        String companyName = busCompanyRepository.findById(companyId)
-                        .orElseThrow(() -> new MyAppException(ErrorCode.COMPANY_NOT_EXISTED)).getCompanyName();
-        accountMailService.sendCredentials(companyUser.getEmail(), password, companyName);
-
+        accountMailService.sendCredentials(companyUser.getEmail(), password, busCompany.getCompanyName());
         return companyUserMapper.toCompanyUserResponse(companyUser);
     }
     public CompanyUserResponse updateCompanyUser(CompanyUserUpRequest request)
@@ -96,7 +97,7 @@ public class CompanyUserService {
 
         CompanyUser staff = companyUserRepository.findById(request.getId())
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
-
+        if(staff.getRole().equals("MANAGER")) throw new MyAppException(ErrorCode.ACCESS_DENIED);
         String fullName = request.getFullName();
         if(fullName != null && !fullName.isBlank()) staff.setFullName(fullName);
         String phone = request.getPhone();

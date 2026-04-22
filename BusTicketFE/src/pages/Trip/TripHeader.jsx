@@ -40,7 +40,7 @@ const TripHeader = ({setIsAddModalOpen, searchParams, updateFilter, dateValue, s
           </div>
           
           <div className='flex-1 flex gap-3'>
-            <InputGroup label="Thời gian xuất bến" type="date" value={dateValue} 
+            <InputGroup label="Thời điểm khởi hành" type="date" value={dateValue} 
               onChange={(e) => {
                 setDateValue(e.target.value)
                 updateFilter({field: "date", value: e.target.value})}} />

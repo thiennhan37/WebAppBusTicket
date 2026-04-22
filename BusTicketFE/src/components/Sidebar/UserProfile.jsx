@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { LogOut, User, Settings, AlertTriangle, X } from 'lucide-react';
 import AuthContext from '../../context/AuthContext';
+import AuthenticateService from '../../Services/authenticate';
 
 const UserProfile = () => {
   const { user, logout, company } = useContext(AuthContext);
@@ -18,7 +19,11 @@ const UserProfile = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
+  const handleLogout = () => {
+    const accessToken = localStorage.getItem("accessToken");
+    AuthenticateService.logout({accessToken});
+    logout();
+  }
   return (
     <div className="relative p-4 border-t-2 border-slate-200 bg-gray-50/50" ref={menuRef}>
       
@@ -70,7 +75,7 @@ const UserProfile = () => {
                   Hủy bỏ
                 </button>
                 <button 
-                  onClick={logout}
+                  onClick={() => {handleLogout()}}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 shadow-lg shadow-red-200 transition-all active:scale-95"
                 >
                   Đăng xuất
@@ -99,7 +104,7 @@ const UserProfile = () => {
         </div>
         <div className="flex flex-col overflow-hidden text-left">
           <span className="text-sm font-bold text-gray-800 truncate">{user?.email}</span>
-          <span className="text-xs text-gray-500 truncate">{company?.companyName}</span>
+          <span className="text-xs text-gray-500 truncate">{user?.fullName?.toUpperCase()}</span>
         </div>
       </div>
     </div>

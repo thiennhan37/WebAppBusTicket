@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigation, CheckCircle2, Circle, X } from 'lucide-react';
-import SearchProvinces from './SearchProvinces';
+import SearchProvinces from "../../components/generalComponent/SearchProvinces"
 import InputGroup from '../../components/other/InputGroup';
 import ProvinceService from '../../Services/ProvinceService';
 

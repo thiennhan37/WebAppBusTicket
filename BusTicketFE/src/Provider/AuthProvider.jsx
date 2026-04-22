@@ -22,7 +22,6 @@ const AuthProvider = ({children}) => {
 
     const login = (data) => {
         localStorage.setItem("accessToken", data.accessToken);
-        localStorage.setItem("refreshToken", data.refreshToken);
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("company", JSON.stringify(data.company));
         setUser(data.user);

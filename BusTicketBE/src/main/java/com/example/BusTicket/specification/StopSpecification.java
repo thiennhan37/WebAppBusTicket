@@ -13,7 +13,7 @@ public class StopSpecification {
 
     public static Specification<Stop> containsKeyword(String keyword) {
         return (root, query, cb) -> {
-            if(keyword == null) return cb.conjunction();
+            if(keyword == null || keyword.isBlank()) return cb.conjunction();
             String pattern = "%" + keyword.toLowerCase() + "%";
             return cb.or(
                     cb.like(cb.lower(root.get("name")), pattern)

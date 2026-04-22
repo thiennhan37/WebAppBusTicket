@@ -5,6 +5,7 @@ import com.example.BusTicket.dto.request.TripCrRequest;
 import com.example.BusTicket.dto.request.TripUpRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.TripResponse;
+import com.example.BusTicket.dto.response.TripSimpleResponse;
 import com.example.BusTicket.service.TripService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.data.web.PagedModel;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 
@@ -28,8 +30,8 @@ public class TripController {
         return ApiResponse.success(tripService.createTrip(request));
     }
     @GetMapping("/trips/{id}")
-    ApiResponse<TripResponse> getTrip(@PathVariable("id") String tripId){
-        return ApiResponse.success(tripService.getTrip(tripId));
+    ApiResponse<TripResponse> getTripById(@PathVariable("id") String tripId){
+        return ApiResponse.success(tripService.getTripById(tripId));
     }
     @GetMapping("/trips")
     ApiResponse<PagedModel<TripResponse>> getAllTrips(@RequestParam(required = false) String status,
@@ -39,6 +41,13 @@ public class TripController {
                                                       Pageable pageable){
         Page<TripResponse> result = tripService.getAllTrips(status, keyword, date, busType, pageable);
         return ApiResponse.success(new PagedModel<>(result));
+    }
+    @GetMapping("/trips/simple-list")
+    ApiResponse<List<TripSimpleResponse>> getSimpleList(@RequestParam String arrival,
+                                                        @RequestParam String destination,
+                                                        @RequestParam LocalDate date){
+        List<TripSimpleResponse> result = tripService.getSimpleTripList(arrival, destination, date);
+        return ApiResponse.success(result);
     }
     @PutMapping("/trips/{id}")
     ApiResponse<TripResponse> updateTrip(@PathVariable("id") String tripId, @RequestBody TripUpRequest request){
