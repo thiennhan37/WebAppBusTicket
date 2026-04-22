@@ -5,12 +5,11 @@ import com.example.BusTicket.dto.request.CompanyRegisterRequest;
 import com.example.BusTicket.dto.request.LoginRequest;
 import com.example.BusTicket.dto.request.LogoutRequest;
 import com.example.BusTicket.dto.request.RefreshTokenRequest;
-import com.example.BusTicket.dto.response.AuthenticationResponse;
+import com.example.BusTicket.dto.response.*;
 import com.example.BusTicket.dto.general.InfoAccount;
-import com.example.BusTicket.dto.response.CompanyUserResponse;
-import com.example.BusTicket.dto.response.RefreshTokenResponse;
 import com.example.BusTicket.entity.CompanyRegister;
 import com.example.BusTicket.entity.CompanyUser;
+import com.example.BusTicket.entity.Customer;
 import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.enums.RoleEnum;
 import com.example.BusTicket.enums.StatusEnum;
@@ -18,9 +17,11 @@ import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.CompanyRegisterMapper;
 import com.example.BusTicket.mapper.CompanyUserMapper;
+import com.example.BusTicket.mapper.CustomerMapper;
 import com.example.BusTicket.repository.jpa.BusCompanyRepository;
 import com.example.BusTicket.repository.jpa.CompanyRegisterRepository;
 import com.example.BusTicket.repository.jpa.CompanyUserRepository;
+import com.example.BusTicket.repository.jpa.CustomerRepository;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +45,9 @@ public class AuthenticationService {
     private final CompanyRegisterRepository companyRegisterRepository;
     private final BusCompanyRepository busCompanyRepository;
     private final CompanyRegisterMapper companyRegisterMapper;
+    private final CustomerRepository customerRepository;
+    private final CustomerMapper customerMapper;
+
 
     @Value("${jwt.accessTime}")
     private long accessTime;
@@ -103,8 +107,10 @@ public class AuthenticationService {
         if(jwtInfo.getRole().equals(RoleEnum.STAFF.name()) || jwtInfo.getRole().equals(RoleEnum.MANAGER.name())){
             user = companyUserRepository.findById(jwtInfo.getSubject())
                     .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
-        }
-        else{
+        }else if (jwtInfo.getRole().equals("CUSTOMER")) {
+            user = customerRepository.findById(jwtInfo.getSubject())
+                    .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
+        } else{
             user = new CompanyUser();
         }
 //        saveInvalidToken(refreshToken);
@@ -126,5 +132,25 @@ public class AuthenticationService {
             String redisKey = "InvalidToken:" + jwtId;
             redisTemplate.opsForValue().set(redisKey, "1", Duration.ofSeconds(ttl));
         }
+    }
+
+    public CustomerAuthenticationResponse customerLogin(String email) throws JOSEException {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
+
+        if (customer.getStatus().equals(StatusEnum.BLOCKED.name())) {
+            throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
+        String accessToken = jwtService.generateToken(customer, accessTime);  // Giả định JwtService hỗ trợ Customer
+        String refreshToken = jwtService.generateToken(customer, refreshTime);
+
+        CustomerInfoResponse customerInfo = customerMapper.toCustomerInfoResponse(customer);
+
+        return CustomerAuthenticationResponse.builder()
+                .customerInfo(customerInfo)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 }

@@ -1,11 +1,9 @@
 package com.example.BusTicket.controller;
 
-import com.example.BusTicket.dto.request.CompanyRegisterRequest;
-import com.example.BusTicket.dto.request.LoginRequest;
-import com.example.BusTicket.dto.request.LogoutRequest;
-import com.example.BusTicket.dto.request.RefreshTokenRequest;
+import com.example.BusTicket.dto.request.*;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.AuthenticationResponse;
+import com.example.BusTicket.dto.response.CustomerAuthenticationResponse;
 import com.example.BusTicket.dto.response.RefreshTokenResponse;
 import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.service.AuthenticationService;
@@ -28,6 +26,13 @@ public class AuthenticationController {
             throws JOSEException, ParseException {
         log.info("in refreshToken controller");
         RefreshTokenResponse response = authenticationService.refreshToken(request);
+        return ApiResponse.success(response);
+    }
+    @PostMapping("auth/customer-login")
+    ApiResponse<CustomerAuthenticationResponse> customerLogin(@RequestBody EmailLoginRequest request)
+            throws JOSEException {
+        log.info("in customerLogin controller");
+        CustomerAuthenticationResponse response = authenticationService.customerLogin(request.getEmail());
         return ApiResponse.success(response);
     }
 }
