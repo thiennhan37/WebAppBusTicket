@@ -6,8 +6,11 @@ import 'package:bus_ticket_app/pages/my_tickets_pages.dart';
 import 'package:bus_ticket_app/pages/notification_pages.dart';
 import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
+import 'core/di/service_locator.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  setupServiceLocator();
   runApp(const MyApp());
 }
 

@@ -28,7 +28,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import tools.jackson.core.ErrorReportConfiguration;
+import org.springframework.data.redis.core.ValueOperations;
+import java.util.Random;
+
 
 import java.text.ParseException;
 import java.time.Duration;
@@ -47,7 +49,7 @@ public class AuthenticationService {
     private final CompanyRegisterMapper companyRegisterMapper;
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
-
+    private final MailService mailService;
 
     @Value("${jwt.accessTime}")
     private long accessTime;
@@ -134,7 +136,48 @@ public class AuthenticationService {
         }
     }
 
-    public CustomerAuthenticationResponse customerLogin(String email) throws JOSEException {
+
+
+    public void sendOtp(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new MyAppException(ErrorCode.INVALID_GMAIL));
+
+        if (customer.getStatus().equals(StatusEnum.BLOCKED.name())) {
+            throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
+        String otp = generateOtp();
+        String redisKey = "OTP:" + email;
+        redisTemplate.opsForValue().set(redisKey, otp, Duration.ofMinutes(5));
+
+        // Tạo HTML email
+        String htmlBody = "<div style='font-family: Arial, sans-serif;'>" +
+                "<h2>Mã OTP của bạn</h2>" +
+                "<p>Mã OTP để đăng nhập là: <strong style='font-size: 20px; color: #007bff;'>" + otp + "</strong></p>" +
+                "<p>Mã này có hiệu lực trong 5 phút.</p>" +
+                "<p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua.</p>" +
+                "</div>";
+
+        mailService.sendHtmlMail(email, "Mã OTP đăng nhập", htmlBody, null, null);
+    }
+
+    // Helper method
+    private String generateOtp() {
+        Random random = new Random();
+        return String.format("%06d", random.nextInt(999999));
+    }
+
+    public CustomerAuthenticationResponse verifyOtp(String email, String otp) throws JOSEException {
+        String redisKey = "OTP:" + email;
+        String storedOtp = redisTemplate.opsForValue().get(redisKey);
+
+        if (storedOtp == null || !storedOtp.equals(otp)) {
+            throw new MyAppException(ErrorCode.INVALID_OTP);  // OTP sai hoặc hết hạn
+        }
+
+        // Xóa OTP sau verify thành công
+        redisTemplate.delete(redisKey);
+
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
 
@@ -142,9 +185,8 @@ public class AuthenticationService {
             throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
         }
 
-        String accessToken = jwtService.generateToken(customer, accessTime);  // Giả định JwtService hỗ trợ Customer
+        String accessToken = jwtService.generateToken(customer, accessTime);
         String refreshToken = jwtService.generateToken(customer, refreshTime);
-
         CustomerInfoResponse customerInfo = customerMapper.toCustomerInfoResponse(customer);
 
         return CustomerAuthenticationResponse.builder()
