@@ -2,6 +2,7 @@ package com.example.BusTicket.repository.jpa;
 
 import com.example.BusTicket.entity.TripSeat;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -46,6 +47,27 @@ public interface TripSeatRepository extends JpaRepository<TripSeat, String> {
         WHERE ts.trip.id = :tripId
         """)
     List<Object[]> findSeatsWithLatestTicket(@Param("tripId") String tripId);
+
+    @Query("""
+        SELECT ts
+        FROM TripSeat ts
+        JOIN Ticket t ON t.tripSeat.id = ts.id
+        WHERE t.id IN :ticketIds
+          AND t.status IN ('HOLDING','PAID')
+          AND t.updatedAt = (
+              SELECT MAX(t2.updatedAt)
+              FROM Ticket t2
+              WHERE t2.tripSeat.id = ts.id
+          )
+    """)
+    List<TripSeat> getTripSeatsForCancel(@Param("ticketIds") List<String> ticketIds);
+
+    @Modifying
+    @Query("""
+            UPDATE TripSeat ts SET ts.status = :status
+            WHERE ts.id IN :ids AND ts.status = :prevStatus
+            """)
+    int updateStatusByIds(@Param("ids") List<String> ids, @Param("status") String status, @Param("prevStatus") String prevStatus);
 }
 
 

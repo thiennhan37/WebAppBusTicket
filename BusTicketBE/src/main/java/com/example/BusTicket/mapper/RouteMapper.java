@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {StopMapper.class})
 public interface RouteMapper {
     RouteResponse toRouteResponse(Route route);
 

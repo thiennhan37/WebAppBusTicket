@@ -138,7 +138,7 @@ const Trips = () =>{
             <tbody className="divide-y divide-slate-100">
               {tripPage.map((trip) => (
                 <tr key={trip.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-2">
                     <div className="flex items-start gap-3">
                       <div className="mt-1 bg-emerald-100 p-2 rounded-lg text-emerald-600">
                         <Bus size={18} />
@@ -152,7 +152,7 @@ const Trips = () =>{
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-2">
                     <div className="flex items-center gap-2 text-slate-700">
                       <Bus size={16} className="text-slate-400" />
                       <span className="text-sm">{trip.busType.name}</span>
@@ -162,14 +162,14 @@ const Trips = () =>{
                       <span>{trip?.price ? formatter.format(trip.price): "Chưa có"}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-2">
                     <div className="flex items-center gap-2 text-slate-700">
                       <Clock size={16} className="text-slate-400" />
                       <span className="text-sm font-medium">{trip.departureTime.split('T')[0]}</span>
                     </div>
                     <div className="text-sm text-slate-500 mt-1 pl-6">{trip.departureTime.split('T')[1]}</div>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-2">
                     {/* Thông tin Biển số xe */}
                     <div className="flex items-center gap-2 text-slate-700">
                       <div className="bg-slate-100 p-1 rounded text-slate-500">

@@ -20,5 +20,5 @@ public class RouteStopResponse {
     @Id
     private Long id;
     private String type;
-    private Stop stop;
+    private StopResponse stop;
 }

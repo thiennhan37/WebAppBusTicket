@@ -35,6 +35,7 @@ public enum ErrorCode {
     BOOKING_ANOTHER_ORDER(4013, "Bạn đang xử lí 1 đơn hàng khác", HttpStatus.BAD_REQUEST),
     ROUTE_STOP_INVALID(4014, "Điểm đón trả không hợp lệ", HttpStatus.BAD_REQUEST),
     ROUTE_INVALID(4014, "Tuyến đường không hợp lệ", HttpStatus.BAD_REQUEST),
+    TICKET_INVALID(4014, "Vé không hợp lệ", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

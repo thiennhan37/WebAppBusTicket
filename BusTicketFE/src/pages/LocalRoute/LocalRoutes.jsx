@@ -110,28 +110,28 @@ const LocalRoutes = () => {
       
       <div className="flex flex-col xl:flex-row"> 
 
-        <div className="flex-1 flex flex-col min-h-[580px] max-w-[580px] bg-white rounded-2xl shadow-sm border border-slate-200">
+        <div className="flex-1 flex flex-col bg-white min-w-[850px] max-w-[850px]  rounded-2xl shadow-sm border border-slate-200">
           <RouteHeader onChangeFilter={onChangeFilter} filterParams={buildFilterParams()} setOpenCreate={setOpenCreate}></RouteHeader>
           
           <div className="flex-1 overflow-visible">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50/80 text-slate-500 text-[11px] uppercase tracking-widest font-bold">
-                  <th className="px-4 py-2">Tuyến Đường</th>
-                  <th className="px-4 py-2">Điểm bắt đầu</th>
-                  <th className="px-4 py-2">Điểm kết thúc</th>
+                  <th className="px-4 py-3">Tuyến Đường</th>
+                  <th className="px-4 py-3">Điểm bắt đầu</th>
+                  <th className="px-4 py-3">Điểm kết thúc</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {routePage.map((route) => (
                     <tr key={route.id} className="hover:bg-slate-50/50 transition-colors" >
-                      <td className="px-4 py-2 font-bold text-slate-700">{route.name}</td>
-                      <td className="px-4 py-2 font-medium text-slate-800">{route.arrivalProvince.name}</td>
-                      <td className="px-4 py-2 font-medium text-slate-800">{route.destinationProvince.name}</td>
-                      <td className="px-4 py-2 text-center">
+                      <td className="px-4 py-3 font-bold text-slate-700">{route.name}</td>
+                      <td className="px-4 py-3 font-medium text-slate-800">{route.arrivalProvince.name}</td>
+                      <td className="px-4 py-3 font-medium text-slate-800">{route.destinationProvince.name}</td>
+                      <td className="px-4 py-3 text-center">
                         {/* <StatusBadge type={staff.status} /> */}
                       </td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-3">
                         <div className="flex justify-center gap-1">
                           <RouteStops routeId={route.id}></RouteStops>
                         </div>
@@ -148,20 +148,28 @@ const LocalRoutes = () => {
             {/* Component Tạo mới: Luôn trong DOM, ẩn bằng CSS */}
             <div className={`flex-1 ${isOpenCreate ? "" : "hidden"} relative w-full max-w-2xl pr-4 ml-4 h-fit animate-in fade-in slide-in-from-right-4 duration-300`}>
               {isOpenCreate && (
-                <>
-                  {reportCreate === "error" && <StatusModal type="error" message={errorCreate.response.data.message} 
-                  onClose={hideReportCreate}></StatusModal>}
-                  {reportCreate === "pending" && <LoadingOverlay ></LoadingOverlay>}
-                  {reportCreate === "success" && <StatusModal type="success" message={"Thêm mới thành công"} 
-                    onClose={() => {
-                      hideReportCreate();
-                      handleOpenCreate(false); 
-                    }}></StatusModal>}
-                  <CreateRoute onChangeCrRoute={onChangeCrRoute} 
-                    crRoute={crRoute} 
-                    setOpen={handleOpenCreate}
-                    handleCreateRoute={handleCreateRoute}></CreateRoute>
-                </>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                  <div className="relative w-full max-w-2xl max-h-[95vh] overflow-y-auto scrollbar-hide">
+                    {/* Các thông báo trạng thái */}
+                    {reportCreate === "error" && (
+                      <StatusModal type="error" message={errorCreate?.response?.data?.message || "Có lỗi xảy ra"} 
+                        onClose={hideReportCreate} 
+                      />
+                    )}
+                    {reportCreate === "pending" && <LoadingOverlay />}
+                    {reportCreate === "success" && (
+                      <StatusModal type="success" message={"Thêm mới thành công"} 
+                        onClose={() => {
+                          hideReportCreate();
+                          handleOpenCreate(false); 
+                        }} 
+                      />
+                    )}
+                    {/* Component chính */}
+                    <CreateRoute onChangeCrRoute={onChangeCrRoute} crRoute={crRoute} setOpen={handleOpenCreate}
+                      handleCreateRoute={handleCreateRoute}/>
+                  </div>
+                </div>
               )}
             </div>
 

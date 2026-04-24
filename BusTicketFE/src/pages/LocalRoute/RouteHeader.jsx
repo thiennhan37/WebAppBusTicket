@@ -21,19 +21,30 @@ const RouteHeader = ({filterParams, onChangeFilter, setOpenCreate}) => {
       </div>
 
       {/* Hàng 2: Thanh công cụ Filter */}
-        <div className="flex  items-end justify-between gap-4">
-            <div className="flex items-end gap-4">
-                {/* Ô Search */}
-                <div className="w-50"> {/* Thiết lập độ rộng cố định hoặc max-width */}
-                    <InputGroup label="Tìm kiếm" placeholder="Tìm kiếm" icon={Search} 
-                        value={filterParams?.keyword || ""} onChange={(e) => onChangeFilter("keyword", e.target.value)} />
-                </div>
+        <div className="flex w-full mt-4 gap-4"> {/* Bỏ justify-between nếu muốn các ô chiếm hết chỗ */}
+    {/* Thêm w-full vào div bao quanh các input để nó dàn hàng ngang hết header */}
+        <div className="flex items-end gap-4 w-full"> 
+          {/* Ô Search */}
+            <div className="flex-1"> 
+                <InputGroup 
+                  label="Tìm kiếm" 
+                  placeholder="Tìm kiếm..." 
+                  icon={Search} 
+                  value={filterParams?.keyword || ""} 
+                  onChange={(e) => onChangeFilter("keyword", e.target.value)} 
+                />
+            </div>
 
-                {/* Ô Tìm kiếm tỉnh thành */}
-                <SearchProvinces onChange={onChangeFilter} field={"arrival"} label={"Điểm xuất phát"} placeholder={"Tỉnh/Thành phố"}/>
-                <SearchProvinces onChange={onChangeFilter} field={"destination"} label={"Điểm đến"} placeholder={"Tỉnh/Thành phố"}/>
+            {/* Ô Tìm kiếm tỉnh thành */}
+            <div className="flex-1">
+              <SearchProvinces onChange={onChangeFilter} field={"arrival"} label={"Điểm xuất phát"} placeholder={"Tỉnh/Thành phố"}/>
+            </div>
+            
+            <div className="flex-1">
+              <SearchProvinces onChange={onChangeFilter} field={"destination"} label={"Điểm đến"} placeholder={"Tỉnh/Thành phố"}/>
             </div>
         </div>
+      </div>
     </div>
   );
 };
