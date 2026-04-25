@@ -48,6 +48,9 @@ dependencies:
   # Lưu token an toàn
   flutter_secure_storage: ^9.0.0
 
+  # Lưu trữ key-value cục bộ (Dữ liệu thông thường, UI)
+  shared_preferences: ^2.2.3
+
   # Environment variables
   flutter_dotenv: ^5.1.0
 

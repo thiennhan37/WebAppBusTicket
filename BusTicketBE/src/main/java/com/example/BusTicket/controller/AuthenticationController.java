@@ -43,4 +43,11 @@ public class AuthenticationController {
         CustomerAuthenticationResponse response = authenticationService.verifyOtp(request.getEmail(), request.getOtp());
         return ApiResponse.success(response);
     }
+
+    @PostMapping("auth/logout")
+    ApiResponse<Boolean> logout(@RequestBody LogoutRequest request) throws JOSEException, ParseException {
+        authenticationService.logout(request);
+        log.info(request.getAccessToken() + " " + request.getRefreshToken());
+        return ApiResponse.success(true);
+    }
 }

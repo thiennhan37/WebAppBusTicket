@@ -5,6 +5,7 @@ class ApiConstants {
   // Auth endpoints
   static const String sendOtp = '$baseUrl/auth/send-otp';
   static const String verifyOtp = '$baseUrl/auth/verify-otp';
+  static const String logOut = '$baseUrl/auth/logout';
 
   // HTTP Headers
   static const Map<String, String> headers = {

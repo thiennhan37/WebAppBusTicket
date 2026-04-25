@@ -1,9 +1,12 @@
-import 'package:bus_ticket_app/pages/home_pages.dart';
+import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
+import 'package:bus_ticket_app/pages/login_page.dart';
 import 'package:bus_ticket_app/widgets/account_info_widgets/custom_input_field.dart';
 import 'package:bus_ticket_app/widgets/account_info_widgets/infor_banner.dart';
 import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
+import '../data/services/storage_service.dart';
 import '../widgets/account_info_widgets/gender_selector_state.dart';
 
 class AccountInfoPages extends StatefulWidget {
@@ -14,10 +17,10 @@ class AccountInfoPages extends StatefulWidget {
 }
 
 class _AccountInfoPageState extends State<AccountInfoPages> {
-  String _fullName = 'Trần Tấn Phát';
-  String _phoneNumber = '0706110630';
+  String _fullName = '';
+  String _phoneNumber = '';
   String _email = '';
-  String _dob = '17/01/2005';
+  String _dob = '';
   String _gender = 'Nam';
 
   final List<Map<String, String>> _countries = [
@@ -37,6 +40,30 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
     // TODO: implement initState
     super.initState();
     _selectedCountry = _countries[0];
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    final storage = GetIt.I<StorageService>();
+    final userInfo = storage.getUserInfo();
+
+    if (userInfo != null) {
+      _fullName = userInfo['fullName'] ?? '';
+      _phoneNumber = userInfo['phone'] ?? '';
+      _email = userInfo['email'] ?? '';
+      _dob = userInfo['dob'] ?? '';
+      _gender = userInfo['gender'] ?? 'Nam';
+    }
+  }
+
+  String _getAvatarText() {
+    if (_fullName.trim().isEmpty) return 'U'; // U = User (Mặc định)
+    List<String> nameParts = _fullName.trim().split(' ');
+    if (nameParts.length >= 2) {
+      return '${nameParts[nameParts.length - 2][0]}${nameParts.last[0]}'
+          .toUpperCase();
+    }
+    return nameParts.first.substring(0, 1).toUpperCase();
   }
 
   @override
@@ -50,13 +77,13 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
         titleSpacing: 0,
         leading: IconButton(
           onPressed: () {
-            final bottomNav = context
-                .findAncestorStateOfType<CustomBottonNavState>();
+            final bottomNav =
+                context.findAncestorStateOfType<CustomBottonNavState>();
             bottomNav?.changeTab(0);
           },
           icon: Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: Text(
+        title: const Text(
           'Thông tin tài khoản',
           style: TextStyle(
             color: Colors.white,
@@ -66,7 +93,9 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
         ),
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              _showLogoutConfirmDialog(context);
+            },
             child: const Text(
               'Đăng xuất',
               style: TextStyle(
@@ -106,8 +135,8 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  'TP',
-                  style: TextStyle(
+                  _getAvatarText(),
+                  style: const TextStyle(
                     fontSize: 64,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -174,7 +203,7 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
             CustomInputField(
               label: 'Email',
               isRequired: true,
-              hintText: _email,
+              initValue: _email,
               onChanged: (value) => _email = value,
             ),
             const SizedBox(height: 16),
@@ -191,7 +220,7 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
               isRequired: true,
               label: 'Ngày sinh',
               initValue: _dob,
-              suffixIcon: Icon(
+              suffixIcon: const Icon(
                 Icons.calendar_today_outlined,
                 color: Colors.black87,
               ),
@@ -294,20 +323,79 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
     );
   }
 
-  void _handleSave() {
-    print('--- THÔNG TIN ĐÃ LƯU ---');
-    print('Tên: $_fullName');
-    print('SĐT: ${_selectedCountry['code']} $_phoneNumber');
-    print('Email: $_email');
-    print('Ngày sinh: $_dob');
-    print('Giới tính: $_gender');
+  Future<void> _handleSave() async {
+    print('--- ĐANG LƯU THÔNG TIN ---');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Lưu thông tin thành công!'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
+    final storage = GetIt.I<StorageService>();
+    Map<String, dynamic> userInfo = storage.getUserInfo() ?? {};
+
+    userInfo['fullName'] = _fullName;
+    userInfo['phone'] = _phoneNumber;
+    userInfo['email'] = _email;
+    userInfo['dob'] = _dob;
+    userInfo['gender'] = _gender;
+
+    await storage.saveUserInfo(userInfo);
+
+    // TODO: (Thực tế bạn sẽ gọi thêm AuthViewModel.updateProfile() để đẩy dữ liệu này lên Server nữa)
+
+    if (mounted) {
+      setState(() {});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lưu thông tin thành công!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _showLogoutConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: const Text('Xác nhận đăng xuất',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text(
+              'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext); // Tắt popup
+              },
+              child: const Text('Hủy',
+                  style: TextStyle(color: Colors.grey, fontSize: 16)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext); // Tắt popup trước
+                _handleLogout(context); // Tiến hành đăng xuất
+              },
+              child: const Text('Đăng xuất',
+                  style: TextStyle(color: Colors.red, fontSize: 16)),
+            ),
+          ],
+        );
+      },
     );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final viewModel = GetIt.I<AuthViewModel>();
+    await viewModel.logout();
+
+    //Chuyển về trang Login và XÓA SẠCH lịch sử trang (tránh người dùng vuốt Back quay lại)
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+        (route) => false, // false nghĩa là xóa hết tất cả các route trước đó
+      );
+    }
   }
 }

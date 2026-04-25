@@ -1,17 +1,23 @@
-import 'package:bus_ticket_app/pages/account_info_pages.dart';
-import 'package:bus_ticket_app/pages/favorite_pages.dart';
-import 'package:bus_ticket_app/pages/home_pages.dart';
+import 'package:bus_ticket_app/data/services/storage_service.dart';
+import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
 import 'package:bus_ticket_app/pages/login_page.dart';
-import 'package:bus_ticket_app/pages/my_tickets_pages.dart';
-import 'package:bus_ticket_app/pages/notification_pages.dart';
 import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'core/di/service_locator.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setupServiceLocator();
-  runApp(const MyApp());
+  await getIt<StorageService>().init();
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider<AuthViewModel>(
+        create: (_) => getIt<AuthViewModel>(),
+      )
+    ],
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -38,7 +44,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       // home: CustomBottonNav(),
-      home: LoginPage(),
+      home: const LoginPage(),
     );
   }
 }

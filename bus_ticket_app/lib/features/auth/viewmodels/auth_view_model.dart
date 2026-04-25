@@ -1,8 +1,7 @@
+import 'package:bus_ticket_app/data/services/storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:bus_ticket_app/data/repositories/AuthRepository.dart';
-
-// Import Secure Storage của bạn vào đây (như đã bàn ở câu hỏi trước)
-// import '../services/secure_storage_service.dart';
+import 'package:get_it/get_it.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
@@ -12,14 +11,11 @@ class AuthViewModel extends ChangeNotifier {
   // --- State Variables (Trạng thái giao diện) ---
   bool _isLoading = false;
   String? _errorMessage;
-  String _savedEmail = ''; // Lưu lại email sau khi gửi OTP thành công
 
   // --- Getters cho View ---
   bool get isLoading => _isLoading;
 
   String? get errorMessage => _errorMessage;
-
-  String get savedEmail => _savedEmail;
 
   // Hàm xóa lỗi (Dùng khi user bắt đầu gõ lại text)
   void clearError() {
@@ -39,7 +35,6 @@ class AuthViewModel extends ChangeNotifier {
 
       if (response.isSuccess) {
         // code == 0
-        _savedEmail = email; // Cất email lại dùng cho bước sau
         _isLoading = false;
         notifyListeners();
         return true;
@@ -59,8 +54,8 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   // --- 2. Xử lý Xác thực OTP ---
-  Future<bool> verifyOtp(String otp) async {
-    if (_savedEmail.isEmpty) {
+  Future<bool> verifyOtp(String otp, String email) async {
+    if (email.isEmpty) {
       _errorMessage = 'Lỗi hệ thống: Không tìm thấy email cần xác thực.';
       notifyListeners();
       return false;
@@ -71,7 +66,7 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _authRepository.verifyOtp(_savedEmail, otp);
+      final response = await _authRepository.verifyOtp(email, otp);
 
       if (response.isSuccess && response.result != null) {
         // code == 0
@@ -79,13 +74,11 @@ class AuthViewModel extends ChangeNotifier {
         // 1. Lấy Token từ Result
         final accessToken = response.accessToken;
         final refreshToken = response.refreshToken;
-
+        final userInfo = response.customerInfo;
         // 2. LƯU TOKEN VÀO BỘ NHỚ BẢO MẬT (Keychain/Keystore)
-        // Ví dụ: await SecureStorageService.saveTokens(accessToken!, refreshToken!);
-
-        // 3. Lấy thông tin user nếu cần (lưu vào local database hoặc state manager khác)
-        // final userInfo = response.customerInfo;
-
+        final storage = GetIt.I<StorageService>();
+        await storage.saveTokens(accessToken!, refreshToken!);
+        if (userInfo != null) await storage.saveUserInfo(userInfo.toJson());
         _isLoading = false;
         notifyListeners();
         return true; // Báo cho View biết Đăng nhập thành công
@@ -101,6 +94,28 @@ class AuthViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> logout() async {
+    final storage = GetIt.I<StorageService>();
+
+    try {
+      // 1. LẤY TOKEN TRƯỚC (Bắt buộc phải lấy trước khi gọi clearAll)
+      final String? accessToken = await storage.getAccessToken();
+      final String? refreshToken = await storage.getRefreshToken();
+
+      // 2. GỌI API LOGOUT (Chỉ gọi khi có đủ 2 token)
+      if (accessToken != null && refreshToken != null) {
+        await _authRepository.logout(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
+      }
+    } catch (e) {
+      print('Lỗi quá trình đăng xuất: $e');
+    } finally {
+      await storage.clearAll();
     }
   }
 }

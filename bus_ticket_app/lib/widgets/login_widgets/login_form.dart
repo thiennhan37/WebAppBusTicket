@@ -1,5 +1,6 @@
 import 'package:bus_ticket_app/core/di/service_locator.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
+import 'package:bus_ticket_app/widgets/login_widgets/otp_verification_widget.dart';
 import 'package:flutter/material.dart';
 
 class LoginForm extends StatefulWidget {
@@ -42,7 +43,7 @@ class _LoginFormState extends State<LoginForm> {
         const SnackBar(
           content:
               Text('Vui lòng nhập đúng định dạng Gmail (VD: abc@gmail.com)'),
-          backgroundColor: Colors.orange, // Đổi màu cảnh báo
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -56,8 +57,10 @@ class _LoginFormState extends State<LoginForm> {
 
     if (success) {
       // Thành công -> Chuyển sang màn hình nhập OTP
-      // Thay '/verify-otp' bằng route tương ứng của bạn
-      Navigator.pushNamed(context, '/verify-otp');
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => OtpVerificationWidget(contactInfo: email)));
     } else {
       // Lỗi -> Hiện SnackBar báo lỗi từ backend
       ScaffoldMessenger.of(context).showSnackBar(

@@ -26,6 +26,56 @@ class ApiService {
     ));
   }
 
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      return await _dio.get(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
+    } on DioException catch (e) {
+      throw Exception(_handleError(e));
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  // Generic POST
+  Future<Response> post(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      return await _dio.post(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+    } on DioException catch (e) {
+      throw Exception(_handleError(e));
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  // Hàm phụ trợ để xử lý lỗi Dio chung (Tùy chọn)
+  String _handleError(DioException error) {
+    if (error.response != null) {
+      // Có thể trích xuất message từ JSON lỗi của server trả về ở đây
+      return error.response?.data?['message'] ??
+          'API Error: ${error.response?.statusCode}';
+    } else {
+      return 'Network error: ${error.message}';
+    }
+  }
+
   // Send OTP
   Future<OtpResponseModel> sendOtp(OtpRequestModel request) async {
     try {

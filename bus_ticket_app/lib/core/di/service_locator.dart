@@ -3,6 +3,8 @@ import '../../data/services/api_service.dart';
 import 'package:bus_ticket_app/data/repositories/AuthRepository.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
 
+import '../../data/services/storage_service.dart';
+
 final getIt = GetIt.instance;
 
 void setupServiceLocator() {
@@ -18,4 +20,6 @@ void setupServiceLocator() {
   getIt.registerFactory<AuthViewModel>(
     () => AuthViewModel(getIt<AuthRepository>()),
   );
+
+  getIt.registerLazySingleton<StorageService>(() => StorageService());
 }
