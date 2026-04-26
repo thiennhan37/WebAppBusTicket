@@ -18,6 +18,7 @@ class CustomerInfoModel {
   final String? status;
   @JsonKey(name: 'createdAt')
   final DateTime? createdAt;
+  final String? idRegion;
 
   CustomerInfoModel({
     required this.id,
@@ -28,6 +29,7 @@ class CustomerInfoModel {
     this.gender,
     this.status,
     this.createdAt,
+    this.idRegion,
   });
 
   factory CustomerInfoModel.fromJson(Map<String, dynamic> json) =>

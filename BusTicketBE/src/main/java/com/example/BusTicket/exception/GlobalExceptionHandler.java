@@ -3,7 +3,9 @@ package com.example.BusTicket.exception;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.nimbusds.jose.JOSEException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,6 +13,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse> handleJsonParseException(HttpMessageNotReadableException ex) {
+        return ResponseEntity
+                .status(ErrorCode.INVALID_FORMAT.getStatusCode())
+                .body(ApiResponse.error(ErrorCode.INVALID_FORMAT));
+    }
 
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse> handleException(Exception exception){

@@ -136,8 +136,6 @@ public class AuthenticationService {
         }
     }
 
-
-
     public void sendOtp(String email) {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new MyAppException(ErrorCode.INVALID_GMAIL));

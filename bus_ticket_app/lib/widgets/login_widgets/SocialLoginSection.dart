@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class SocialLoginSection extends StatelessWidget {
-  const SocialLoginSection({super.key});
+  final bool isLogin;
+  final VoidCallback? onToggleAuth;
+
+  const SocialLoginSection({
+    super.key,
+    this.isLogin = true,
+    this.onToggleAuth,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +19,7 @@ class SocialLoginSection extends StatelessWidget {
           children: [
             Expanded(child: Divider(color: Colors.grey.shade300)),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 'hoặc',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
@@ -62,14 +69,14 @@ class SocialLoginSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Bạn chưa có tài khoản? ',
-              style: TextStyle(color: Colors.black87),
+            Text(
+              isLogin ? 'Bạn chưa có tài khoản? ' : 'Bạn đã có tài khoản? ',
+              style: const TextStyle(color: Colors.black87),
             ),
             GestureDetector(
-              onTap: () {},
+              onTap: onToggleAuth,
               child: Text(
-                'Đăng ký',
+                isLogin ? 'Đăng ký' : 'Đăng nhập',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.bold,

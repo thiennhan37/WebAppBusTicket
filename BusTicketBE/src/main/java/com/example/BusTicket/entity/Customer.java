@@ -49,8 +49,10 @@ public class Customer implements InfoAccount {
     private String role = "CUSTOMER";  // Mặc định
 
     @Column(name = "password", length = 255)
-    private String password;  // Có thể null, không dùng trong login
+    private String password;
 
+    @Column(name = "id_region", length = 4)
+    private String idRegion;
     @Override
     public String getId() {
         return this.id;

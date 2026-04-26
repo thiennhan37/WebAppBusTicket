@@ -28,26 +28,4 @@ public class AuthenticationController {
         RefreshTokenResponse response = authenticationService.refreshToken(request);
         return ApiResponse.success(response);
     }
-
-    @PostMapping("auth/send-otp")
-    ApiResponse<Void> sendOtp(@RequestBody EmailLoginRequest request) {
-        log.info("in sendOtp controller");
-        authenticationService.sendOtp(request.getEmail());
-        return ApiResponse.success(null);
-    }
-
-    @PostMapping("auth/verify-otp")
-    ApiResponse<CustomerAuthenticationResponse> verifyOtp(@RequestBody OtpVerifyRequest request)
-            throws JOSEException {
-        log.info("in verifyOtp controller");
-        CustomerAuthenticationResponse response = authenticationService.verifyOtp(request.getEmail(), request.getOtp());
-        return ApiResponse.success(response);
-    }
-
-    @PostMapping("auth/logout")
-    ApiResponse<Boolean> logout(@RequestBody LogoutRequest request) throws JOSEException, ParseException {
-        authenticationService.logout(request);
-        log.info(request.getAccessToken() + " " + request.getRefreshToken());
-        return ApiResponse.success(true);
-    }
 }

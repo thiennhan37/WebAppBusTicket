@@ -53,6 +53,14 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
       _email = userInfo['email'] ?? '';
       _dob = userInfo['dob'] ?? '';
       _gender = userInfo['gender'] ?? 'Nam';
+      final String? idRegion = userInfo['idRegion'];
+
+      if (idRegion != null && idRegion.isNotEmpty) {
+        _selectedCountry = _countries.firstWhere(
+          (country) => country['code'] == idRegion,
+          orElse: () => _countries[0],
+        );
+      }
     }
   }
 

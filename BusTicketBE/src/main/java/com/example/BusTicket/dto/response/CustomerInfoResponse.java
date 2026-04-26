@@ -23,4 +23,5 @@ public class CustomerInfoResponse {
     private GenderEnum gender;
     private StatusEnum status;
     private LocalDateTime createdAt;
+    private String idRegion;
 }

@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-        textTheme: TextTheme(),
+        textTheme: const TextTheme(),
         useMaterial3: true,
       ),
       // home: CustomBottonNav(),

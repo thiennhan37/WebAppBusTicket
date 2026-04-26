@@ -2,7 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class HeaderLoginWidget extends StatelessWidget {
-  const HeaderLoginWidget({super.key});
+  final String title;
+  final String subtitle;
+  final String imagePath;
+
+  const HeaderLoginWidget({
+    super.key,
+    this.title = 'Xin chào',
+    this.subtitle = 'Đăng nhập để tận hưởng nhiều ưu đãi',
+    this.imagePath = 'assets/images/busLogin.svg',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,23 +27,23 @@ class HeaderLoginWidget extends StatelessWidget {
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back, color: Colors.white),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Xin chào',
-                    style: TextStyle(
+                    title,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Text(
-                    'Đăng nhập để tận hưởng nhiều ưu đãi',
-                    style: TextStyle(
+                    subtitle,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -48,7 +57,7 @@ class HeaderLoginWidget extends StatelessWidget {
               width: double.infinity,
               height: 150,
               alignment: Alignment.bottomCenter,
-              child: SvgPicture.asset('assets/images/busLogin.svg'),
+              child: SvgPicture.asset(imagePath),
             ),
             const SizedBox(height: 20.0),
           ],

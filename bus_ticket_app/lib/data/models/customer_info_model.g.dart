@@ -18,6 +18,7 @@ CustomerInfoModel _$CustomerInfoModelFromJson(Map<String, dynamic> json) =>
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
+      idRegion: json['idRegion'] as String?,
     );
 
 Map<String, dynamic> _$CustomerInfoModelToJson(CustomerInfoModel instance) =>
@@ -30,4 +31,5 @@ Map<String, dynamic> _$CustomerInfoModelToJson(CustomerInfoModel instance) =>
       'gender': instance.gender,
       'status': instance.status,
       'createdAt': instance.createdAt?.toIso8601String(),
+      'idRegion': instance.idRegion,
     };

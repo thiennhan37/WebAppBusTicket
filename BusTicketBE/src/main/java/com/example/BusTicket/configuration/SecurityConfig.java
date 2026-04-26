@@ -28,7 +28,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity // cho phép dùng preAuthorize, postAuthorize
 public class SecurityConfig {
     private final String[] AUTH_ENDPOINTS = {"/nhaxe/auth/login", "/nhaxe/auth/logout", "/auth/refresh-token",
-        "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout"};
+        "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/auth/register"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open"};
