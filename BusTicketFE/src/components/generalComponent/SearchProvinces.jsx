@@ -52,7 +52,7 @@ const SearchProvinces = ({ onChange, field, label, placeholder, initial }) => {
   }, [provinces, inputValue, isOpen, searchRef]);
 
   return (
-    <div className="flex flex-col items-center max-h-[70px]">
+    <div className="flex flex-col max-h-[70px]">
       <div ref={searchRef} className="relative w-full max-w-md">
         <label className="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1">
           {label}

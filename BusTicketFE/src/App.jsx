@@ -11,6 +11,8 @@ import LocalRoutes from './pages/LocalRoute/LocalRoutes'
 import Report from './pages/Report'
 import Rating from './pages/Rating'
 import StaffManagement from './pages/StaffManagement/StaffManagement'
+import PaymentSuccess from './components/generalComponent/PaymentSuccess'
+
 function App() { 
               {/* <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
@@ -20,7 +22,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-
+          <Route path='/payment-success' element={<PaymentSuccess/>}></Route>
           <Route path='/nhaxe' element={<HomePage/>}></Route>
           <Route element={<ProtectedRoute type="company"/>}>
               <Route element={<CompanyLayout/>}>

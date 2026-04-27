@@ -53,7 +53,7 @@ const CreateRoute = ({ crRoute, onChangeCrRoute, setOpen, handleCreateRoute }) =
   };
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow-2xl border border-gray-100 w-full max-w-2xl ml-4 h-fit animate-in fade-in slide-in-from-right-4 duration-300">
+    <div className="bg-white p-4 rounded-xl shadow-2xl border border-gray-100 w-full max-w-2xl h-fit animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="flex items-center justify-between gap-2 mb-6 border-b pb-2">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
