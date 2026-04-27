@@ -18,7 +18,7 @@ const TripService = {
     getTripById(tripId){
         if(!tripId) return;
         return api.get(`/nhaxe/trips/${tripId}`);
-    }, 
+    },
     createTrip(newTrip){
         const trip = {
             routeId: newTrip.route.id, 
