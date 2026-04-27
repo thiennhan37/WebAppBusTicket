@@ -1,9 +1,23 @@
-import 'package:bus_ticket_app/pages/account_info_pages.dart';
-import 'package:bus_ticket_app/pages/home_pages.dart';
+import 'package:bus_ticket_app/data/services/storage_service.dart';
+import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
+import 'package:bus_ticket_app/pages/login_page.dart';
+import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'core/di/service_locator.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  setupServiceLocator();
+  await getIt<StorageService>().init();
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider<AuthViewModel>(
+        create: (_) => getIt<AuthViewModel>(),
+      )
+    ],
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -26,11 +40,11 @@ class MyApp extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-        textTheme: TextTheme(),
-        useMaterial3: true
+        textTheme: const TextTheme(),
+        useMaterial3: true,
       ),
-      home: AccountInfoPage(),
+      // home: CustomBottonNav(),
+      home: const LoginPage(),
     );
   }
 }
-
