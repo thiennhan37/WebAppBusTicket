@@ -31,6 +31,7 @@ public class SecurityConfig {
         "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
             "/register/verify"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type"};
+    private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open"};
     private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes"};
@@ -48,7 +49,7 @@ public class SecurityConfig {
                         // Browser gửi OPTIONS trước (CORS)
                         .requestMatchers(HttpMethod.POST, AUTH_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/bus-type").permitAll()
+                        .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
                         .requestMatchers(HttpMethod.POST, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
                         .requestMatchers(HttpMethod.PUT, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())

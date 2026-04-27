@@ -16,7 +16,8 @@ public enum ErrorCode {
     INVALID_STATE(1007, "Invalid state", HttpStatus.BAD_REQUEST),
     ERROR_REDIS(1008, "Hệ thống không phản hồi", HttpStatus.INTERNAL_SERVER_ERROR),
     ERROR_SAVED(1009, "Lưu thông tin thất bại", HttpStatus.BAD_REQUEST),
-
+    ERROR_MOMO(1010, "Momo phản hồi không hợp lệ", HttpStatus.BAD_REQUEST),
+    ERROR_SIGNATURE(1011, "Chữ kí chưa xác thực", HttpStatus.UNAUTHORIZED),
 
 
     COMPANY_NOT_EXISTED(4001, "Nhà xe không tồn tại", HttpStatus.BAD_REQUEST),
@@ -37,6 +38,14 @@ public enum ErrorCode {
     REGISTRATION_EXPIRED(4026, "Phiên đăng ký đã hết hạn. Vui lòng đăng ký lại", HttpStatus.BAD_REQUEST),
     MAIL_SEND_FAILED(5001, "Hệ thống không thể gửi email xác thực lúc này", HttpStatus.INTERNAL_SERVER_ERROR),
     SYSTEM_ERROR(5000, "Đã xảy ra lỗi hệ thống, vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR),
+    BUS_BUSY(4009, "Xe đã có lịch trình khác trong khoảng thời gian này", HttpStatus.BAD_REQUEST),
+    TRIP_SEAT_BOOKED(4010, "Ghế đã bị đặt", HttpStatus.BAD_REQUEST),
+    TRIP_SEAT_INVALID(4011, "Ghế không hợp lệ", HttpStatus.BAD_REQUEST),
+    ORDER_EXISTED(4012, "Đơn hàng đã tồn tại", HttpStatus.BAD_REQUEST),
+    BOOKING_ANOTHER_ORDER(4013, "Bạn đang xử lí 1 đơn hàng khác", HttpStatus.BAD_REQUEST),
+    ROUTE_STOP_INVALID(4014, "Điểm đón trả không hợp lệ", HttpStatus.BAD_REQUEST),
+    ROUTE_INVALID(4014, "Tuyến đường không hợp lệ", HttpStatus.BAD_REQUEST),
+    TICKET_INVALID(4014, "Vé không hợp lệ", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

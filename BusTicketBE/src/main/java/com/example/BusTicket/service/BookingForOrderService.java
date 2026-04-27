@@ -3,10 +3,13 @@ package com.example.BusTicket.service;
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.request.BookingOrderCrRequest;
 import com.example.BusTicket.dto.request.BookingOrderDelRequest;
+import com.example.BusTicket.dto.request.CancelTicketRequest;
 import com.example.BusTicket.dto.request.CompHoldSeatRequest;
 import com.example.BusTicket.dto.response.BookingOrderResponse;
 import com.example.BusTicket.entity.*;
+import com.example.BusTicket.enums.HistoryStatusEnum;
 import com.example.BusTicket.enums.TicketStatusEnum;
+import com.example.BusTicket.enums.TripSeatEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.BookingOrderMapper;
@@ -14,7 +17,6 @@ import com.example.BusTicket.repository.jpa.*;
 import com.example.BusTicket.util.IdUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +28,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class BookingOrderService {
+public class BookingForOrderService {
     private final BookingOrderRepository bookingOrderRepository;
     private final SeatReservationService seatReservationService;
     private final CustomerRepository customerRepository;
@@ -36,7 +38,9 @@ public class BookingOrderService {
     private final RouteStopRepository routeStopRepository;
     private final TicketRepository ticketRepository;
     private final BookingOrderMapper orderMapper;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final HistoryBookingRepository historyBookingRepository;
+    private final HistoryDetailRepository historyDetailRepository;
+
 
     @Value("${booking.holdingSeatTime}")
     private int holdingSeatTime;
@@ -107,10 +111,12 @@ public class BookingOrderService {
                 .totalCost(totalCost)
                 .build();
         bookingOrderRepository.save(bookingOrder);
-        saveTicketList(tripSeatList, bookingOrder, arrival, destination);
+        tripSeatRepository.updateStatusByIds(tripSeatIdList, TripSeatEnum.BOOKED.name(), TripSeatEnum.AVAILABLE.name());
+        List<Ticket> ticketList =  saveTicketList(tripSeatList, bookingOrder, arrival, destination);
+        saveHistoryForBooking(bookingOrder, creatingStaff, null, ticketList);
         return orderMapper.toBookingOrderResponse(bookingOrder);
     }
-    private void saveTicketList(List<TripSeat> tripSeatList,BookingOrder bookingOrder, RouteStop arrival, RouteStop destination){
+    private List<Ticket> saveTicketList(List<TripSeat> tripSeatList,BookingOrder bookingOrder, RouteStop arrival, RouteStop destination){
         List<Ticket> ticketList = new ArrayList<>();
         for(TripSeat ts : tripSeatList){
             Ticket ticket = Ticket.builder()
@@ -125,7 +131,26 @@ public class BookingOrderService {
                     .build();
             ticketList.add(ticket);
         }
-        ticketRepository.saveAll(ticketList);
+        return ticketRepository.saveAll(ticketList);
+    }
+    private void saveHistoryForBooking(BookingOrder bookingOrder, CompanyUser actor, Customer customer, List<Ticket> ticketList){
+        HistoryBooking historyBooking = HistoryBooking.builder()
+                .type(HistoryStatusEnum.BOOKING.name())
+                .bookingOrder(bookingOrder)
+                .actor(actor)
+                .customer(customer)
+                .createdAt(LocalDateTime.now())
+                .build();
+        historyBooking = historyBookingRepository.save(historyBooking);
+        List<HistoryDetail> historyDetailList = new ArrayList<>();
+        for(Ticket t : ticketList){
+            HistoryDetail historyDetail = HistoryDetail.builder()
+                    .historyBooking(historyBooking)
+                    .ticket(t)
+                    .build();
+            historyDetailList.add(historyDetail);
+        }
+        historyDetailRepository.saveAll(historyDetailList);
     }
 
     // đã fix bug comp A xóa được trip_seat của B nếu A nhập đúng order của A và nhập các tripSeatId của order của B
