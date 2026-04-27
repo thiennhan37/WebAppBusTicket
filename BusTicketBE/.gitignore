@@ -1,78 +1,77 @@
-```gitignore
-# =========================
-# GENERAL
-# =========================
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+logs/
 *.log
-*.tmp
-*.swp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
 .DS_Store
 Thumbs.db
 
-# =========================
-# INTELLIJ / VS CODE
-# =========================
-.idea/
-*.iml
-.vscode/
+# Environment
+.env
+.env.local
+.env.*.local
 
-# =========================
-# SPRING BOOT / JAVA / MAVEN
-# =========================
-target/
+# IDE
+.vscode/
+.settings/
+.classpath
+.project
+*.swp
+*.swo
+*~
+
+# Generated files
 build/
-out/
+dist/
+gen/
+
+# Java
 *.class
 *.jar
 *.war
 *.ear
-.mvn/wrapper/maven-wrapper.jar
+*.zip
 
-# =========================
-# SPRING CONFIG (optional)
-# Uncomment if needed
-# application-local.yml
-# application-dev.yml
-# =========================
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
-# =========================
-# NODE / REACTJS
-# =========================
+# Gradle (nếu dùng)
+.gradle/
+gradle/
+
+# Node (nếu có frontend)
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 package-lock.json
-dist/
-build/
-coverage/
-.next/
+yarn.lock
 
-# =========================
-# FLUTTER / DART
-# =========================
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-build/
-ios/Pods/
-ios/.symlinks/
-android/.gradle/
-android/app/debug
-android/app/profile
-android/app/release
+# Build output
+out/
+bin/
 
-# Generated files
-*.lock
-!.gitignore
-!pubspec.lock
-
-# =========================
-# ENV FILES
-# =========================
-.env
-.env.*
-```
-
+# Spring Boot
+application-*.properties
+application-*.yaml
+application-*.yml
