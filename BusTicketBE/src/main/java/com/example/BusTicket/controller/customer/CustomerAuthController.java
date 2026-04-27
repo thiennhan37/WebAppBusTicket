@@ -41,12 +41,6 @@ public class CustomerAuthController {
         return ApiResponse.success(response);
     }
 
-    @PostMapping("auth/logout")
-    ApiResponse<Boolean> logout(@RequestBody LogoutRequest request) throws JOSEException, ParseException {
-        authenticationService.logout(request);
-        log.info(request.getAccessToken() + " " + request.getRefreshToken());
-        return ApiResponse.success(true);
-    }
 
     @PostMapping("/register/init")
     public ApiResponse<?> initiateRegistration(@Valid @RequestBody CustomerRegisterRequest request) {
