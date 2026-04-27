@@ -22,4 +22,14 @@ public class CompanyUserSpecification {
             return criteriaBuilder.equal(root.get("busCompany").get("id"), busCompanyId);
         };
     }
+    public static Specification<CompanyUser> containsKeyword(String keyword){
+        return (root, query, criteriaBuilder) -> {
+            if(keyword == null || keyword.isBlank()) return criteriaBuilder.conjunction();
+            String pattern = "%" + keyword.toLowerCase() + "%";
+            return criteriaBuilder.and(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("fullName")), pattern),
+                        criteriaBuilder.like(root.get("id"), pattern)
+                    );
+        };
+    }
 }

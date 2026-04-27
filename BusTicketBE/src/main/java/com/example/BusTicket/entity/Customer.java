@@ -4,15 +4,17 @@ import com.example.BusTicket.dto.general.InfoAccount;
 import com.example.BusTicket.enums.GenderEnum;
 import com.example.BusTicket.enums.StatusEnum;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Data
 @Entity
 @Table(name = "customer")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

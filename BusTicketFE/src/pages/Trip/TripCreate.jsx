@@ -11,7 +11,7 @@ import SeatDiagram from "../../components/other/SeatDiagram";
 const TripCreate = ({ setIsAddModalOpen}) => {
   // console.log(newTrip);
   const [newTrip, setNewTrip] = useState({route: null, licensePlate: "", driver: "", 
-    busType: {id:"", name:""}, price: null})
+    busType: {id:"", name:""}, price: 0})
   const handleNewTrip = (field, value) => {
     setNewTrip((prev) => ({
       ...prev, 
@@ -107,9 +107,6 @@ const TripCreate = ({ setIsAddModalOpen}) => {
                     handleNewTrip('busType', busType);
                   }} />
                   {newTrip?.busType?.diagram ? 
-                      // <>
-                      //   {console.log(newTrip.busType.diagram)}
-                      // </>
                     <SeatDiagram diagram={newTrip.busType.diagram}></SeatDiagram>
                     : <div>
                       </div>

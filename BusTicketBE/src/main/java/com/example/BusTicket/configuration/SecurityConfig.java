@@ -33,7 +33,9 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open"};
-    private final String[] COMPANY_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes"};
+    private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes"};
+    private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
+            "/nhaxe/orders/delete-order", "/nhaxe/orders/book-order"};
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
     @Autowired
@@ -50,8 +52,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
                         .requestMatchers(HttpMethod.POST, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
                         .requestMatchers(HttpMethod.PUT, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
-                        .requestMatchers(HttpMethod.GET, COMPANY_ENDPOINTS)
+                        .requestMatchers(HttpMethod.GET, COMPANY_VIEW_ENDPOINTS)
                             .hasAnyRole(RoleEnum.MANAGER.name(), RoleEnum.STAFF.name())
+                        .requestMatchers(HttpMethod.POST, COMPANY_UPDATE_ENDPOINTS)
+                        .hasAnyRole(RoleEnum.MANAGER.name(), RoleEnum.STAFF.name())
                         .anyRequest().authenticated()
                         //Tất cả API khác → bắt buộc có JWT
         );

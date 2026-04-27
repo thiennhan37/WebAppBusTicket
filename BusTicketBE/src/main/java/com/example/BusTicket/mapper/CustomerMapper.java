@@ -13,7 +13,6 @@ public interface CustomerMapper {
     CustomerInfoResponse toCustomerInfoResponse(Customer customer);
     List<CustomerInfoResponse> toCustomerInfoResponseList(List<Customer> customerList);
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "password", ignore = true)
     @Mapping(target = "gender", ignore = true) // Sẽ set mặc định ở Service
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "role", ignore = true)

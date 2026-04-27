@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, User, Award, Calendar, UserPlus, MapPinPlus } from 'lucide-react';
 import InputGroup from '../../components/other/InputGroup';
-import SearchProvinces from './SearchProvinces';
+import SearchProvinces from "../../components/generalComponent/SearchProvinces"
 const RouteHeader = ({filterParams, onChangeFilter, setOpenCreate}) => {
   console.log("reload routeHeader")
   return (

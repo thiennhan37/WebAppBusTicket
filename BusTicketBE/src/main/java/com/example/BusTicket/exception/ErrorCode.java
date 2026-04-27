@@ -14,6 +14,8 @@ public enum ErrorCode {
     INVALID_PARAMETER(1005, "Invalid request parameters", HttpStatus.BAD_REQUEST),
     MISSING_REQUIRED_FIELD(1006, "Required field is missing", HttpStatus.BAD_REQUEST),
     INVALID_STATE(1007, "Invalid state", HttpStatus.BAD_REQUEST),
+    ERROR_REDIS(1008, "Hệ thống không phản hồi", HttpStatus.INTERNAL_SERVER_ERROR),
+    ERROR_SAVED(1009, "Lưu thông tin thất bại", HttpStatus.BAD_REQUEST),
 
 
 

@@ -1,6 +1,8 @@
 package com.example.BusTicket.dto.response;
 
+import com.example.BusTicket.entity.BusType;
 import com.example.BusTicket.entity.Province;
+import com.example.BusTicket.entity.TripSeat;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -21,6 +24,8 @@ public class TripResponse {
     private String status;
     private LocalDateTime departureTime;
     private RouteResponse route;
-    private String busType;
-    private Long price;
+    private BusType busType;
+    private Long price, heldSeats, bookedSeats;
+    private List<TicketResponse> historyBooking;
+    private List<TripSeatResponse> seatMap;
 }

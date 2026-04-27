@@ -1,4 +1,4 @@
-package com.example.BusTicket.controller;
+package com.example.BusTicket.controller.trip;
 
 
 import com.example.BusTicket.dto.request.RouteCrRequest;
@@ -6,7 +6,6 @@ import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.RouteResponse;
 import com.example.BusTicket.dto.response.RouteStopResponse;
 import com.example.BusTicket.entity.Route;
-import com.example.BusTicket.entity.RouteStop;
 import com.example.BusTicket.service.RouteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

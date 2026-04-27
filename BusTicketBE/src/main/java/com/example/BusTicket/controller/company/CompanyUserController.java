@@ -29,14 +29,14 @@ public class CompanyUserController {
     @GetMapping("/member")
     ApiResponse<PagedModel<CompanyUserResponse>> getAllCompanyUser(@RequestParam(required = false) String status,
            @RequestParam(required = false) String role,
+           @RequestParam(required = false) String keyword,
            @PageableDefault(page = 0, size = 5) Pageable pageable){
 
 //        var authenticate = SecurityContextHolder.getContext().getAuthentication();
 //        log.info("username : {}", authenticate.getName());
 //        authenticate.getAuthorities().forEach(x -> log.info(x.getAuthority()));
 
-        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 5);
-        Page<CompanyUserResponse> pageResult = companyUserService.getAllCompanyUser(status, role, fixedPageable);
+        Page<CompanyUserResponse> pageResult = companyUserService.getAllCompanyUser(status, role, keyword, pageable);
         return ApiResponse.success(new PagedModel<>(pageResult));
     }
     @PostMapping("/member")
@@ -50,6 +50,5 @@ public class CompanyUserController {
             throws ParseException, JOSEException
     {
         return ApiResponse.success(companyUserService.updateCompanyUser(request));
-//        log.info("end controller");
     }
 }
