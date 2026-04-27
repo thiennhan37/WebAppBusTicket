@@ -1,7 +1,11 @@
 import 'package:bus_ticket_app/core/di/service_locator.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
+import 'package:bus_ticket_app/widgets/login_widgets/otp_verification_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+
+import '../../data/models/customer_register_request_model.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
@@ -174,9 +178,44 @@ class _RegisterFormState extends State<RegisterForm> {
       return;
     }
 
-    // TODO: Thực hiện gọi hàm Đăng ký. Bạn có thể ghép mã quốc gia vào SĐT để gửi lên server
-    // String fullPhoneNumber = "${_selectedCountry['code']}$phone";
-    // ...
+    final String countryCode = _selectedCountry['code'] ?? '+84';
+
+    String formattedDob = DateFormat('dd/MM/yyyy').format(_selectedDate!);
+
+    final registerRequest = CustomerRegisterRequestModel(
+      fullName: name,
+      email: email,
+      phone: phone,
+      idRegion: countryCode,
+      dob: formattedDob,
+    );
+
+    // 4. Gọi hàm ViewModel
+    bool isSuccess = await viewModel.sendRegistrationOtp(registerRequest);
+
+    if (isSuccess) {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtpVerificationWidget(
+            contactInfo: email,
+            isRegister: true,
+            registerData:
+                registerRequest, // Truyền đầy đủ data để lúc Resend OTP còn có mã vùng
+          ),
+        ),
+      );
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              viewModel.errorMessage ?? 'Đăng ký thất bại, vui lòng thử lại'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildTextField({

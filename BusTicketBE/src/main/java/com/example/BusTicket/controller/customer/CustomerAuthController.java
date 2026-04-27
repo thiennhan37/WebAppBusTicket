@@ -48,14 +48,15 @@ public class CustomerAuthController {
         return ApiResponse.success(true);
     }
 
-    @PostMapping("auth/register")
-    public ApiResponse<?> register(@Valid @RequestBody CustomerRegisterRequest request) {
-        try {
-            CustomerInfoResponse response = customerAuthService.registerCustomer(request);
-            return ApiResponse.success(response);
-        } catch (RuntimeException e) {
-            // Trả về lỗi 400 nếu email/sđt đã tồn tại
-            return ApiResponse.error(ErrorCode.INVALID_CUSTOMER_REGISTER);
-        }
+    @PostMapping("/register/init")
+    public ApiResponse<?> initiateRegistration(@Valid @RequestBody CustomerRegisterRequest request) {
+        customerAuthService.initiateCustomerRegistration(request);
+        return ApiResponse.success(true);
+    }
+
+    @PostMapping("/register/verify")
+    public ApiResponse<?> verifyRegistration(@Valid @RequestBody OtpVerifyRequest request) throws Exception {
+        CustomerAuthenticationResponse response = customerAuthService.verifyRegistrationOtp(request.getEmail(), request.getOtp());
+        return ApiResponse.success(response);
     }
 }

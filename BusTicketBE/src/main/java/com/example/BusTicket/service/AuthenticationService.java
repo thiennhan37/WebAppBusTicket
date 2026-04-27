@@ -145,7 +145,7 @@ public class AuthenticationService {
         }
 
         String otp = generateOtp();
-        String redisKey = "OTP:" + email;
+        String redisKey = "OTP_Login:" + email;
         redisTemplate.opsForValue().set(redisKey, otp, Duration.ofMinutes(5));
 
         // Tạo HTML email
@@ -166,7 +166,7 @@ public class AuthenticationService {
     }
 
     public CustomerAuthenticationResponse verifyOtp(String email, String otp) throws JOSEException {
-        String redisKey = "OTP:" + email;
+        String redisKey = "OTP_Login:" + email;
         String storedOtp = redisTemplate.opsForValue().get(redisKey);
 
         if (storedOtp == null || !storedOtp.equals(otp)) {

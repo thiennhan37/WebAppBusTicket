@@ -48,8 +48,7 @@ public class Customer implements InfoAccount {
     @Column(name = "role", length = 50)
     private String role = "CUSTOMER";  // Mặc định
 
-    @Column(name = "password", length = 255)
-    private String password;
+
 
     @Column(name = "id_region", length = 4)
     private String idRegion;
@@ -70,7 +69,7 @@ public class Customer implements InfoAccount {
 
     @Override
     public String getPassword() {
-        return this.password;
+        return null;
     }
 
     @Override

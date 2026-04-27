@@ -6,9 +6,17 @@ import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 
 class OtpVerificationWidget extends StatefulWidget {
   final String contactInfo;
+  final bool isRegister; // THÊM MỚI: Phân biệt luồng Login hay Register
+  final dynamic
+      registerData; // THÊM MỚI: Dữ liệu đăng ký (dùng để gửi lại OTP nếu cần)
 
-  const OtpVerificationWidget({Key? key, required this.contactInfo})
-      : super(key: key);
+  const OtpVerificationWidget({
+    Key? key,
+    required this.contactInfo,
+    this.isRegister =
+        false, // Mặc định là false để không ảnh hưởng luồng Login cũ
+    this.registerData,
+  }) : super(key: key);
 
   @override
   State<OtpVerificationWidget> createState() => _OtpVerificationScreeWidget();
@@ -57,15 +65,27 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
       return;
     }
 
-    // Đóng bàn phím
     FocusScope.of(context).unfocus();
-
     final authVM = context.read<AuthViewModel>();
-    final isSuccess = await authVM.verifyOtp(otp, widget.contactInfo);
+
+    // RẼ NHÁNH API Ở ĐÂY
+    bool isSuccess = false;
+    if (widget.isRegister) {
+      isSuccess = await authVM.verifyRegistrationOtp(widget.contactInfo, otp);
+    } else {
+      isSuccess = await authVM.verifyOtp(otp, widget.contactInfo);
+    }
 
     if (isSuccess && mounted) {
-      // Đăng nhập thành công -> Lưu dữ liệu (đã làm trong ViewModel)
-      // -> Chuyển sang Page khác (HomeScreen) và xóa lịch sử điều hướng
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.isRegister
+              ? 'Đăng ký thành công!'
+              : 'Đăng nhập thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const CustomBottonNav()),
@@ -77,17 +97,24 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
   // --- Hàm xử lý Gửi lại OTP ---
   Future<void> _onResendOtp() async {
     final authVM = context.read<AuthViewModel>();
-    final isSuccess = await authVM.sendOtp(widget.contactInfo);
+
+    // RẼ NHÁNH API GỬI LẠI Ở ĐÂY
+    bool isSuccess = false;
+    if (widget.isRegister && widget.registerData != null) {
+      // Đăng ký thì phải gửi lại toàn bộ thông tin form
+      isSuccess = await authVM.sendRegistrationOtp(widget.registerData!);
+    } else {
+      // Đăng nhập thì chỉ cần gửi lại email
+      isSuccess = await authVM.sendOtp(widget.contactInfo);
+    }
 
     if (isSuccess && mounted) {
-      // Hiện thông báo đã gửi lại mã
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Đã gửi lại mã OTP thành công!'),
           backgroundColor: Colors.green,
         ),
       );
-      // Khởi động lại bộ đếm 30s
       _startTimer();
     }
   }

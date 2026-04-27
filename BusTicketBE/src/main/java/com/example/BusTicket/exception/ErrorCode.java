@@ -26,10 +26,15 @@ public enum ErrorCode {
     NOT_EXISTED(4006, "Dữ liệu không tồn tại", HttpStatus.BAD_REQUEST),
     ROUTE_NOT_EXISTED(4007, "Tuyến đường không tồn tại", HttpStatus.BAD_REQUEST),
     INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành không hợp lệ", HttpStatus.BAD_REQUEST),
+
     INVALID_GMAIL(4021, "Không tìm thấy gmail này trong hệ thống", HttpStatus.BAD_REQUEST),
     INVALID_OTP(4022, "Sai OTP hoặc OTP đã hết hạn", HttpStatus.BAD_REQUEST),
     INVALID_CUSTOMER_REGISTER(4023, "Gmail hoặc số điện thoại đã được sử dụng", HttpStatus.BAD_REQUEST),
     INVALID_FORMAT(4024, "Dữ liệu gửi lên không đúng định dạng", HttpStatus.BAD_REQUEST),
+    PHONE_EXISTED(4025, "Số điện thoại này đã được sử dụng", HttpStatus.BAD_REQUEST),
+    REGISTRATION_EXPIRED(4026, "Phiên đăng ký đã hết hạn. Vui lòng đăng ký lại", HttpStatus.BAD_REQUEST),
+    MAIL_SEND_FAILED(5001, "Hệ thống không thể gửi email xác thực lúc này", HttpStatus.INTERNAL_SERVER_ERROR),
+    SYSTEM_ERROR(5000, "Đã xảy ra lỗi hệ thống, vui lòng thử lại sau", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
     private int code;
     private String message;
