@@ -6,10 +6,11 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MomoCreateRequest {
+public class MomoPaymentRequest {
 
-    private String orderId;
+    private String bookingOrderId;
     private String amount;
     private String orderInfo;
+    private String transId;
     private String type;
 }

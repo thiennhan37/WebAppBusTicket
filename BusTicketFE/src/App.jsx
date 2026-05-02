@@ -12,6 +12,7 @@ import Report from './pages/Report'
 import Rating from './pages/Rating'
 import StaffManagement from './pages/StaffManagement/StaffManagement'
 import PaymentSuccess from './components/generalComponent/PaymentSuccess'
+import Payment from './pages/Payment/Payment'
 
 function App() { 
               {/* <div className="mb-8">
@@ -23,6 +24,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path='/payment-success' element={<PaymentSuccess/>}></Route>
+          <Route path='/payment:bookingOrderId' element={<Payment/>}></Route>
           <Route path='/nhaxe' element={<HomePage/>}></Route>
           <Route element={<ProtectedRoute type="company"/>}>
               <Route element={<CompanyLayout/>}>

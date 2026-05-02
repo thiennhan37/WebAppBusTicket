@@ -19,7 +19,7 @@ import java.util.List;
 @Getter
 public class BookingOrderCrRequest {
 
-    @NotNull(message = "Booking Id không được rỗng")
+    @NotNull(message = "BookingOrder Id không được rỗng")
     private String id;
     @NotNull
     private String customerName;
@@ -31,7 +31,7 @@ public class BookingOrderCrRequest {
     @NotNull
     private Long arrivalId;
     @NotNull
-    List<String> tripSeatIdList;
+    private List<String> tripSeatIdList;
     @NotNull
     private Long destinationId;
 

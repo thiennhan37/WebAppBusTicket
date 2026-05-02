@@ -1,8 +1,17 @@
-import { publicApi } from "./api";
+import api from "./api";
 
 const OrderService = {
-    holdSeats: async ({tripId, tricketIdList}) => {
-        const res = await publicApi.post(`/orders/hold-seats/${tripId}`, tricketIdList);
+    holdSeats({tripId, tripSeatIdList}){
+        const res = api.post(`/nhaxe/orders/hold-seats/${tripId}`, {tripSeatIdList});
+        return res;
+    }, 
+    unHoldSeats({tripId, bookingOrderId, tripSeatIdList}){
+        const res = api.post(`/nhaxe/orders/unhold-seats/${tripId}`, {bookingOrderId, tripSeatIdList});
+        return res;
+    }, 
+    bookOrderByCompany({tripId, payload}){
+        console.log(tripId, payload);
+        const res = api.post(`/nhaxe/orders/book-order/${tripId}`, payload);
         return res;
     }
 }

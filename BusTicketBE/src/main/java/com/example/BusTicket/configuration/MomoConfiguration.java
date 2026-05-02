@@ -12,6 +12,7 @@ public class MomoConfiguration {
     private String accessKey;
     private String secretKey;
     private String endpoint;
+    private String refundUrl;
     private String redirectUrl;
     private String ipnUrl;
 }

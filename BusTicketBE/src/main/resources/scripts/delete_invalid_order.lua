@@ -7,11 +7,14 @@
 local currentOrder = redis.call('GET', KEYS[1])
 
 -- 2. Kiểm tra xem key này có đúng là do orderId hiện tại đang giữ hay không
+redis.log(redis.LOG_WARNING, "Gia tri cua bien keys1 la: " .. tostring(KEYS[1]))
+redis.log(redis.LOG_WARNING, "Gia tri cua bien keys2 la: " .. tostring(KEYS[2]))
 if currentOrder == ARGV[1] then
     -- Nếu khớp, chứng tỏ TTL chưa hết và mình vẫn đang làm chủ các key này.
     -- Tiến hành xóa toàn bộ các KEYS truyền vào.
     -- Hàm unpack(KEYS) sẽ bung mảng KEYS thành các tham số rời rạc cho lệnh DEL để xóa hàng loạt trong 1 lần gọi.
     redis.call('DEL', KEYS[1], KEYS[2])
+
     for i = 3, #KEYS do
         local orderId = redis.call('GET', KEYS[i]);
         if(orderId == currentOrder) then

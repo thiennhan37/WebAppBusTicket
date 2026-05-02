@@ -1,7 +1,6 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
-import com.example.BusTicket.dto.JwtObject.JwtInfo;
 import com.example.BusTicket.dto.request.CompanyUserCrRequest;
 import com.example.BusTicket.dto.request.CompanyUserUpRequest;
 import com.example.BusTicket.dto.response.CompanyUserResponse;
@@ -41,7 +40,7 @@ public class CompanyUserService {
     private final BusCompanyRepository busCompanyRepository;
     private final CompanyUserMapper companyUserMapper;
     private final PasswordEncoder passwordEncoder;
-    private final AccountMailService accountMailService;
+    private final SendMailService accountMailService;
     private final JwtService jwtService;
 
 

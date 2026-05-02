@@ -19,14 +19,15 @@ public class BookingOrderController {
     ApiResponse<String> companyHoldTripSeats(@RequestBody CompHoldSeatRequest request, @PathVariable("id") String tripId) {
         return ApiResponse.success(bookingForOrderService.holdSeatsByCompany(request, tripId));
     }
+    @PostMapping("/nhaxe/orders/unhold-seats/{id}")
+    ApiResponse<Boolean> companyUnHoldSeats(@RequestBody BookingOrderDelRequest request, @PathVariable("id") String tripId) {
+        return ApiResponse.success(bookingForOrderService.unHoldSeats(request, tripId));
+    }
     @PostMapping("/nhaxe/orders/book-order/{id}")
-    ApiResponse<BookingOrderResponse> companyBookOrder(@RequestBody BookingOrderCrRequest request, @PathVariable("id") String tripId) {
+    ApiResponse<BookingOrderResponse> bookOrderByCompany(@RequestBody BookingOrderCrRequest request, @PathVariable("id") String tripId) {
         return ApiResponse.success(bookingForOrderService.bookOrderByCompany(request, tripId));
     }
-    @DeleteMapping("/nhaxe/orders/delete-order/{id}")
-    ApiResponse<Boolean> companyDeleteOrder(@RequestBody BookingOrderDelRequest request, @PathVariable("id") String tripId) {
-        return ApiResponse.success(bookingForOrderService.deleteInvalidOrder(request, tripId));
-    }
+
 //    @PutMapping("/nhaxe/orders/cancel-order/{id}")
 //    ApiResponse<Boolean> cancelTicket(@RequestBody BookingOrderCrRequest request, @PathVariable("id") String tripId) {
 //        return ApiResponse.success(bookingOrderService.bookOrderByCompany(request, tripId));

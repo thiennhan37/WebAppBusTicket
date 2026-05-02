@@ -16,7 +16,8 @@ public enum ErrorCode {
     INVALID_STATE(1007, "Invalid state", HttpStatus.BAD_REQUEST),
     ERROR_REDIS(1008, "Hệ thống không phản hồi", HttpStatus.INTERNAL_SERVER_ERROR),
     ERROR_SAVED(1009, "Lưu thông tin thất bại", HttpStatus.BAD_REQUEST),
-    ERROR_MOMO(1010, "Momo phản hồi không hợp lệ", HttpStatus.BAD_REQUEST),
+    ERROR_MOMO_PAYMENT(1010, "Momo Payment phản hồi không hợp lệ", HttpStatus.BAD_REQUEST),
+    ERROR_MOMO_REFUND(1010, "Momo Refund phản hồi không hợp lệ", HttpStatus.BAD_REQUEST),
     ERROR_SIGNATURE(1011, "Chữ kí chưa xác thực", HttpStatus.UNAUTHORIZED),
 
 
@@ -29,6 +30,7 @@ public enum ErrorCode {
     NOT_EXISTED(4006, "Dữ liệu không tồn tại", HttpStatus.BAD_REQUEST),
     ROUTE_NOT_EXISTED(4007, "Tuyến đường không tồn tại", HttpStatus.BAD_REQUEST),
     INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành không hợp lệ", HttpStatus.BAD_REQUEST),
+    BOOKING_TRIP_INVALID(4008, "Đặt chuyến xe không hợp lệ", HttpStatus.BAD_REQUEST),
 
     INVALID_GMAIL(4021, "Không tìm thấy gmail này trong hệ thống", HttpStatus.BAD_REQUEST),
     INVALID_OTP(4022, "Sai OTP hoặc OTP đã hết hạn", HttpStatus.BAD_REQUEST),
