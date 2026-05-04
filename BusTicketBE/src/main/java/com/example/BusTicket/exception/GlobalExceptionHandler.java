@@ -14,12 +14,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse> handleJsonParseException(HttpMessageNotReadableException ex) {
-        return ResponseEntity
-                .status(ErrorCode.INVALID_FORMAT.getStatusCode())
-                .body(ApiResponse.error(ErrorCode.INVALID_FORMAT));
-    }
+//    @ExceptionHandler(HttpMessageNotReadableException.class)
+//    public ResponseEntity<ApiResponse> handleJsonParseException(HttpMessageNotReadableException ex) {
+//        System.out.println("có lỗi " + ex.toString());
+//        return ResponseEntity
+//                .status(ErrorCode.INVALID_FORMAT.getStatusCode())
+//                .body(ApiResponse.error(ErrorCode.INVALID_FORMAT));
+//    }
 
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse> handleException(Exception exception){

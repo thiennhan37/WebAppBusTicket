@@ -4,9 +4,9 @@ server:
     context-path: /vexedat
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3306/busticket"
-    username: root
-    password: root
+    url: "jdbc:mysql://localhost:3306/BusTicket"
+    username: BusTicket_User
+    password: 123456
   data:
     redis:
       host: "localhost"
@@ -45,15 +45,18 @@ jwt:
   refreshTime: 86400 #seconds;
 
 booking:
-  holdingSeatTime: 600
+  holdingSeatTime: 300 #seconds;
+  paymentExpirationTime: 360 #seconds;
   holdingSeatPrefixKey: "trip_seat_hold:"
   tempOrderPrefixKey: "temp_order_hold:"
   compMakeOrderPrefixKey: "comp_make_order:"
+  paymentPrefixKey: "payment:"
 
 momo:
   partner-code: "MOMO"
   access-key: "F8BBA842ECF85"
   secret-key: "K951B6PE1waDMi640xX08PD3vg6EkVlz"
   endpoint: https://test-payment.momo.vn/v2/gateway/api/create
+  refund-url: https://test-payment.momo.vn/v2/gateway/api/refund
   redirect-url: http://localhost:5173/payment-success
   ipn-url: https://unquote-crumpet-gaffe.ngrok-free.dev/vexedat/momo/ipn

@@ -110,7 +110,8 @@ const LocalRoutes = () => {
       
       <div className="flex flex-col xl:flex-row"> 
 
-        <div className="flex-1 flex flex-col bg-white min-w-[850px] max-w-[850px]  rounded-2xl shadow-sm border border-slate-200">
+        <div className="flex-1 flex flex-col bg-white max-w-[850px] h-[580px]
+          rounded-2xl shadow-sm border border-slate-200">
           <RouteHeader onChangeFilter={onChangeFilter} filterParams={buildFilterParams()} setOpenCreate={setOpenCreate}></RouteHeader>
           
           <div className="flex-1 overflow-visible">

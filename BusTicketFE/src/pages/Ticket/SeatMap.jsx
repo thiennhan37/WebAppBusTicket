@@ -20,7 +20,7 @@ const SeatMap = ({ busType, seatMap, onSeatClick, mode = "normal", selectedSeats
       )
     );
   }, [busType, seatMap]);
-  console.log(processedFloors);
+  // console.log(processedFloors);
 
   const formatter = new Intl.NumberFormat('vi-VN', {
     style: 'currency',
@@ -29,15 +29,15 @@ const SeatMap = ({ busType, seatMap, onSeatClick, mode = "normal", selectedSeats
   return (
     <div className="bg-white-50 min-h-screen">
       <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {processedFloors.map((floor, floorIndex) => (
-            <div key={floorIndex} className="bg-white p-4 rounded-xl shadow-sm border border-gray-300">
+            <div key={floorIndex} className="bg-white p-2 rounded-xl shadow-sm border border-gray-300">
               <div className="text-center font-bold text-gray-600 mb-6 pb-2 border-b uppercase tracking-wider">
                 {floorIndex === 0 ? "Tầng 1" : "Tầng 2"}
               </div>
 
               <div 
-                className="grid gap-4"
+                className="grid gap-1"
                 style={{ 
                   // Sử dụng column từ busType truyền vào
                   gridTemplateColumns: `repeat(${busType.diagram.column}, minmax(0, 1fr))` 
@@ -52,7 +52,7 @@ const SeatMap = ({ busType, seatMap, onSeatClick, mode = "normal", selectedSeats
                     const isBooked = seat.status === 'BOOKED';
                     const isHeld = seat.status === 'HELD';
                     const isAvailable = seat.status === 'AVAILABLE';
-                    const isSelected = selectedSeatsList.some(s => s.seatName === seat.seatName);
+                    const isSelected = selectedSeatsList.some(s => s.id === seat.id);
 
                     let bgClass = '';
                     if (isSelected) {
@@ -66,6 +66,7 @@ const SeatMap = ({ busType, seatMap, onSeatClick, mode = "normal", selectedSeats
                     }
 
                     let cursorClass = 'cursor-pointer';
+                    if (mode === 'normal' && isAvailable) cursorClass = 'cursor-default pointer-events-none opacity-80';
                     if (mode === 'book' && !isAvailable) cursorClass = 'cursor-not-allowed opacity-60';
                     if (mode === 'cancel' && isAvailable) cursorClass = 'cursor-not-allowed opacity-60';
 
@@ -73,7 +74,7 @@ const SeatMap = ({ busType, seatMap, onSeatClick, mode = "normal", selectedSeats
                       <div
                         key={seat.id}
                         onClick={() => onSeatClick && onSeatClick(seat)} 
-                        className={`relative h-[120px] rounded-lg border-2 p-2 transition-all duration-200 ${cursorClass} ${bgClass}`}
+                        className={`relative h-[120px] rounded-lg border-2 p-1 transition-all duration-200 ${cursorClass} ${bgClass}`}
                       >
                         <div className="flex items-center gap-1">
                           <span className={`font-semibold text-black`}>{seat.seatName}</span>

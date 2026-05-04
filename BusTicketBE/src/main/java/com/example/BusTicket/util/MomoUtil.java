@@ -1,25 +1,35 @@
 package com.example.BusTicket.util;
 
 
+import com.example.BusTicket.configuration.MomoConfiguration;
 import com.example.BusTicket.dto.general.ExtraDataDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
 @Component
+@RequiredArgsConstructor
 public class MomoUtil {
+    private  final MomoConfiguration momoConfiguration;
     public String generateSignature(String rawData, String secretKey) {
         try {
             Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+
+            SecretKeySpec secretKeySpec =
+                    new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+
             hmacSHA256.init(secretKeySpec);
 
-            byte[] hash = hmacSHA256.doFinal(rawData.getBytes());
+            byte[] hash =
+                    hmacSHA256.doFinal(rawData.getBytes(StandardCharsets.UTF_8));
+
             return Hex.encodeHexString(hash);
         } catch (Exception e) {
             throw new RuntimeException("Error while generating signature", e);
@@ -27,7 +37,7 @@ public class MomoUtil {
     }
     public boolean verifySignature(Map<String, Object> payload, String secretKey) {
         String rawData =
-                "accessKey=" + payload.get("accessKey") +
+                "accessKey=" + momoConfiguration.getAccessKey() +
                 "&amount=" + payload.get("amount") +
                 "&extraData=" + payload.get("extraData") +
                 "&message=" + payload.get("message") +
@@ -41,8 +51,11 @@ public class MomoUtil {
                 "&resultCode=" + payload.get("resultCode") +
                 "&transId=" + payload.get("transId");
 
+//        System.out.println("rawData: "+ rawData);
         String expectedSignature = generateSignature(rawData, secretKey);
         String signature = payload.get("signature").toString();
+//        System.out.println("expectedSignature: " + expectedSignature);
+//        System.out.println("signature: "+ signature);
         return expectedSignature.equals(signature);
     }
     public String buildExtraData(Object data) {

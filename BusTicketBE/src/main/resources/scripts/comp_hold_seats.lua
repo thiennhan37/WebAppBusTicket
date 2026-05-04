@@ -6,7 +6,7 @@
 -- ARGV[3 .. N]: List các trip-seat cho key orderID
 
 
-
+redis.log(redis.LOG_WARNING, "Gia tri cua bien keys1 la: " .. tostring(KEYS[1]))
 -- 1.1 Kiểm tra Staff đã có order đang xử lý chưa
 if redis.call('EXISTS', KEYS[1]) == 1 then
     return -1 -- Tương ứng: BOOKING_ANOTHER_ORDER
