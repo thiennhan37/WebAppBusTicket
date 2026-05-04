@@ -1,6 +1,6 @@
 package com.example.BusTicket.enums;
 
-public enum MomoIpnEnum {
+public enum MomoEnum {
     PAYMENT,
     REFUND,
     ;

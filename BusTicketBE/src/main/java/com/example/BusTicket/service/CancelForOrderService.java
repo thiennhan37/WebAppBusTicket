@@ -75,16 +75,5 @@ public class CancelForOrderService {
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
         return companyUser;
     }
-    private void checkRouteStop(RouteStop arrival, RouteStop destination, Trip trip){
-        Long routeId1 = arrival.getRoute().getId();
-        Long routeId2 = destination.getRoute().getId();
-        Long routeId = trip.getRoute().getId();
-        if(!Objects.equals(routeId, routeId1) || !Objects.equals(routeId, routeId2))
-            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
-        if( !arrival.getType().equals("UP") || !destination.getType().equals("DOWN"))
-            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
-
-    }
-
 
 }

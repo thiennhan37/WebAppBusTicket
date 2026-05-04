@@ -51,11 +51,11 @@ public class MomoUtil {
                 "&resultCode=" + payload.get("resultCode") +
                 "&transId=" + payload.get("transId");
 
-        System.out.println("rawData: "+ rawData);
+//        System.out.println("rawData: "+ rawData);
         String expectedSignature = generateSignature(rawData, secretKey);
         String signature = payload.get("signature").toString();
-        System.out.println("expectedSignature: " + expectedSignature);
-        System.out.println("signature: "+ signature);
+//        System.out.println("expectedSignature: " + expectedSignature);
+//        System.out.println("signature: "+ signature);
         return expectedSignature.equals(signature);
     }
     public String buildExtraData(Object data) {

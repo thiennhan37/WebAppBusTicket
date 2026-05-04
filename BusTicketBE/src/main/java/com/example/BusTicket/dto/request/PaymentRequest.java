@@ -12,10 +12,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentRequest {
-
-    private String requestId;
     private String bookingOrderId;
     private String type;
     private Long transId;
     private Long parentTransId;
+    private Long amount;
 }

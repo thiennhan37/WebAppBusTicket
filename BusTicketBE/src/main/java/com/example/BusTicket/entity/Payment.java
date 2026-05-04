@@ -12,11 +12,15 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private String requestId;
-    private String bookingOrderId;
+    private String momoOrderId;
+    private String status;
     private String type;
     private Long transId;
     private Long parentTransId;
-    private LocalDateTime createdAt;
+    private Long amount;
+    private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_order_id", referencedColumnName = "id")
+    private BookingOrder bookingOrder;
 }

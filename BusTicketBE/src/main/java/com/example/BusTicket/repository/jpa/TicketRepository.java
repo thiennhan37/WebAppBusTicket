@@ -24,6 +24,17 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
             """)
     int updateStatusByIds(@Param("ids") List<String> ids, @Param("status") String status, @Param("prevStatus") String prevStatus);
 
+    @Query("""
+        SELECT t FROM Ticket t
+        WHERE t.status = 'HOLDING'
+            AND t.bookingOrder.id = :bookingOrderId
+            AND t.updatedAt = (
+              SELECT MAX(t2.updatedAt)
+              FROM Ticket t2
+              WHERE t2.bookingOrder.id = :bookingOrderId AND t2.tripSeat.id = t.tripSeat.id
+            )
+    """)
+    List<Ticket> getTicketsBecomeSuccessfulPayment(@Param("bookingOrderId") String bookingOrderId);
 }
 
 

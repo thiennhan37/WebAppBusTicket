@@ -2,6 +2,7 @@ package com.example.BusTicket.service;
 
 import com.example.BusTicket.entity.BookingOrder;
 import com.example.BusTicket.entity.BusCompany;
+import com.example.BusTicket.entity.Payment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -37,12 +38,12 @@ public class SendMailService {
         );
     }
 
-    public void sendBookingPaymentEmail(BookingOrder bookingOrder) {
+    public void sendBookingPaymentEmail(BookingOrder bookingOrder, Payment payment) {
         BusCompany busCompany = bookingOrder.getTrip().getBusCompany();
         String companyName = (busCompany != null ? busCompany.getCompanyName() : "VEXEDAT");
 
-        // Tạo link dẫn tới trang thanh toán của bạn (Thay URL bằng link thực tế)
-        String paymentUrl = "http://localhost:5173/nhaxe/payment/" + bookingOrder.getId();
+        // Tạo link dẫn tới trang thanh toán
+        String paymentUrl = "http://localhost:5173/redirect-momo/payment/" + payment.getId();
         String[] time = bookingOrder.getTrip().getDepartureTime().toString().split("T");
         String htmlBody = """
         <html>
@@ -65,9 +66,7 @@ public class SendMailService {
                     </a>
                 </div>
                 
-                <p style="font-size: 0.9em; color: #777; margin-top: 30px; text-align: center;">
-                    <i>Lưu ý: Liên kết thanh toán này sẽ hết hạn sau 30 phút.</i>
-                </p>
+
             </div>
         </body>
         </html>
@@ -81,7 +80,9 @@ public class SendMailService {
                 bookingOrder.getTotalCost(),
                 paymentUrl
         );
-
+//                <p style="font-size: 0.9em; color: #777; margin-top: 30px; text-align: center;">
+//                <i>Lưu ý: Liên kết thanh toán này sẽ hết hạn sau 30 phút.</i>
+//                </p>
         mailService.sendHtmlMail(
                 bookingOrder.getCustomerEmail(),
                 "[" + companyName + "] Thông tin thanh toán đơn hàng #" + bookingOrder.getId(),

@@ -46,9 +46,11 @@ jwt:
 
 booking:
   holdingSeatTime: 300 #seconds;
+  paymentExpirationTime: 360 #seconds;
   holdingSeatPrefixKey: "trip_seat_hold:"
   tempOrderPrefixKey: "temp_order_hold:"
   compMakeOrderPrefixKey: "comp_make_order:"
+  paymentPrefixKey: "payment:"
 
 momo:
   partner-code: "MOMO"

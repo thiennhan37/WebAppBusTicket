@@ -12,7 +12,14 @@ import java.util.List;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, String> {
-
+    @Modifying
+    @Query("""
+        UPDATE Payment p
+        SET p.status = 'SUCCESSFUL'
+        WHERE p.id = :id
+          AND p.status = 'PENDING'
+    """)
+    int updateToSuccess(@Param("id") String id);
 }
 
 

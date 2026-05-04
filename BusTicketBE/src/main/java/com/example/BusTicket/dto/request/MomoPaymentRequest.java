@@ -8,9 +8,9 @@ import lombok.*;
 @AllArgsConstructor
 public class MomoPaymentRequest {
 
+    private String paymentId;
     private String bookingOrderId;
-    private String amount;
     private String orderInfo;
-    private String transId;
+    private Long transId;
     private String type;
 }

@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder @NoArgsConstructor @AllArgsConstructor
 public class ExtraDataDTO {
     private String type;
-//    private String bookingId;
+    private String bookingOrderId;
+    private String paymentId;
 //    private String userId;
 //    private String plan;
 }

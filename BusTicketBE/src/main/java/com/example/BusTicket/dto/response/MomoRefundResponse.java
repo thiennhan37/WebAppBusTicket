@@ -8,6 +8,8 @@ import java.util.Map;
 @Data
 @Builder
 public class MomoRefundResponse {
-    private Map<String, Object> result;
+    private String momoOrderId;
+    private Long transId;
+    private Long resultCode;
 
 }

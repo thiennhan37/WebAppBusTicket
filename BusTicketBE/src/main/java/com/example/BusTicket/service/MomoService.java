@@ -6,8 +6,11 @@ import com.example.BusTicket.dto.request.MomoPaymentRequest;
 import com.example.BusTicket.dto.request.MomoRefundRequest;
 import com.example.BusTicket.dto.response.MomoPaymentResponse;
 import com.example.BusTicket.dto.response.MomoRefundResponse;
+import com.example.BusTicket.entity.BookingOrder;
+import com.example.BusTicket.enums.MomoEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
+import com.example.BusTicket.repository.jpa.BookingOrderRepository;
 import com.example.BusTicket.util.MomoUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,17 +26,27 @@ import java.util.UUID;
 public class MomoService{
     private final MomoConfiguration momoConfiguration;
     private final MomoUtil momoUtil;
+    private final BookingOrderRepository bookingOrderRepository;
     private final RestTemplate restTemplate = new RestTemplate();
+
+
     private final String PAYMENT_PREFIX = "PAYMENT_";
     private final String REFUND_PREFIX = "REFUND_";
 
     public MomoPaymentResponse createMomoPayment(MomoPaymentRequest request) {
         String requestId = UUID.randomUUID().toString();
-        String orderId = PAYMENT_PREFIX + request.getBookingOrderId();
-        String amount = request.getAmount();
+        String orderId = UUID.randomUUID().toString();
+
+        String bookingOrderId = request.getBookingOrderId();
+        String paymentId = request.getPaymentId();
+        BookingOrder bookingOrder = bookingOrderRepository.findById(bookingOrderId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        Long amount = bookingOrder.getTotalCost();
         String orderInfo = request.getOrderInfo();
         ExtraDataDTO extraDataDTO = ExtraDataDTO.builder()
-                .type(request.getType())
+                .type(MomoEnum.PAYMENT.name())
+                .bookingOrderId(bookingOrderId)
+                .paymentId(paymentId)
                 .build();
         String extraData = momoUtil.buildExtraData(extraDataDTO);
 
@@ -48,7 +61,7 @@ public class MomoService{
                 + "&requestId=" + requestId
                 + "&requestType=captureWallet";
 
-        System.out.println("rawData: " + rawData);
+//        System.out.println("rawData: " + rawData);
         String signature = momoUtil.generateSignature(rawData, momoConfiguration.getSecretKey());
 
         Map<String, Object> body = new HashMap<>();
@@ -75,6 +88,7 @@ public class MomoService{
         Map<String, Object> result = response.getBody();
 
         if (result == null || !result.containsKey("payUrl")) {
+            if(result != null) System.out.println(result.get("message"));
             throw new MyAppException(ErrorCode.ERROR_MOMO_PAYMENT);
         }
         return MomoPaymentResponse.builder()
@@ -85,15 +99,15 @@ public class MomoService{
 
     public MomoRefundResponse createMomoRefund(MomoRefundRequest request) {
         String requestId = UUID.randomUUID().toString();
-        String orderId = REFUND_PREFIX + request.getBookingOrderId();
-        String transId = request.getTransId();
-        String amount = request.getAmount();
+        String orderId = UUID.randomUUID().toString();
+        String transId = request.getTransId().toString();
+        String amount = request.getAmount().toString();
         String description = request.getDescription();
 
         String rawData = "accessKey=" + momoConfiguration.getAccessKey() +
                 "&amount=" + amount +
                 "&description=" + description +
-                "&orderId=" + description +
+                "&orderId=" + orderId +
                 "&partnerCode=" + momoConfiguration.getPartnerCode() +
                 "&requestId=" + requestId +
                 "&transId=" + transId;
@@ -122,7 +136,9 @@ public class MomoService{
             throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
         }
         return MomoRefundResponse.builder()
-                .result(result)
+                .momoOrderId(result.get("orderId").toString())
+                .resultCode(Long.valueOf(result.get("resultCode").toString()))
+                .transId(Long.valueOf(result.get("transId").toString()))
                 .build();
     }
 

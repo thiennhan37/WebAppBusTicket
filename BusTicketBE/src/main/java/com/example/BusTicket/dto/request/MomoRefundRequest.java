@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MomoRefundRequest {
 
-    private String bookingOrderId;
-    private String transId;
-    private String amount;
+//    private String bookingOrderId;
+    private Long transId;
+    private Long amount;
     private String description;
 }
