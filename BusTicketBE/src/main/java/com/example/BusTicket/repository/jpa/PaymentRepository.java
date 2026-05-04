@@ -20,6 +20,8 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
           AND p.status = 'PENDING'
     """)
     int updateToSuccess(@Param("id") String id);
+
+    Payment findByBookingOrderIdAndType(String bookingOrderId, String type);
 }
 
 

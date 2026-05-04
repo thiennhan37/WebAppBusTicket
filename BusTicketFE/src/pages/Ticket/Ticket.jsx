@@ -12,7 +12,7 @@ import LoadingOverlay from '../../components/other/LoadingOverlay';
 import { useMutation } from '@tanstack/react-query';
 import OrderService from "../../Services/OrderService";
 import StatusModal from '../../components/other/StatusModal';
-
+import ConfirmModal from '../../components/other/ConfirmModal';
 
 const Ticket = () => {
   console.log("reload ticket")
@@ -23,6 +23,7 @@ const Ticket = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [mode, setMode] = useState("normal"); // "normal", "book", "cancel"
   const [selectedSeatsList, setSelectedSeatsList] = useState([]);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [arrival, setArrival] = useState(searchParams.get('arrival') || '') ;
@@ -180,6 +181,34 @@ const Ticket = () => {
       setReport("error:"+ error.response?.data?.message);
     }
   });
+  const {mutate: cancelTicketList} = useMutation({
+    mutationFn: async () => {
+      const ticketIdList = selectedSeatsList.map((seat)=> {
+        return seat.ticket.id;
+      });
+      const res = await OrderService.cancelTicketByCompany({tripId: selectedTripId, ticketIdList});
+      return res?.data?.result;
+    },
+    onSuccess: () => {
+      setReport("success:Hủy đặt vé thành công");
+    },
+    onError: (error) => {
+      setReport("error:"+ error.response?.data?.message);
+    }
+  });
+  const {mutate: updateTicket} = useMutation({
+    mutationFn: async (payload) => {
+      const res = await OrderService.updateTicketByCompany({tripId: selectedTripId, payload});
+      setIsUpdateModalOpen(false);
+      return res?.data;
+    },
+    onSuccess: () => {
+      setReport("success:Cập nhật vé thành công");
+    },
+    onError: (error) => {
+      setReport("error:"+ error.response?.data?.message);
+    }
+  });
 
   const [report, setReport] = useState("");
   const hideReport = () => {setReport("");}
@@ -224,9 +253,6 @@ const Ticket = () => {
                     </span>
                 </p>
               </div>
-              <button className="px-2 py-2 bg-gray-200 text-black rounded-lg hover:bg-gray-400 text-sm font-medium border border-gray-200 gap-1">
-                Sơ đồ xe
-              </button>
               <div className={`flex flex-col gap-1 items-end ${!isOpenTrip ? 'opacity-60' : ''}`}>
                 <div className="flex gap-2">
                   {/* Nút Xác nhận đặt */}
@@ -243,6 +269,9 @@ const Ticket = () => {
                   {mode === "cancel" && selectedSeatsList.length > 0 && (
                     <button 
                       disabled={!isOpenTrip}
+                      onClick={() => {setIsCancelModalOpen(true); 
+                        console.log(selectedSeatsList); 
+                      }}
                       className="px-2 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium shadow-md">
                       Xác nhận hủy ({selectedSeatsList.length})
                     </button>
@@ -304,6 +333,8 @@ const Ticket = () => {
         <UpdateTicket 
           seat={selectedSeat} 
           onClose={() => setIsUpdateModalOpen(false)} 
+          selectedTrip={selectedTrip}
+          onSubmit={updateTicket}
         />
       )}
 
@@ -325,6 +356,15 @@ const Ticket = () => {
           }}
         />
       )}
+      {/* Modal xác nhận hủy vé */}
+      <ConfirmModal 
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={cancelTicketList}
+        title="Hủy vé cho chuyến đi"
+        message={`Bạn có chắc chắn muốn hủy danh sách vé các ghế 
+          ${selectedSeatsList.map(seat => seat.seatName).join(", ")} ?`}
+      />
     </div>
   );
 }

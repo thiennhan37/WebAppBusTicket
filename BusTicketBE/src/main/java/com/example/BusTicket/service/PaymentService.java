@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
@@ -67,6 +68,7 @@ public class PaymentService {
 
         String payUrl = redisTemplate.opsForValue().get(paymentPrefixKey + paymentId);
         if(payUrl == null){
+            // nếu đã bị xóa tỏng redis -> query lại momo lấy link thanh toán
             String bookingOrderId = payment.getBookingOrder().getId();
             MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder()
                     .bookingOrderId(bookingOrderId)
@@ -105,6 +107,7 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         if(type.equals(MomoEnum.PAYMENT.name())){
+            // chưa lưu lịch sử khi thanh toán/refund thành công
             log.info("xử lí payment");
             int updatedRow = paymentRepository.updateToSuccess(paymentId);
             // update payment thất bại
@@ -115,25 +118,11 @@ public class PaymentService {
                 if( !momoOrderId.equals(currentMomoOrderId)){
                     log.info("thực hiện refund");
                     Long amount = Long.valueOf(payload.get("amount").toString());
-                    PaymentRequest paymentRequest = PaymentRequest.builder()
-                            .parentTransId(Long.valueOf(payload.get("transId").toString()))
-                            .bookingOrderId(bookingOrderId)
-                            .type(MomoEnum.REFUND.name())
-                            .amount(amount)
-                            .build();
-                    Payment refundPayment = createPayment(paymentRequest);
+                    Long parentTransId = Long.valueOf(payload.get("transId").toString());
+                    String description = "Hoàn tiền cho thanh toán hóa đơn #" + bookingOrderId;
 
-                    MomoRefundRequest momoRefundRequest = MomoRefundRequest.builder()
-                            .transId(Long.valueOf(payload.get("transId").toString()))
-                            .amount(amount)
-                            .description("Hoàn tiền cho thanh toán hóa đơn #" + bookingOrderId)
-                            .build();
-                    MomoRefundResponse momoRefundResponse = momoService.createMomoRefund(momoRefundRequest);
-                    refundPayment.setTransId(momoRefundResponse.getTransId());
-                    refundPayment.setMomoOrderId(momoRefundResponse.getMomoOrderId());
-                    if(momoRefundResponse.getResultCode() == 0) refundPayment.setStatus(PaymentEnum.SUCCESSFUL.name());
-                    else refundPayment.setStatus(PaymentEnum.FAILED.name());
-                    paymentRepository.save(refundPayment);
+                    boolean refundResult = refundPayment(parentTransId, bookingOrderId, amount, description);
+                    if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
                 }
                 else{
                     log.info("Thanh toán trùng lặp và không có refund");
@@ -155,5 +144,29 @@ public class PaymentService {
             System.out.println("co loi extraData");
         }
         return result;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public boolean refundPayment(Long parentTransId, String bookingOrderId, Long amount, String description){
+        PaymentRequest paymentRequest = PaymentRequest.builder()
+                .parentTransId(parentTransId)
+                .bookingOrderId(bookingOrderId)
+                .type(MomoEnum.REFUND.name())
+                .amount(amount)
+                .build();
+        Payment refundPayment = createPayment(paymentRequest);
+
+        MomoRefundRequest momoRefundRequest = MomoRefundRequest.builder()
+                .transId(parentTransId)
+                .amount(amount)
+                .description(description)
+                .build();
+        MomoRefundResponse momoRefundResponse = momoService.createMomoRefund(momoRefundRequest);
+        refundPayment.setTransId(momoRefundResponse.getTransId());
+        refundPayment.setMomoOrderId(momoRefundResponse.getMomoOrderId());
+        if(momoRefundResponse.getResultCode() == 0) refundPayment.setStatus(PaymentEnum.SUCCESSFUL.name());
+        else refundPayment.setStatus(PaymentEnum.FAILED.name());
+        paymentRepository.save(refundPayment);
+        return refundPayment.getStatus().equals(PaymentEnum.SUCCESSFUL.name());
     }
 }

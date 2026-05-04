@@ -5,10 +5,7 @@ import com.example.BusTicket.dto.request.*;
 import com.example.BusTicket.dto.response.BookingOrderResponse;
 import com.example.BusTicket.dto.response.MomoPaymentResponse;
 import com.example.BusTicket.entity.*;
-import com.example.BusTicket.enums.HistoryStatusEnum;
-import com.example.BusTicket.enums.TicketStatusEnum;
-import com.example.BusTicket.enums.TripSeatEnum;
-import com.example.BusTicket.enums.TripStatusEnum;
+import com.example.BusTicket.enums.*;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.BookingOrderMapper;
@@ -138,6 +135,7 @@ public class BookingForOrderService {
         PaymentRequest request = PaymentRequest.builder()
                 .amount(bookingOrder.getTotalCost())
                 .bookingOrderId(bookingOrderId)
+                .type(MomoEnum.PAYMENT.name())
                 .build();
         Payment payment = paymentService.createPayment(request);
         MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder()

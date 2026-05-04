@@ -54,11 +54,6 @@ public interface TripSeatRepository extends JpaRepository<TripSeat, String> {
         JOIN Ticket t ON t.tripSeat.id = ts.id
         WHERE t.id IN :ticketIds
           AND t.status IN ('HOLDING','PAID')
-          AND t.updatedAt = (
-              SELECT MAX(t2.updatedAt)
-              FROM Ticket t2
-              WHERE t2.tripSeat.id = ts.id
-          )
     """)
     List<TripSeat> getTripSeatsForCancel(@Param("ticketIds") List<String> ticketIds);
 

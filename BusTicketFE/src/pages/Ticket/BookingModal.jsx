@@ -56,7 +56,6 @@ const BookingModal = ({bookingOrderId, selectedTrip, selectedSeatsList, onClose,
       if (!selectedTrip?.route?.id) return null;
       const upResponse = (await RouteService.getRouteStop({ routeId: selectedTrip.route.id, params: { type: "UP" } }))?.data?.result || [];
       const downResponse = (await RouteService.getRouteStop({ routeId: selectedTrip.route.id, params: { type: "DOWN" } }))?.data?.result || [];
-      console.log(upResponse, downResponse);
       return { upResponse, downResponse };
     },
     enabled: !!selectedTrip?.route?.id
