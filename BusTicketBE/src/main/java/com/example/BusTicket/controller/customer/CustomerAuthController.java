@@ -14,6 +14,7 @@ import com.nimbusds.jose.JOSEException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +40,13 @@ public class CustomerAuthController {
         log.info("in verifyOtp controller");
         CustomerAuthenticationResponse response = authenticationService.verifyOtp(request.getEmail(), request.getOtp());
         return ApiResponse.success(response);
+    }
+
+    @PostMapping("auth/log-out")
+    ApiResponse<Boolean> logout(@RequestBody LogoutRequest request)
+            throws JOSEException, ParseException {
+        authenticationService.logout(request, request.getRefreshToken());
+        return ApiResponse.success(true);
     }
 
 

@@ -29,7 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
     private final String[] AUTH_ENDPOINTS = {"/nhaxe/auth/login", "/nhaxe/auth/logout", "/auth/refresh-token",
         "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
-            "/register/verify"};
+            "/register/verify", "/auth/log-out"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type"};
     private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
