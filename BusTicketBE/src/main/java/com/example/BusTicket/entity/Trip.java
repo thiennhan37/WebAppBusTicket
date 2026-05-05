@@ -32,5 +32,4 @@ public class Trip {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bus_type_id", referencedColumnName = "id")
     private BusType busType;
-
 }

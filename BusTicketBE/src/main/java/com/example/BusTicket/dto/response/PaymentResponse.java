@@ -9,12 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+public class PaymentResponse {
 
-public class TripSeatResponse {
-
-    private String id;
-    private String seat, status;
-    private Long price;
-    private TicketResponse ticket;
-
+    private String requestId;
+    private String bookingOrderId;
+    private String type;
+    private Long transId;
+    private Long parentTransId;
 }

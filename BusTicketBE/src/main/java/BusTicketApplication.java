@@ -8,9 +8,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class BusTicketApplication {
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 
-		SpringApplication.run(BusTicketApplication.class, args);
-	}
+        SpringApplication.run(BusTicketApplication.class, args);
+    }
 
 }

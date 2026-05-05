@@ -12,7 +12,6 @@ const TripService = {
     }, 
     getSimpleTripList(params){
         if(!params.date || !params.arrival || !params.destination) return;
-        console.log("params", params)
         return api.get("/nhaxe/trips/simple-list", {params:params});
     }, 
     getTripById(tripId){

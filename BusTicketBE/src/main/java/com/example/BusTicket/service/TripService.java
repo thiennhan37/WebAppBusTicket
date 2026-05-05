@@ -21,8 +21,10 @@ import com.example.BusTicket.specification.TripSpecification;
 import com.example.BusTicket.util.IdUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
@@ -49,7 +51,11 @@ public class TripService {
     private final TripSeatRepository tripSeatRepository;
     private final TripMapper tripMapper;
     private final TripSeatMapper tripSeatMapper;
+    private final RedisTemplate<String, String> redisTemplate;
 
+
+    @Value("${booking.holdingSeatPrefixKey}")
+    private String holdingSeatPrefixKey;
 
     @Transactional
     public TripResponse createTrip(TripCrRequest request){
@@ -59,7 +65,8 @@ public class TripService {
         BusCompany busCompany = companyUser.getBusCompany();
         if( !busCompany.getId().equals(request.getBusCompanyId()))
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
-        if(tripRepository.existsByLicensePlateAndDepartureTime(request.getLicensePlate(), request.getDepartureTime()))
+        if( request.getLicensePlate() != null && !request.getLicensePlate().isBlank() &&
+        tripRepository.existsByLicensePlateAndDepartureTime(request.getLicensePlate(), request.getDepartureTime()))
             throw new MyAppException(ErrorCode.BUS_BUSY);
 
         Trip trip = Trip.builder()
@@ -78,22 +85,6 @@ public class TripService {
         } catch (Exception e){
             throw new MyAppException(ErrorCode.NOT_EXISTED);
         }
-        BusDiagram busDiagram = trip.getBusType().getDiagram();
-        if(busDiagram == null) throw new MyAppException(ErrorCode.NOT_EXISTED);
-        List<List<List<String>>> seatList = busDiagram.getSeatList();
-        List<TripSeat> tripSeatList = new ArrayList<>();
-        for(var floor : seatList){
-            for(var row : floor){
-                for(var seat : row){
-                    if(seat != null && !seat.isBlank()){
-                        TripSeat tripSeat = TripSeat.builder().id(IdUtil.generateID()).trip(trip).seat(seat)
-                                .price(trip.getPrice()).status(TripSeatEnum.AVAILABLE.name()).build();
-                        tripSeatList.add(tripSeat);
-                    }
-                }
-            }
-        }
-        tripSeatRepository.saveAll(tripSeatList);
         return tripMapper.toTripResponse(trip);
     }
     public TripResponse getTripById(String tripId){
@@ -112,8 +103,7 @@ public class TripService {
         Object[] firstRow = (Object[]) result[0];
         Long heldSeats = firstRow[0] == null ? 0 : ((Number) firstRow[0]).longValue();
         Long bookedSeats = firstRow[1] == null ? 0 : ((Number) firstRow[1]).longValue();
-        tripResponse.setHeldSeats(heldSeats);
-        tripResponse.setBookedSeats(bookedSeats);
+
 
         // load lịch sử đặt vé(toàn bộ danh sách vé)
         List<Ticket> ticketList = ticketRepository.findAllByTripId(trip.getId());
@@ -122,17 +112,54 @@ public class TripService {
 
         // load trạng thái ghế và vé đang giữ ghế
         List<Object[]> tripSeatList = tripSeatRepository.findSeatsWithLatestTicket(trip.getId());
+        List<String> tripSeatIds = new ArrayList<>();
+        for (Object[] obj : tripSeatList) {
+            if (obj[0] != null) {
+                TripSeat ts = (TripSeat) obj[0];
+                if (ts.getId() != null && ts.getStatus().equals(TripSeatEnum.AVAILABLE.name()) ){
+                    tripSeatIds.add(ts.getId());
+                }
+            }
+        }
+        // load ghế đang giữ trong redis
+        Map<String, Boolean> heldSeatInRedisMap = checkHeldSeatsInRedis(tripSeatIds);
+
         List<TripSeatResponse> seatMap = new ArrayList<>();
         for(var object :tripSeatList){
             TripSeat ts = object[0] != null ? (TripSeat)object[0] : null;
             Ticket tk = object[1] != null ? (Ticket)object[1] : null;
+            // check ghế đang bị giữ trong redis
+            if(ts != null && ts.getStatus().equals(TripSeatEnum.AVAILABLE.name())){
+                if(Boolean.TRUE.equals(heldSeatInRedisMap.get(ts.getId())) ){
+                    ts.setStatus(TripSeatEnum.HELD.name());
+                    heldSeats++;
+                }
+            }
+
+            // lưu thông tin vé hiện tại cho ghế.
             TripSeatResponse tripSeatResponse = tripSeatMapper.toTripSeatResponse(ts);
             tripSeatResponse.setTicket(ticketMapper.toTicketResponse(tk));
             seatMap.add(tripSeatResponse);
         }
+        tripResponse.setHeldSeats(heldSeats);
+
+        tripResponse.setBookedSeats(bookedSeats);
         tripResponse.setSeatMap(seatMap);
         return tripResponse;
     }
+    private Map<String, Boolean> checkHeldSeatsInRedis(List<String> tripSeatIds) {
+        List<String> keys = tripSeatIds.stream()
+                .map(id -> holdingSeatPrefixKey + id).toList();
+
+        List<String> values = redisTemplate.opsForValue().multiGet(keys);
+
+        Map<String, Boolean> result = new HashMap<>();
+        for (int i = 0; i < tripSeatIds.size(); i++) {
+            result.put(tripSeatIds.get(i), values.get(i) != null);
+        }
+        return result;
+    }
+
     public TripResponse updateTrip(String tripId, TripUpRequest request){
         Jwt jwt = JwtHelper.getJwt();
         CompanyUser companyUser = companyUserRepository.findById(jwt.getSubject())
@@ -172,6 +199,24 @@ public class TripService {
         if(trip.getDepartureTime().isBefore(LocalDateTime.now().plusHours(1)))
             throw new MyAppException(ErrorCode.INVALID_DEPARTURE_TIME);
         trip.setStatus(TripStatusEnum.OPEN.name());
+
+        // Lưu tripSeat cho các chuyến đã OPEN (mở bán)
+        BusDiagram busDiagram = trip.getBusType().getDiagram();
+        if(busDiagram == null) throw new MyAppException(ErrorCode.NOT_EXISTED);
+        List<List<List<String>>> seatList = busDiagram.getSeatList();
+        List<TripSeat> tripSeatList = new ArrayList<>();
+        for(var floor : seatList){
+            for(var row : floor){
+                for(var seat : row){
+                    if(seat != null && !seat.isBlank()){
+                        TripSeat tripSeat = TripSeat.builder().id(IdUtil.generateID()).trip(trip).seat(seat)
+                                .price(trip.getPrice()).status(TripSeatEnum.AVAILABLE.name()).build();
+                        tripSeatList.add(tripSeat);
+                    }
+                }
+            }
+        }
+        tripSeatRepository.saveAll(tripSeatList);
         return tripMapper.toTripResponse(tripRepository.save(trip));
     }
     public Boolean cancelTrip(String tripId){
@@ -215,10 +260,13 @@ public class TripService {
                 .and(TripSpecification.hasArrivalProvince(arrivalProvince))
                 .and(TripSpecification.hasDestinationProvince(destinationProvince))
                 .and(TripSpecification.hasDate(date))
-                .and(TripSpecification.hasStatus(TripStatusEnum.OPEN.name()));
+                .and(TripSpecification.hasStatus(TripStatusEnum.OPEN.name())
+                        .or(TripSpecification.hasStatus(TripStatusEnum.CANCELLED.name()))
+                        .or(TripSpecification.hasStatus(TripStatusEnum.CLOSED.name()))
+                );
 
         List<Trip> tripList = tripRepository.findAll(spec, sort);
-        List<TripSimpleResponse> tripSimpleResponses = tripList.stream().map(tripMapper::toTripSimpleResponse).toList();
+        List<TripSimpleResponse> tripSimpleResponseList = tripList.stream().map(tripMapper::toTripSimpleResponse).toList();
         List<String> tripIds = tripList.stream().map(Trip::getId).toList();
         List<Object[]> results = tripSeatRepository.countBookedSeats(tripIds);
         Map<String, Long> countMap = results.stream()
@@ -226,13 +274,11 @@ public class TripService {
                         row -> (String) row[0],
                         row -> row[1] == null ? 0L : ((Number) row[1]).longValue()
                 ));
-        for (TripSimpleResponse x : tripSimpleResponses) {
+        for (TripSimpleResponse x : tripSimpleResponseList) {
             x.setBookedSeats(countMap.getOrDefault(x.getId(), 0L));
         }
-        return tripSimpleResponses;
+        return tripSimpleResponseList;
     }
-//    private Long getBookedSeat(String tripId){
-//        return bookedSeat = ;
-//    }
+
     
 }
