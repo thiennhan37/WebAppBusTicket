@@ -8,6 +8,7 @@ class ApiConstants {
   static const String logOut = '$baseUrl/auth/log-out';
   static const String sendOtpRegister = '$baseUrl/register/init';
   static const String verifyOtpRegister = '$baseUrl/register/verify';
+  static const String refreshToken = '$baseUrl/auth/refresh-token';
 
   // HTTP Headers
   static const Map<String, String> headers = {

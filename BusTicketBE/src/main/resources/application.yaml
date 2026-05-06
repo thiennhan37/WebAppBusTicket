@@ -4,9 +4,9 @@ server:
     context-path: /vexedat
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3306/BusTicket"
-    username: BusTicket_User
-    password: 123456
+    url: "jdbc:mysql://localhost:3306/busticket"
+    username: root
+    password: root
   data:
     redis:
       host: "localhost"
@@ -41,8 +41,8 @@ spring:
 
 jwt:
   signerKey: "NaW3jODSZ4yTtMj7s9CQFJvcLnrSgkq0"
-  accessTime: 9000 #seconds;
-  refreshTime: 86400 #seconds;
+  accessTime: 5 #9000 #seconds;
+  refreshTime: 10 #86400 #seconds;
 
 booking:
   holdingSeatTime: 300 #seconds;

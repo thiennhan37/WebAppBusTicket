@@ -24,6 +24,7 @@ import com.example.BusTicket.repository.jpa.CompanyUserRepository;
 import com.example.BusTicket.repository.jpa.CustomerRepository;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,6 +39,7 @@ import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
     private final JwtService jwtService;
     private final CompanyUserRepository companyUserRepository;
@@ -113,7 +115,8 @@ public class AuthenticationService {
         } else{
             user = new CompanyUser();
         }
-//        saveInvalidToken(refreshToken);
+
+        saveInvalidToken(refreshToken);
         String newAccessToken = jwtService.generateToken(user, accessTime);
         String newRefreshToken = jwtService.generateToken(user, refreshTime);
         return RefreshTokenResponse.builder()

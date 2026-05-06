@@ -1,6 +1,7 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.request.CustomerRegisterRequest;
+import com.example.BusTicket.dto.request.UpdateCustomerProfileRequest;
 import com.example.BusTicket.dto.response.CustomerAuthenticationResponse;
 import com.example.BusTicket.dto.response.CustomerInfoResponse;
 import com.example.BusTicket.entity.Customer;
@@ -112,6 +113,37 @@ public class CustomerAuthService {
                     .build();
         } catch (Exception e) {
             // Bắt lỗi trong trường hợp parse JSON lỗi hoặc lưu DB lỗi
+            throw new MyAppException(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    public CustomerInfoResponse updateCustomerProfile(String customerId, UpdateCustomerProfileRequest request) {
+        try {
+            Customer customer = customerRepository.findById(customerId)
+                    .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+
+            // Kiểm tra email trùng lặp (ngoài email hiện tại)
+            if (!customer.getEmail().equals(request.getEmail()) && 
+                customerRepository.existsByEmail(request.getEmail())) {
+                throw new MyAppException(ErrorCode.EMAIL_EXISTED);
+            }
+
+            // Kiểm tra số điện thoại trùng lặp (ngoài số hiện tại)
+            if (!customer.getPhone().equals(request.getPhone()) && 
+                customerRepository.existsByPhone(request.getPhone())) {
+                throw new MyAppException(ErrorCode.PHONE_EXISTED);
+            }
+
+            // Cập nhật thông tin khách hàng
+            customerMapper.updateCustomerFromRequest(request, customer);
+            Customer updatedCustomer = customerRepository.save(customer);
+
+            log.info("Customer profile updated successfully for customer id: {}", customerId);
+            return customerMapper.toCustomerInfoResponse(updatedCustomer);
+        } catch (MyAppException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error updating customer profile: ", e);
             throw new MyAppException(ErrorCode.SYSTEM_ERROR);
         }
     }

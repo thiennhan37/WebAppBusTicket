@@ -215,6 +215,4 @@ public class BookingForOrderService {
             throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
 
     }
-
-
 }
