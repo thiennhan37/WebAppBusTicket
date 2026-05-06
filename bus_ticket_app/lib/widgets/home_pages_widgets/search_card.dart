@@ -1,5 +1,9 @@
+import 'package:bus_ticket_app/data/services/local/booking_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get_it/get_it.dart';
+import '../../data/models/province_model.dart';
+import '../../pages/location_search_pages.dart';
 
 class SearchCard extends StatefulWidget {
   const SearchCard({super.key});
@@ -9,14 +13,63 @@ class SearchCard extends StatefulWidget {
 }
 
 class _SearchCardState extends State<SearchCard> {
-  String _departure = "Hồ Chí Minh";
-  String _destination = "Đắk Lắk";
+  ProvinceModel? _departure;
+  ProvinceModel? _destination;
+
   bool _isRoundTrip = false;
   DateTime _startDate = DateTime.now();
   DateTime? _endDate;
 
+  final _storage = GetIt.I<BookingStorage>(); // Gọi GetIt ra để dùng chung
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLocations(); // Load dữ liệu ngay khi widget vừa render
+  }
+
+  // Hàm đọc từ LocalStorage
+  void _loadSavedLocations() {
+    setState(() {
+      _departure = _storage.getDeparture();
+      _destination = _storage.getDestination();
+    });
+  }
+
   String _formatDate(DateTime date) {
     return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString()}";
+  }
+
+  // Hàm chọn điểm và LƯU LẠI
+  Future<void> _selectLocation(bool isOrigin) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocationSearchPage(isOrigin: isOrigin),
+      ),
+    );
+
+    if (result != null && result is ProvinceModel) {
+      setState(() {
+        if (isOrigin) {
+          _departure = result;
+          _storage.saveDeparture(result);
+        } else {
+          _destination = result;
+          _storage.saveDestination(result);
+        }
+      });
+    }
+  }
+
+  void _swapLocations() {
+    setState(() {
+      ProvinceModel? tmp = _departure;
+      _departure = _destination;
+      _destination = tmp;
+    });
+    _storage.saveDeparture(_departure);
+    _storage.saveDestination(_destination);
   }
 
   Future<void> _pickDate() async {
@@ -27,9 +80,7 @@ class _SearchCardState extends State<SearchCard> {
         lastDate: DateTime.now().add(const Duration(days: 365)),
         builder: (context, child) {
           return Theme(
-            data: Theme.of(
-              context,
-            ).copyWith(colorScheme: const ColorScheme.light()),
+            data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light()),
             child: child!,
           );
         },
@@ -48,9 +99,7 @@ class _SearchCardState extends State<SearchCard> {
         lastDate: DateTime.now().add(const Duration(days: 365)),
         builder: (context, child) {
           return Theme(
-            data: Theme.of(
-              context,
-            ).copyWith(colorScheme: const ColorScheme.light()),
+            data: Theme.of(context).copyWith(colorScheme: const ColorScheme.light()),
             child: child!,
           );
         },
@@ -64,26 +113,42 @@ class _SearchCardState extends State<SearchCard> {
   }
 
   Widget _buildLocationTile(
-    IconData icon,
-    iconColor,
-    String title,
-    String value,
-  ) {
-    return Row(
-      children: [
-        Icon(icon, color: iconColor),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      IconData icon,
+      Color iconColor,
+      String title,
+      String value,
+      VoidCallback onTap,
+      ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        child: Row(
           children: [
-            Text(title, style: TextStyle(color: Colors.grey, fontSize: 12)),
-            Text(
-              value,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            Icon(icon, color: iconColor),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontWeight: value.contains("Chọn điểm") ? FontWeight.w500 : FontWeight.bold,
+                      fontSize: 16,
+                      color: value.contains("Chọn điểm") ? Colors.grey.shade600 : Colors.black,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
@@ -94,11 +159,11 @@ class _SearchCardState extends State<SearchCard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Color.fromRGBO(0, 0, 0, 0.1),
             blurRadius: 10,
-            offset: const Offset(0, 5),
+            offset: Offset(0, 5),
           ),
         ],
       ),
@@ -115,18 +180,21 @@ class _SearchCardState extends State<SearchCard> {
             children: [
               Column(
                 children: [
+                  // 4. TRUYỀN HÀM onTap VÀ TÊN TỈNH VÀO
                   _buildLocationTile(
                     Icons.circle_outlined,
                     Colors.blue,
                     "Nơi xuất phát",
-                    _departure,
+                    _departure?.name ?? "Chọn điểm đi",
+                        () => _selectLocation(true), // isOrigin = true
                   ),
                   const Divider(indent: 40),
                   _buildLocationTile(
                     Icons.location_on,
                     Colors.red,
                     "Bạn muốn đi đâu",
-                    _destination,
+                    _destination?.name ?? "Chọn điểm đến",
+                        () => _selectLocation(false), // isOrigin = false
                   ),
                 ],
               ),
@@ -137,13 +205,7 @@ class _SearchCardState extends State<SearchCard> {
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  onPressed: () {
-                    setState(() {
-                      String tmp = _departure;
-                      _departure = _destination;
-                      _destination = tmp;
-                    });
-                  },
+                  onPressed: _swapLocations,
                   icon: const Icon(Icons.swap_vert, size: 20),
                 ),
               ),
@@ -160,8 +222,8 @@ class _SearchCardState extends State<SearchCard> {
                   padding: const EdgeInsets.symmetric(vertical: 4.0),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today, color: Colors.blue),
-                      SizedBox(width: 8),
+                      const Icon(Icons.calendar_today, color: Colors.blue),
+                      const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -169,7 +231,7 @@ class _SearchCardState extends State<SearchCard> {
                             _isRoundTrip && _endDate != null
                                 ? "Ngày đi - Ngày về"
                                 : "Ngày đi",
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                            style: const TextStyle(color: Colors.grey, fontSize: 12),
                           ),
                           Text(
                             _isRoundTrip && _endDate != null
@@ -188,7 +250,7 @@ class _SearchCardState extends State<SearchCard> {
               ),
               Row(
                 children: [
-                  Text("Khứ hồi"),
+                  const Text("Khứ hồi"),
                   Switch(
                     value: _isRoundTrip,
                     onChanged: (val) {
@@ -215,7 +277,11 @@ class _SearchCardState extends State<SearchCard> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: () {},
+              onPressed: () {
+                // TODO: Xử lý sự kiện bấm tìm kiếm (gọi API lấy danh sách chuyến xe)
+                // Bạn có thể lấy _departure!.id và _destination!.id ở đây
+                print("Tìm chuyến từ: ${_departure?.id} đến ${_destination?.id}");
+              },
               child: const Text(
                 'Tìm kiếm',
                 style: TextStyle(

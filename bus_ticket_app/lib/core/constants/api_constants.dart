@@ -9,6 +9,8 @@ class ApiConstants {
   static const String sendOtpRegister = '$baseUrl/register/init';
   static const String verifyOtpRegister = '$baseUrl/register/verify';
   static const String refreshToken = '$baseUrl/auth/refresh-token';
+  static const String getProvinces = '$baseUrl/provinces';
+  static const String getStop = '$baseUrl/stops';
 
   // HTTP Headers
   static const Map<String, String> headers = {

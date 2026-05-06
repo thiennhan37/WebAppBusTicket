@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/data/services/local/auth_storage.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/profile_viewmodel.dart';
 import 'package:bus_ticket_app/pages/login_page.dart';
@@ -8,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
 import '../data/models/update_customer_profile_request_model.dart';
-import '../data/services/storage_service.dart';
+import '../core/storage/storage_service.dart';
 import '../widgets/account_info_widgets/gender_selector_state.dart';
 import 'package:intl/intl.dart';
 class AccountInfoPages extends StatefulWidget {
@@ -47,7 +48,7 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
   }
 
   void _loadUserData() {
-    final storage = GetIt.I<StorageService>();
+    final storage = GetIt.I<AuthStorage>();
     final userInfo = storage.getUserInfo();
 
     if (userInfo != null) {
@@ -365,7 +366,7 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
     if (!mounted) return;
 
     if (isSuccess) {
-      final storage = GetIt.I<StorageService>();
+      final storage = GetIt.I<AuthStorage >();
       Map<String, dynamic> userInfo = storage.getUserInfo() ?? {};
 
       userInfo['fullName'] = _fullName;

@@ -1,17 +1,16 @@
+import 'package:bus_ticket_app/data/services/local/auth_storage.dart';
 import 'package:bus_ticket_app/pages/login_page.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
-import '../../data/services/storage_service.dart';
 import '../constants/api_constants.dart';
 import '../../global_varible.dart';
 
 class ApiClient {
   late Dio dio;
-  final StorageService _storageService;
+  final AuthStorage _authStorage;
 
-  ApiClient(this._storageService) {
+  ApiClient(this._authStorage) {
     dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
@@ -27,7 +26,7 @@ class ApiClient {
         onRequest: (options, handler) async {
           final bool requiresToken = options.extra['requiresToken'] ?? true;
           if (requiresToken) {
-            String? accessToken = await _storageService.getAccessToken();
+            String? accessToken = await _authStorage.getAccessToken();
             if (accessToken != null && accessToken.isNotEmpty) {
               options.headers['Authorization'] = 'Bearer $accessToken';
             }
@@ -39,7 +38,7 @@ class ApiClient {
           if (error.response?.statusCode == 401) {
             bool isRefreshed = await _refreshToken();
             if (isRefreshed) {
-              String? newAccessToken = await _storageService.getAccessToken();
+              String? newAccessToken = await _authStorage.getAccessToken();
               final options = error.requestOptions;
               options.headers['Authorization'] = 'Bearer $newAccessToken';
               try {
@@ -60,7 +59,6 @@ class ApiClient {
         },
       ),
     );
-
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -86,6 +84,41 @@ class ApiClient {
 
           return handler.next(options);
         },
+        onResponse: (response, handler) {
+          print("========== RESPONSE ==========");
+          print("Status Code: ${response.statusCode}");
+          print("URL: ${response.requestOptions.method} ${response.requestOptions.uri}");
+
+          if (!response.headers.isEmpty) {
+            print("Headers:");
+            response.headers.forEach((k, v) => print("$k: $v"));
+          }
+
+          if (response.data != null) {
+            print("Response Data:");
+            print(response.data);
+          }
+
+          print("==============================");
+
+          return handler.next(response);
+        },
+        onError: (DioException error, handler) {
+          print("========== ERROR ==========");
+          print("Error Type: ${error.type}");
+          print("Status Code: ${error.response?.statusCode}");
+          print("URL: ${error.requestOptions.method} ${error.requestOptions.uri}");
+          print("Error Message: ${error.message}");
+
+          if (error.response?.data != null) {
+            print("Error Response Data:");
+            print(error.response?.data);
+          }
+
+          print("===========================");
+
+          return handler.next(error);
+        },
       ),
     );
   }
@@ -93,7 +126,7 @@ class ApiClient {
   Future<bool> _refreshToken() async {
     try {
       // Lấy Refresh Token từ Local Storage
-      String? refreshToken = await _storageService.getRefreshToken();
+      String? refreshToken = await _authStorage.getRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
         return false;
       }
@@ -113,7 +146,7 @@ class ApiClient {
         final newAccessToken = response.data['accessToken'];
         final newRefreshToken = response.data['refreshToken'];
 
-        await _storageService.saveTokens(newAccessToken, newRefreshToken);
+        await _authStorage.saveTokens(newAccessToken, newRefreshToken);
 
         return true;
       }
@@ -125,7 +158,7 @@ class ApiClient {
   }
 
   Future<void> _forceLogout() async {
-    await _storageService.clearTokens();
+    await _authStorage.clearTokens();
     Fluttertoast.showToast(
       msg: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
       toastLength: Toast.LENGTH_LONG,
@@ -141,19 +174,77 @@ class ApiClient {
   }
 
 
-  Future<Response> get(String path, {Options? options}) async {
-    return await dio.get(path, options: options);
+  Future<Response> get(
+      String path, {
+        Map<String, dynamic>? queryParameters,
+        bool requiresToken = true,
+        Options? options,
+      }) async {
+    return await dio.get(
+      path,
+      queryParameters: queryParameters,
+      options: (options ?? Options()).copyWith(
+        extra: {
+          'requiresToken': requiresToken,
+        },
+      ),
+    );
   }
 
-  Future<Response> post(String path, {dynamic data, Options? options}) async {
-    return await dio.post(path, data: data, options: options);
+  Future<Response> post(
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        bool requiresToken = true,
+        Options? options,
+      }) async {
+    return await dio.post(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: (options ?? Options()).copyWith(
+        extra: {
+          'requiresToken': requiresToken,
+        },
+      ),
+    );
   }
 
-  Future<Response> put(String path, {dynamic data, Options? options}) async {
-    return await dio.put(path, data: data, options: options);
+  Future<Response> put(
+      String path, {
+        dynamic data,
+        Map<String, dynamic>? queryParameters,
+        bool requiresToken = true,
+        Options? options,
+      }) async {
+    return await dio.put(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: (options ?? Options()).copyWith(
+        extra: {
+          'requiresToken': requiresToken,
+        },
+      ),
+    );
   }
 
-  Future<Response> delete(String path, {Options? options}) async {
-    return await dio.delete(path, options: options);
+  Future<Response> delete(
+      String path, {
+        Map<String, dynamic>? queryParameters,
+        dynamic data,
+        bool requiresToken = true,
+        Options? options,
+      }) async {
+    return await dio.delete(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: (options ?? Options()).copyWith(
+        extra: {
+          'requiresToken': requiresToken,
+        },
+      ),
+    );
   }
 }

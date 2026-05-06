@@ -1,5 +1,5 @@
 import 'package:bus_ticket_app/data/models/customer_register_request_model.dart';
-import 'package:bus_ticket_app/data/services/storage_service.dart';
+import 'package:bus_ticket_app/data/services/local/auth_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:bus_ticket_app/data/repositories/AuthRepository.dart';
 import 'package:get_it/get_it.dart';
@@ -77,7 +77,7 @@ class AuthViewModel extends ChangeNotifier {
         final refreshToken = response.refreshToken;
         final userInfo = response.customerInfo;
         // 2. LƯU TOKEN VÀO BỘ NHỚ BẢO MẬT (Keychain/Keystore)
-        final storage = GetIt.I<StorageService>();
+        final storage = GetIt.I<AuthStorage>();
         await storage.saveTokens(accessToken!, refreshToken!);
         if (userInfo != null) await storage.saveUserInfo(userInfo.toJson());
         _isLoading = false;
@@ -99,7 +99,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    final storage = GetIt.I<StorageService>();
+    final storage = GetIt.I<AuthStorage>();
 
     try {
       // 1. LẤY TOKEN TRƯỚC (Bắt buộc phải lấy trước khi gọi clearAll)
@@ -174,7 +174,7 @@ class AuthViewModel extends ChangeNotifier {
         final userInfo = response.customerInfo;
 
         // 2. LƯU TOKEN VÀO BỘ NHỚ
-        final storage = GetIt.I<StorageService>();
+        final storage = GetIt.I<AuthStorage>();
         await storage.saveTokens(accessToken!, refreshToken!);
         if (userInfo != null) {
           await storage.saveUserInfo(userInfo.toJson());
