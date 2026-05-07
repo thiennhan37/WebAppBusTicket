@@ -1,4 +1,5 @@
 import 'package:bus_ticket_app/data/services/local/booking_storage.dart';
+import 'package:bus_ticket_app/pages/searh_result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
@@ -278,9 +279,29 @@ class _SearchCardState extends State<SearchCard> {
                 ),
               ),
               onPressed: () {
-                // TODO: Xử lý sự kiện bấm tìm kiếm (gọi API lấy danh sách chuyến xe)
-                // Bạn có thể lấy _departure!.id và _destination!.id ở đây
-                print("Tìm chuyến từ: ${_departure?.id} đến ${_destination?.id}");
+                if (_departure == null || _destination == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vui lòng chọn cả điểm xuất phát và điểm đến'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return; // Dừng lại, không cho sang trang
+                }
+
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => SearchResultPage(
+                      departureName: _departure!.name,
+                      destinationName: _destination!.name,
+                      startDate: _startDate,
+                      endDate: _endDate,
+                      isRoundTrip: _isRoundTrip,
+                    ),
+                  ),
+                );
+
+                print("Đang tìm chuyến từ: ${_departure!.name} đến ${_destination!.name}");
               },
               child: const Text(
                 'Tìm kiếm',

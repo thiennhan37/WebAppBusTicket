@@ -27,4 +27,5 @@ public class Route {
     @JoinColumn(name = "destination_id", referencedColumnName = "id")
     private Province destinationProvince;
 
+    private Integer durationMinutes;
 }

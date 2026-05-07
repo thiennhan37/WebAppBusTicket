@@ -11,6 +11,7 @@ class ApiConstants {
   static const String refreshToken = '$baseUrl/auth/refresh-token';
   static const String getProvinces = '$baseUrl/provinces';
   static const String getStop = '$baseUrl/stops';
+  static const String searchTrip = '$baseUrl/trips/search';
 
   // HTTP Headers
   static const Map<String, String> headers = {

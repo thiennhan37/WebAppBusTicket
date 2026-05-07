@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/core/network/api_client.dart';
 import 'package:bus_ticket_app/data/models/customer_register_request_model.dart';
 import 'package:bus_ticket_app/data/services/local/auth_storage.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +7,9 @@ import 'package:get_it/get_it.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
+  final ApiClient _apiClient;
 
-  AuthViewModel(this._authRepository);
+  AuthViewModel(this._authRepository, this._apiClient);
 
   // --- State Variables (Trạng thái giao diện) ---
   bool _isLoading = false;
@@ -195,6 +197,21 @@ class AuthViewModel extends ChangeNotifier {
       _errorMessage = 'Lỗi kết nối: $e';
       _isLoading = false;
       notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> tryAutoLogin() async {
+    try {
+      final refreshToken = await GetIt.I<AuthStorage>().getRefreshToken();
+
+      if (refreshToken == null || refreshToken.isEmpty) {
+        return false;
+      }
+      final isSuccess = await _apiClient.refreshToken();
+      return isSuccess;
+    } catch (e) {
+      // Nếu refresh token hết hạn hoặc API lỗi
       return false;
     }
   }

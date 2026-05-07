@@ -36,7 +36,7 @@ class ApiClient {
 
         onError: (DioException error, handler) async {
           if (error.response?.statusCode == 401) {
-            bool isRefreshed = await _refreshToken();
+            bool isRefreshed = await refreshToken();
             if (isRefreshed) {
               String? newAccessToken = await _authStorage.getAccessToken();
               final options = error.requestOptions;
@@ -59,78 +59,79 @@ class ApiClient {
         },
       ),
     );
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          print("========== REQUEST ==========");
-          print("URL: ${options.method} ${options.uri}");
+  //   dio.interceptors.add(
+  //     InterceptorsWrapper(
+  //       onRequest: (options, handler) {
+  //         print("========== REQUEST ==========");
+  //         print("URL: ${options.method} ${options.uri}");
+  //
+  //         if (options.headers.isNotEmpty) {
+  //           print("Headers:");
+  //           options.headers.forEach((k, v) => print("$k: $v"));
+  //         }
+  //
+  //         if (options.queryParameters.isNotEmpty) {
+  //           print("Query Params:");
+  //           print(options.queryParameters);
+  //         }
+  //
+  //         if (options.data != null) {
+  //           print("Body (DTO):");
+  //           print(options.data);
+  //         }
+  //
+  //         print("=============================");
+  //
+  //         return handler.next(options);
+  //       },
+  //       onResponse: (response, handler) {
+  //         print("========== RESPONSE ==========");
+  //         print("Status Code: ${response.statusCode}");
+  //         print("URL: ${response.requestOptions.method} ${response.requestOptions.uri}");
+  //
+  //         if (!response.headers.isEmpty) {
+  //           print("Headers:");
+  //           response.headers.forEach((k, v) => print("$k: $v"));
+  //         }
+  //
+  //         if (response.data != null) {
+  //           print("Response Data:");
+  //           print(response.data);
+  //         }
+  //
+  //         print("==============================");
+  //
+  //         return handler.next(response);
+  //       },
+  //       onError: (DioException error, handler) {
+  //         print("========== ERROR ==========");
+  //         print("Error Type: ${error.type}");
+  //         print("Status Code: ${error.response?.statusCode}");
+  //         print("URL: ${error.requestOptions.method} ${error.requestOptions.uri}");
+  //         print("Error Message: ${error.message}");
+  //
+  //         if (error.response?.data != null) {
+  //           print("Error Response Data:");
+  //           print(error.response?.data);
+  //         }
+  //
+  //         print("===========================");
+  //
+  //         return handler.next(error);
+  //       },
+  //     ),
+  //   );
 
-          if (options.headers.isNotEmpty) {
-            print("Headers:");
-            options.headers.forEach((k, v) => print("$k: $v"));
-          }
-
-          if (options.queryParameters.isNotEmpty) {
-            print("Query Params:");
-            print(options.queryParameters);
-          }
-
-          if (options.data != null) {
-            print("Body (DTO):");
-            print(options.data);
-          }
-
-          print("=============================");
-
-          return handler.next(options);
-        },
-        onResponse: (response, handler) {
-          print("========== RESPONSE ==========");
-          print("Status Code: ${response.statusCode}");
-          print("URL: ${response.requestOptions.method} ${response.requestOptions.uri}");
-
-          if (!response.headers.isEmpty) {
-            print("Headers:");
-            response.headers.forEach((k, v) => print("$k: $v"));
-          }
-
-          if (response.data != null) {
-            print("Response Data:");
-            print(response.data);
-          }
-
-          print("==============================");
-
-          return handler.next(response);
-        },
-        onError: (DioException error, handler) {
-          print("========== ERROR ==========");
-          print("Error Type: ${error.type}");
-          print("Status Code: ${error.response?.statusCode}");
-          print("URL: ${error.requestOptions.method} ${error.requestOptions.uri}");
-          print("Error Message: ${error.message}");
-
-          if (error.response?.data != null) {
-            print("Error Response Data:");
-            print(error.response?.data);
-          }
-
-          print("===========================");
-
-          return handler.next(error);
-        },
-      ),
-    );
   }
 
-  Future<bool> _refreshToken() async {
+  Future<bool> refreshToken() async {
     try {
       // Lấy Refresh Token từ Local Storage
       String? refreshToken = await _authStorage.getRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
         return false;
       }
-
+      print(refreshToken);
       final tokenDio = Dio(BaseOptions(baseUrl: ApiConstants.baseUrl));
 
       final response = await tokenDio.post(
@@ -143,11 +144,10 @@ class ApiClient {
       );
 
       if (response.statusCode == 200) {
-        final newAccessToken = response.data['accessToken'];
-        final newRefreshToken = response.data['refreshToken'];
+        final newAccessToken = response.data['result']['accessToken'];
+        final newRefreshToken = response.data['result']['refreshToken'];
 
         await _authStorage.saveTokens(newAccessToken, newRefreshToken);
-
         return true;
       }
       return false;

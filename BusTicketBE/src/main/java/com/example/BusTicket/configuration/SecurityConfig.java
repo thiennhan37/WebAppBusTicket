@@ -37,6 +37,7 @@ public class SecurityConfig {
     private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes"};
     private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
             "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order"};
+    private final String[] CUSTOMER_ENDPOINTS = {"/trips/search"};
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
     @Autowired
@@ -47,6 +48,7 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Browser gửi OPTIONS trước (CORS)
+                        .requestMatchers(HttpMethod.GET, CUSTOMER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, AUTH_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
