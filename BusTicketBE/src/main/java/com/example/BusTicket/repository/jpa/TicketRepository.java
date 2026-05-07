@@ -22,10 +22,10 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
     @Modifying
     @Query("""
             UPDATE Ticket t SET t.status = :status
-            WHERE t.id IN :ids AND t.status = :prevStatus 
-            """)
+            WHERE t.id IN :ids AND t.status IN :prevStatusList\s
+           \s""")
     int updateStatusByIds(@Param("ids") List<String> ids, @Param("status") String status,
-                          @Param("prevStatus") String prevStatus, @Param("updatedAt") LocalDateTime updatedAt);
+                          @Param("prevStatusList") List<String> prevStatusList, @Param("updatedAt") LocalDateTime updatedAt);
 
     @Query("""
         SELECT t FROM Ticket t

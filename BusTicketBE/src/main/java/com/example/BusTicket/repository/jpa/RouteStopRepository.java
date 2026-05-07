@@ -16,4 +16,6 @@ public interface RouteStopRepository extends JpaRepository<RouteStop, Long> {
            """)
     long countValidStop(@Param("ids") List<Long> ids, @Param("provinceId") String provinceId);
     List<RouteStop> findAllByRouteIdAndType(Long routeId, String type);
+
+
 }

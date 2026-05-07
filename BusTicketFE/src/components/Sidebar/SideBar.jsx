@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { NavLink } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
-import UserProfile from "./UserProfile";
+import UserSetting from './UserSetting';
 const menuItems = [
   { icon: LayoutDashboard, label: 'Tổng quan', link:'overview', active: true },
   { icon: BusFront, label: 'Chuyến đi', link:'trips', active: false },
@@ -57,7 +57,7 @@ const SideBar = () =>{
           </NavLink>
         ))}
       </nav>
-      <UserProfile></UserProfile>
+      <UserSetting/>
       
     </div>
   );
