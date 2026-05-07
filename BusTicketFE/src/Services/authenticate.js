@@ -1,5 +1,6 @@
 
-import { publicApi } from "./api";
+import { publicApi} from "./api";
+import api from "./api";
 
 const AuthenticateService = {
     refreshToken(){
@@ -13,6 +14,9 @@ const AuthenticateService = {
     }, 
     registerCompany({email, hostName, companyName, hotline}){
         return publicApi.post("/nhaxe/auth/register", {email, hostName, companyName, hotline});
+    }, 
+    changePassword({oldPassword, newPassword}){
+        return api.put("/auth/change-password", {oldPassword, newPassword});
     }
 }
 

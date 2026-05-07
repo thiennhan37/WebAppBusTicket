@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigation, CheckCircle2, Circle, X } from 'lucide-react';
+import { Navigation, CheckCircle2, Circle, X, Clock } from 'lucide-react';
 import SearchProvinces from "../../components/generalComponent/SearchProvinces"
 import InputGroup from '../../components/other/InputGroup';
 import ProvinceService from '../../Services/ProvinceService';
@@ -8,10 +8,22 @@ const CreateRoute = ({ crRoute, onChangeCrRoute, setOpen, handleCreateRoute }) =
 
   const [upList, setUpList] = useState([]);
   const [downList, setDownList] = useState([]);
-  // const onChangeRouteName = (value) => { 
-  //   setRouteName(value.trim());
-  //   onChangeCrRoute("name", value.trim());
-  // };
+
+  const duration = crRoute?.durationMinutes || 0;
+  const displayHours = Math.floor(duration / 60);
+  const displayMinutes = duration % 60;
+
+  const handleDurationChange = (type, value) => {
+    const numValue = parseInt(value) || 0;
+    let newTotal = 0;
+    
+    if (type === 'hours') {
+      newTotal = (numValue * 60) + displayMinutes;
+    } else {
+      newTotal = (displayHours * 60) + numValue;
+    }
+    onChangeCrRoute("durationMinutes", newTotal);
+  };
 
   useEffect(() => {
     const loadUpStops = async () => {
@@ -65,9 +77,36 @@ const CreateRoute = ({ crRoute, onChangeCrRoute, setOpen, handleCreateRoute }) =
           <X size={20} />
         </button>
       </div>
-      <InputGroup value={crRoute.name} 
-        onChange={(e) => {onChangeCrRoute("name", e.target.value.trimStart()); }} 
-        label={"Tên tuyến đường"} placeholder={"Nhập tên tuyến đường"} />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Tên tuyến đường */}
+          <InputGroup value={crRoute.name} 
+            onChange={(e) => {onChangeCrRoute("name", e.target.value.trimStart()); }} 
+            label={"Tên tuyến đường"} placeholder={"Nhập tên tuyến đường"} />
+          {/* Thời gian di chuyển */}
+          <div className="w-full">
+            <label className="text-[11px] font-bold text-slate-700 uppercase mb-1.5 block ml-1">
+              Thời gian di chuyển (dự kiến)
+            </label>
+            
+            <div className="flex items-center gap-2">
+              {/* Ô nhập Giờ */}
+              <div className="flex-1 relative flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1.5 focus-within:border-blue-400 transition-all">
+                <input type="text" min="0" value={String(displayHours)} onChange={(e) => handleDurationChange('hours', e.target.value)} className="w-full bg-transparent outline-none text-sm text-slate-700 pl-1.5 font-medium"/>
+                <span className="text-[10px] font-bold text-slate-400 uppercase pr-1 select-none">Giờ</span>
+              </div>
+  
+              {/* Ô nhập Phút */}
+              <div className="flex-1 relative flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1.5 focus-within:border-blue-400 transition-all">
+                <input type="text" min="0" max="59" value={String(displayMinutes)} onChange={(e) => handleDurationChange('minutes', e.target.value)} className="w-full bg-transparent outline-none text-sm text-slate-700 pl-1.5 font-medium"/>
+                <span className="text-[10px] font-bold text-slate-400 uppercase pr-1 select-none">Phút</span>
+              </div>
+              <div className="flex items-center justify-center bg-slate-100 text-slate-500 rounded-xl p-1.5 border border-slate-200 aspect-square">
+                <Clock size={16} />
+              </div>
+            </div>
+          </div>
+      </div>
       <div className="flex gap-x-4 pt-2">
         {/* PHẦN 1: TỈNH BẮT ĐẦU & ĐIỂM ĐÓN */}
         <section className="flex-1 space-y-3">

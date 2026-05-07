@@ -2,6 +2,7 @@ package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.request.RouteCrRequest;
+import com.example.BusTicket.dto.request.RouteUpRequest;
 import com.example.BusTicket.dto.response.RouteResponse;
 import com.example.BusTicket.dto.response.RouteStopResponse;
 import com.example.BusTicket.entity.*;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,6 +63,7 @@ public class RouteService {
                 .arrivalProvince(arrivalProvince)
                 .destinationProvince(destinationProvince)
                 .busCompany(busCompany)
+                .durationMinutes(request.getDurationMinutes())
                 .build();
         route = routeRepository.save(route);
 
@@ -125,7 +128,73 @@ public class RouteService {
         return routeStopRepository.findAllByRouteIdAndType(routeId, type)
                 .stream().map(routeStopMapper::toRouteStopResponse).toList();
     }
-//    public List<RouteStopResponse> getStopBy(Long routeId, String type){
+
+    public RouteResponse updateRoute(RouteUpRequest request, Long RouteId){
+        List<Long> upStopIdList = request.getUpStopIdList();
+        List<Long> downStopIdList = request.getDownStopIdList();
+//        if(upStopIdList.isEmpty() && downStopIdList.isEmpty()) throw new MyAppException(ErrorCode.MISSING_REQUIRED_FIELD);
+
+        Jwt jwt = JwtHelper.getJwt();
+        String id = jwt.getSubject();
+        Route route = routeRepository.findById(RouteId).orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        CompanyUser user = companyUserRepository.findById(id)
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+        BusCompany busCompany = user.getBusCompany();
+        if( ! busCompany.getId().equals(route.getBusCompany().getId())) throw new MyAppException(ErrorCode.ACCESS_DENIED);
+
+        String newRouteName = request.getName();
+        if(newRouteName == null || newRouteName.isBlank()) throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        Integer durationMinutes = request.getDurationMinutes();
+        if(durationMinutes == null || durationMinutes <= 0) throw new MyAppException(ErrorCode.DURATION_TIME_INVALID);
+        route.setName(newRouteName);
+        route.setDurationMinutes(durationMinutes);
+        route = routeRepository.save(route);
+
+        Province arrivalProvince = provinceRepository.getReferenceById(route.getArrivalProvince().getId());
+        Province destinationProvince = provinceRepository.getReferenceById(route.getDestinationProvince().getId());
+        int upStopCount = stopRepository.countStopBelongToProvince(upStopIdList, arrivalProvince.getId());
+        if(upStopCount != upStopIdList.size()) throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        int downStopCount = stopRepository.countStopBelongToProvince(downStopIdList, destinationProvince.getId());
+        if(downStopCount != downStopIdList.size()) throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+
+
+
+        long validUpStopCount = routeStopRepository.countValidStop(upStopIdList, arrivalProvince.getId());
+        if(validUpStopCount != upStopIdList.size()) throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        long validDownStopCount = routeStopRepository.countValidStop(downStopIdList, destinationProvince.getId());
+        if(validDownStopCount != downStopIdList.size()) throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+
+
+        Set<Long> existingUpStopIdList = routeStopRepository.findAllByRouteIdAndType(route.getId(), StopType.UP.name())
+                .stream().map(rs -> rs.getStop().getId()).collect(Collectors.toSet());
+        Set<Long> existingDownStopIdList = routeStopRepository.findAllByRouteIdAndType(route.getId(), StopType.DOWN.name())
+                .stream().map(rs -> rs.getStop().getId()).collect(Collectors.toSet());
+        List<RouteStop> newRouteStopList = new ArrayList<>();
+        for(Long stopId : upStopIdList){
+            if( !existingUpStopIdList.contains(stopId)){
+                newRouteStopList.add(RouteStop.builder()
+                        .stop(stopRepository.getReferenceById(stopId))
+                        .route(route)
+                        .type(StopType.UP.name())
+                        .build());
+            }
+        }
+        for(Long stopId : downStopIdList){
+            if( !existingUpStopIdList.contains(stopId)){
+                newRouteStopList.add(RouteStop.builder()
+                        .stop(stopRepository.getReferenceById(stopId))
+                        .route(route)
+                        .type(StopType.DOWN.name())
+                        .build());
+            }
+
+        }
+        routeStopRepository.saveAll(newRouteStopList);
+        return routeMapper.toRouteResponse(route);
+    }
+
+
+    //    public List<RouteStopResponse> getStopBy(Long routeId, String type){
 //        Jwt jwt = JwtHelper.getJwt();
 //        String id = jwt.getSubject();
 //        CompanyUser user = companyUserRepository.findById(id)

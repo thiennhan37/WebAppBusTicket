@@ -1,9 +1,5 @@
 package com.example.BusTicket.dto.response;
 
-import com.example.BusTicket.entity.BookingOrder;
-import com.example.BusTicket.entity.RouteStop;
-import com.example.BusTicket.entity.TripSeat;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

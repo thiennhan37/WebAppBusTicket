@@ -9,7 +9,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StatusModal from "../../components/other/StatusModal"
 import SeatDiagram from "../../components/other/SeatDiagram";
 const TripCreate = ({ setIsAddModalOpen}) => {
-  // console.log(newTrip);
+  
   const [newTrip, setNewTrip] = useState({route: null, licensePlate: "", driver: "", 
     busType: {id:"", name:""}, price: 0})
   const handleNewTrip = (field, value) => {
@@ -43,8 +43,9 @@ const TripCreate = ({ setIsAddModalOpen}) => {
       queryClient.invalidateQueries({ queryKey: ['tripList'] });
         setReportCreate('success')
       },
-    onError: () => {
-      setReportCreate('error')
+    onError: (error) => {
+      console.log("error in create trip", error.response);
+      setReportCreate("error: " + error.response?.data?.message);
     }
   });
   
@@ -65,7 +66,7 @@ const TripCreate = ({ setIsAddModalOpen}) => {
               title="Thêm chuyến đi mới"
               message={`Bạn có chắc chắn muốn lưu chuyến đi vào hệ thống?`}
             />
-          {reportCreate === "error" && <StatusModal type="error"  
+          {reportCreate.startsWith("error") && <StatusModal type="error" message={reportCreate.split(":")[1]} 
               onClose={hideReportCreate}></StatusModal>}
           {reportCreate === "success" && <StatusModal type="success" message={"Lưu chuyến đi thành công"} 
             onClose={hideReportCreate}></StatusModal>}

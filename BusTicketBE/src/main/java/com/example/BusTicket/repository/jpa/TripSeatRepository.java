@@ -60,9 +60,10 @@ public interface TripSeatRepository extends JpaRepository<TripSeat, String> {
     @Modifying
     @Query("""
             UPDATE TripSeat ts SET ts.status = :status
-            WHERE ts.id IN :ids AND ts.status = :prevStatus
+            WHERE ts.id IN :ids AND ts.status IN :prevStatusList
             """)
-    int updateStatusByIds(@Param("ids") List<String> ids, @Param("status") String status, @Param("prevStatus") String prevStatus);
+    int updateStatusByIds(@Param("ids") List<String> ids,
+                          @Param("status") String status, @Param("prevStatusList") List<String> prevStatusList);
 
 }
 

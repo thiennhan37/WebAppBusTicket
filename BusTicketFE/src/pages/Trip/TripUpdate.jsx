@@ -51,8 +51,8 @@ const TripUpdate = ({selectedTrip, setSelectedTrip,  setIsUpdateOpen}) => {
       queryClient.invalidateQueries({ queryKey: ['tripList'] });
         setReportUpdate('success')
       },
-    onError: () => {
-      setReportUpdate('error')
+    onError: (error) => {
+      setReportUpdate("error: " + error.response?.data?.message);
     }
   });
 
@@ -66,7 +66,7 @@ const TripUpdate = ({selectedTrip, setSelectedTrip,  setIsUpdateOpen}) => {
               title={`Cập nhật chuyến đi ${selectedTrip.id}`}
               message={`Bạn có chắc chắn muốn cập nhật thông tin chuyến đi?`}
             />
-          {reportUpdate === "error" && <StatusModal type="error"  
+          {reportUpdate.startsWith("error") && <StatusModal type="error" message={reportUpdate.split(":")[1]} 
               onClose={hideReportUpdate}></StatusModal>}
           {reportUpdate === "success" && <StatusModal type="success" message={"Lưu chuyến đi thành công"} 
             onClose={hideReportUpdate}></StatusModal>}
@@ -93,7 +93,7 @@ const TripUpdate = ({selectedTrip, setSelectedTrip,  setIsUpdateOpen}) => {
                 <InputGroup label="Thời gian khởi hành" type="datetime-local" value={selectedTrip.departureTime} 
                   onChange={(e) => handleSelectedTrip("departureTime", e.target.value)} disabled={selectedTrip.status === "OPEN"}/> 
                 
-                <InputGroup label="Giá vé" type="number" value={selectedTrip.price}
+                <InputGroup label="Giá vé" type="number" value={selectedTrip.price} disabled={selectedTrip.status === "OPEN"}
                   onChange={(e) => handleSelectedTrip("price", Number(e.target.value))}/> 
                 <InputGroup label="Mã số phương tiện" type="text" value={selectedTrip.licensePlate}
                   onChange={(e) => handleSelectedTrip("licensePlate", e.target.value.trimStart())}/> 

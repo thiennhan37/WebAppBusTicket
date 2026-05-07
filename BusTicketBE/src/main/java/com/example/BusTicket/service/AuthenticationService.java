@@ -1,10 +1,8 @@
 package com.example.BusTicket.service;
 
+import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.JwtObject.JwtInfo;
-import com.example.BusTicket.dto.request.CompanyRegisterRequest;
-import com.example.BusTicket.dto.request.LoginRequest;
-import com.example.BusTicket.dto.request.LogoutRequest;
-import com.example.BusTicket.dto.request.RefreshTokenRequest;
+import com.example.BusTicket.dto.request.*;
 import com.example.BusTicket.dto.response.*;
 import com.example.BusTicket.dto.general.InfoAccount;
 import com.example.BusTicket.entity.CompanyRegister;
@@ -27,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.data.redis.core.ValueOperations;
 import java.util.Random;
@@ -90,6 +89,34 @@ public class AuthenticationService {
 
         saveInvalidToken(accessToken);
         saveInvalidToken(refreshToken);
+    }
+    public void changePassword(ChangePasswordRequest request){
+        Jwt jwt = JwtHelper.getJwt();
+        String userId = jwt.getSubject();
+
+        CompanyUser user = null;
+        if(jwt.getClaim("role").equals(RoleEnum.MANAGER.name()) || jwt.getClaim("role").equals(RoleEnum.STAFF.name())){
+            user = companyUserRepository.findById(userId).orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+        }
+        else{
+            throw new RuntimeException("Chưa tạo admin");
+        }
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword()))
+            throw new MyAppException(ErrorCode.PASSWORD_NOT_MATCHES);
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword()))
+            throw new MyAppException(ErrorCode.NEW_PASSWORD_DUPLICATE);
+
+        String newPasswordEncoded = passwordEncoder.encode(request.getNewPassword());
+
+        if(user instanceof CompanyUser){
+            CompanyUser companyUser  = user;
+            companyUser.setPassword(newPasswordEncoded);
+            companyUserRepository.save(companyUser);
+        }
+        else{
+            throw new RuntimeException("Chưa tạo admin");
+        }
     }
     public CompanyRegister registerCompany(CompanyRegisterRequest request){
         if(busCompanyRepository.existsByEmail(request.getEmail())) throw new MyAppException(ErrorCode.EMAIL_EXISTED);
