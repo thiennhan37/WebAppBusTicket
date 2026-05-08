@@ -5,8 +5,10 @@ import authenticate from "../../Services/authenticate"
 import { useContext } from "react";
 import AuthContext from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+
 const FormLogin = ({setShowModal, setAuthMode}) => {
-    const [showPassword, setShowPassword] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [errorEmail, setErrorEmail] = useState("");
     const validateEmail = () =>{
@@ -23,27 +25,48 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
     
     const {login} = useContext(AuthContext);
     const navigate = useNavigate();
-    const handleLogin = async (e) =>{
-        e.preventDefault();
-        const errorEmail = validateEmail();
-        if(errorEmail)  return;
-        try{
+    const {mutate: handleLogin} = useMutation({
+        mutationFn: async () => {
+            const errorEmail = validateEmail();
+            if(errorEmail)  return;
             const response = await authenticate.loginCompany({email, password});
-            // console.log(response);
-            console.log("login response: ", response.data);
+            return response;
+        },
+        onSuccess: (response) => {
             login(response.data.result);
-            navigate("/nhaxe/overview");
-            
-        } catch(error){
+            navigate("/nhaxe/overview"); 
+        },
+        onError: (error) => {
             const statusCode = error.response?.status;
             let message;
             if(statusCode === 401) message = "Email hoặc mật khẩu không chính xác";
             else if(statusCode === 403) message = "Tài khoản của bạn đã bị khóa";
-            else message = "Đã có lỗi xảy ra, vui lòng thử lại sau";
-            
+            else if(statusCode === 500) message = "Đã có lỗi xảy ra, vui lòng thử lại sau";
+
             setErrorLogin(message);
-        }
-    }
+        } 
+    });
+    // const handleLogin = async (e) =>{
+    //     // e.preventDefault();
+    //     const errorEmail = validateEmail();
+    //     if(errorEmail)  return;
+    //     try{
+    //         const response = await authenticate.loginCompany({email, password});
+    //         // console.log(response);
+    //         console.log("login response: ", response.data);
+    //         login(response.data.result);
+    //         navigate("/nhaxe/overview");
+            
+    //     } catch(error){
+    //         const statusCode = error.response?.status;
+    //         let message;
+    //         if(statusCode === 401) message = "Email hoặc mật khẩu không chính xác";
+    //         else if(statusCode === 403) message = "Tài khoản của bạn đã bị khóa";
+    //         else message = "Đã có lỗi xảy ra, vui lòng thử lại sau";
+            
+    //         setErrorLogin(message);
+    //     }
+    // }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -68,12 +91,14 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
                     </p>
                 </div>
 
-                <form className="" onSubmit={(e) => handleLogin(e)}>
+                <form className="" onSubmit={(e) => {e.preventDefault(); handleLogin()}}>
 
                     <div className="relative">
                         <Mail className={`absolute left-4 top-4 transition-colors ${errorEmail ? 'text-red-500' : 'text-gray-400'}`} size={18}/>
                         <input 
-                            type="text" 
+                            type="text"
+                            name="email"
+                            autoComplete="username"
                             placeholder="Email Address"
                             className={`w-full pl-12 pr-4 py-3 bg-gray-50 border rounded-2xl transition-all focus:outline-none 
                                 ${errorEmail 
@@ -96,7 +121,10 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
                     <div className="relative pb-4">
                         <Lock className="absolute left-4 top-4 text-gray-400" size={18} />
                         <input 
+                            required
                             type={showPassword ? "text" : "password"} 
+                            name="password"
+                            autoComplete="current-password"
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -121,7 +149,8 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
                     </div>
 
                     <button className="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl 
-                    hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all transform active:scale-[0.98] mt-2">
+                        hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all transform active:scale-[0.98] mt-2" 
+                    type="submit">
                         Sign In
                     </button>
                 </form>

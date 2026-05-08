@@ -2,6 +2,7 @@ package com.example.BusTicket.controller.trip;
 
 
 import com.example.BusTicket.dto.request.RouteCrRequest;
+import com.example.BusTicket.dto.request.RouteUpRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.RouteResponse;
 import com.example.BusTicket.dto.response.RouteStopResponse;
@@ -43,6 +44,10 @@ public class RouteController {
     @GetMapping("/routes/{id}")
     ApiResponse<List<RouteStopResponse>> getRouteStopList(@PathVariable("id") Long routeId, @RequestParam(required = true) String type){
         return ApiResponse.success(routeService.getRouteStopList(routeId, type));
+    }
+    @PutMapping("/routes/{id}")
+    ApiResponse<RouteResponse> updateRoute(@RequestBody RouteUpRequest request, @PathVariable("id") Long routeId){
+        return ApiResponse.success(routeService.updateRoute(request, routeId));
     }
 
 //    @GetMapping("/stops")

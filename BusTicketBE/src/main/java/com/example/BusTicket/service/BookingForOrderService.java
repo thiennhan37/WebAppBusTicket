@@ -56,7 +56,8 @@ public class BookingForOrderService {
         Jwt jwt = JwtHelper.getJwt();
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
-        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name())) throw new MyAppException(ErrorCode.BOOKING_TRIP_INVALID);
+        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
+            throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
         // check quyền thêm order dành cho nhân viên công ty sỡ hữu chuyến đi này.
         CompanyUser creatingStaff = checkCompanyPermission(jwt.getSubject(), trip);
 
@@ -83,6 +84,8 @@ public class BookingForOrderService {
         Jwt jwt = JwtHelper.getJwt();
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
+            throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
         // check quyền thêm order dành cho nhân viên công ty sỡ hữu chuyến đi này.
         CompanyUser creatingStaff = checkCompanyPermission(jwt.getSubject(), trip);
 
@@ -100,8 +103,7 @@ public class BookingForOrderService {
         seatReservationService.checkValidOrder(orderId, tripSeatIdList);
         List<TripSeat> tripSeatList = tripSeatRepository.getValidTripSeatList(tripSeatIdList, trip.getId());
 
-        // xóa order đang giữ trong redis dù có đặt order thành công hay không
-        seatReservationService.deleteInvalidOrder(creatingStaff.getId(), orderId, tripSeatIdList);
+
         if(tripSeatIdList.size() != tripSeatList.size()){
             throw new MyAppException(ErrorCode.TRIP_SEAT_BOOKED);
         }
@@ -121,11 +123,13 @@ public class BookingForOrderService {
                 .build();
 
         bookingOrderRepository.save(bookingOrder);
-        tripSeatRepository.updateStatusByIds(tripSeatIdList, TripSeatEnum.HELD.name(), TripSeatEnum.AVAILABLE.name());
+        tripSeatRepository.updateStatusByIds(tripSeatIdList, TripSeatEnum.HELD.name(), List.of(TripSeatEnum.AVAILABLE.name()));
         List<Ticket> ticketList =  saveTicketList(tripSeatList, bookingOrder, arrival, destination);
         saveHistoryForBooking(bookingOrder, creatingStaff, null, ticketList);
         // lưu link thanh toán vào redis để customer click vào email lấy link
         Payment payment = savePaymentIntoRedis(bookingOrder);
+        // xóa order đang giữ trong redis
+        seatReservationService.deleteInvalidOrder(creatingStaff.getId(), orderId, tripSeatIdList);
         // gửi mail để thanh toán cho khách hàng
         sendMailService.sendBookingPaymentEmail(bookingOrder, payment);
         return orderMapper.toBookingOrderResponse(bookingOrder);
@@ -190,6 +194,8 @@ public class BookingForOrderService {
         Jwt jwt = JwtHelper.getJwt();
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
+            throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
         // check quyền thêm order dành cho nhân viên công ty sỡ hữu chuyến đi này.
         CompanyUser creatingStaff = checkCompanyPermission(jwt.getSubject(), trip);
         String orderId = request.getBookingOrderId();

@@ -54,8 +54,9 @@ const Trips = () =>{
   })
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const handleUpdateTrip = (trip) => {
-    const {busType: busTypeName, ...rest} = trip;
-    setSelectedTrip({...rest, busType: {id:"", name:busTypeName, diagram:""}});
+    // const {busType: busTypeName, ...rest} = trip;
+    // setSelectedTrip({...rest, busType: {id:"", name:busTypeName, diagram:""}});
+    setSelectedTrip({...trip});
     setIsUpdateOpen(true);
   }
 
@@ -196,10 +197,15 @@ const Trips = () =>{
                   <td className="py-3 text-right">
                     {trip.status === "SCHEDULED" ? 
                         <div className='flex gap-1'>
-                          <button className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                          <button className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 
+                            rounded-lg transition-colors"
+                            title="Cập nhật chuyến đi"
+                          >
                             <FileInput size={22} onClick={() => handleUpdateTrip(trip)}/>
                           </button>
-                          <button className="text-green-400 hover:text-green-600 hover:bg-green-200 rounded-lg transition-colors">
+                          <button className="text-green-400 hover:text-green-600 hover:bg-green-200 rounded-lg transition-colors"
+                            title="Mở bán chuyến đi"
+                          >
                             <CircleCheckBig size={22} onClick={() => handleOpenTrip(trip)}/>
                           </button>
                         </div>
@@ -207,10 +213,16 @@ const Trips = () =>{
                       }
                     {trip.status === "OPEN" ? 
                         <div className='flex gap-1'>
-                          <button className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                          <button className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 
+                            rounded-lg transition-colors"
+                            title="Cập nhật chuyến đi"
+                          >
                             <FileInput size={22} onClick={() => handleUpdateTrip(trip)}/>
                           </button>
-                          <button className="text-red-400 hover:text-red-600 hover:bg-red-200 rounded-lg transition-colors">
+                          <button className="text-red-400 hover:text-red-600 hover:bg-red-200 
+                            rounded-lg transition-colors"
+                            title="Hủy chuyến đi"
+                          >
                             <CircleX size={22} />
                           </button>
                         </div>

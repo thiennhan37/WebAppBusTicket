@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import { LogOut, User, Settings, AlertTriangle, X } from 'lucide-react';
 import AuthContext from '../../context/AuthContext';
 import AuthenticateService from '../../Services/authenticate';
+import UserProfile from './UsesProfile';
 
-const UserProfile = () => {
+const UserSetting = () => {
   const { user, logout, company } = useContext(AuthContext);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const menuRef = useRef(null);
 
   // Đóng menu nhỏ khi click ra ngoài
@@ -30,10 +32,13 @@ const UserProfile = () => {
       {/* 1. DROPDOWN MENU NHỎ (Hiện khi bấm vào User) */}
       {isMenuOpen && (
         <div className="absolute bottom-full left-4 mb-2 w-52 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-40 animate-in fade-in slide-in-from-bottom-2">
-          {/* <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-            <User size={18} className="text-gray-400" /> Hồ sơ cá nhân
+          <button
+            onClick={() => { setIsMenuOpen(false); setShowSettings(true); }}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <Settings size={18} className="text-gray-400" /> Cài đặt
           </button>
-          <hr className="my-1 border-gray-100" /> */}
+          <hr className="my-1 border-gray-100" />
           <button 
             onClick={() => {
               setIsMenuOpen(false); 
@@ -45,6 +50,9 @@ const UserProfile = () => {
           </button>
         </div>
       )}
+
+     {/* Settings modal */}
+     {showSettings && <UserProfile isOpen={showSettings} onClose={() => setShowSettings(false)} />}
 
       {/* 2. LỚP PHỦ MỜ VÀ MODAL XÁC NHẬN (LOGOUT MODAL) */}
       {showLogoutModal && (
@@ -111,4 +119,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile;
+export default UserSetting;

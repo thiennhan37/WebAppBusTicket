@@ -14,6 +14,7 @@ public class Route {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    private Integer durationMinutes;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bus_company_id", referencedColumnName = "id")
@@ -26,6 +27,4 @@ public class Route {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "destination_id", referencedColumnName = "id")
     private Province destinationProvince;
-
-    private Integer durationMinutes;
 }

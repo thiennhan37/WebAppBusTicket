@@ -15,6 +15,8 @@ public class RouteCrRequest {
     @NotNull
     private String busCompanyId;
     @NotNull
+    private Integer durationMinutes;
+    @NotNull
     private String arrivalId;
     @NotNull
     private String destinationId;

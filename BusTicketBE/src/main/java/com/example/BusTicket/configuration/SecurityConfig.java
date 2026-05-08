@@ -36,7 +36,7 @@ public class SecurityConfig {
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open"};
     private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes"};
     private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
-            "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order"};
+            "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order", "/auth/change-password"};
     private final String[] CUSTOMER_ENDPOINTS = {"/trips/search", "/trips/stops", "/trips/bus-diagram"};
     @Autowired
     private CustomJwtDecoder customJwtDecoder;

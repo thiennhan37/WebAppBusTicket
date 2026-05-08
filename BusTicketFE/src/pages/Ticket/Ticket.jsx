@@ -176,6 +176,9 @@ const Ticket = () => {
     },
     onSuccess: () => {
       setReport("success:Lưu đơn hàng thành công");
+      setIsBookingModalOpen(false);
+      setMode("normal");
+      setSelectedSeatsList([]);
     },
     onError: (error) => {
       setReport("error:"+ error.response?.data?.message);
@@ -350,9 +353,7 @@ const Ticket = () => {
           }}
           onConfirm={(payload) => {
             bookOrder(payload);
-            setIsBookingModalOpen(false);
-            setMode("normal");
-            setSelectedSeatsList([]);
+            
           }}
         />
       )}

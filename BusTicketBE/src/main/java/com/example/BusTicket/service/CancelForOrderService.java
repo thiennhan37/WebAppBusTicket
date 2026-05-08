@@ -5,10 +5,7 @@ import com.example.BusTicket.dto.request.CancelTicketRequest;
 import com.example.BusTicket.dto.request.MomoRefundRequest;
 import com.example.BusTicket.dto.request.PaymentRequest;
 import com.example.BusTicket.entity.*;
-import com.example.BusTicket.enums.MomoEnum;
-import com.example.BusTicket.enums.PaymentEnum;
-import com.example.BusTicket.enums.TicketStatusEnum;
-import com.example.BusTicket.enums.TripSeatEnum;
+import com.example.BusTicket.enums.*;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.BookingOrderMapper;
@@ -64,14 +61,19 @@ public class CancelForOrderService {
         Trip trip = tripRepository.findById(tripId).orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         if(tripList.size() != 1 || !tripList.getFirst().getId().equals(tripId))
             throw new MyAppException(ErrorCode.TRIP_SEAT_INVALID);
+        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
+            throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
         CompanyUser companyUser = checkCompanyPermission(jwt.getSubject(), trip);
 
         // update status ticket to  cancelled
-        int rowUpdTicket = ticketRepository.updateStatusByIds(ticketIdList, TicketStatusEnum.CANCELLED.name()
-                , TicketStatusEnum.PAID.name(), LocalDateTime.now());
+        List<String> ticketStatusList = List.of(TicketStatusEnum.PAID.name(), TicketStatusEnum.HOLDING.name());
+        int rowUpdTicket = ticketRepository
+                .updateStatusByIds(ticketIdList, TicketStatusEnum.CANCELLED.name(), ticketStatusList, LocalDateTime.now());
         if(rowUpdTicket != ticketIdList.size()) throw new MyAppException(ErrorCode.ERROR_SAVED);
         // update status tripSeat to  available
-        int rowUpdTripSeat = tripSeatRepository.updateStatusByIds(tripSeatIdList, TripSeatEnum.AVAILABLE.name(), TripSeatEnum.BOOKED.name());
+        List<String> tripSeatStatusList = List.of(TripSeatEnum.BOOKED.name(), TripSeatEnum.HELD.name());
+        int rowUpdTripSeat = tripSeatRepository
+                .updateStatusByIds(tripSeatIdList, TripSeatEnum.AVAILABLE.name(), tripSeatStatusList);
         if(rowUpdTripSeat != tripSeatIdList.size()) throw new MyAppException(ErrorCode.ERROR_SAVED);
 
         Payment payment = paymentRepository.findByBookingOrderIdAndType(bookingOrderId, MomoEnum.PAYMENT.name());

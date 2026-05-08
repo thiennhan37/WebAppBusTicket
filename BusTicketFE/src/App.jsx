@@ -4,7 +4,7 @@ import CompanyLayout from './layout/CompanyLayout'
 import HomePage from './pages/HomePage/HomePage'
 import AuthProvider from './Provider/AuthProvider'
 import ProtectedRoute from './routes/ProtectedRoute'
-import Overview from './pages/Overview'
+import Overview from './pages/Overview/Overview'
 import Trips from "./pages/Trip/Trips"
 import Ticket from './pages/Ticket/Ticket'
 import LocalRoutes from './pages/LocalRoute/LocalRoutes'

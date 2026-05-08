@@ -68,7 +68,8 @@ public class TripService {
         if( request.getLicensePlate() != null && !request.getLicensePlate().isBlank() &&
         tripRepository.existsByLicensePlateAndDepartureTime(request.getLicensePlate(), request.getDepartureTime()))
             throw new MyAppException(ErrorCode.BUS_BUSY);
-
+        if(request.getDepartureTime().isBefore(LocalDateTime.now()))
+            throw new MyAppException(ErrorCode.DEPARTURE_TIME_INVALID);
         Trip trip = Trip.builder()
                 .id(IdUtil.generateID())
                 .busCompany(busCompany)
@@ -170,11 +171,16 @@ public class TripService {
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
         if(request.getDriver() != null) trip.setDriver(request.getDriver());
         if(request.getLicensePlate() != null) trip.setLicensePlate(request.getLicensePlate());
-        if(request.getPrice() != null) trip.setPrice(request.getPrice());
+
         if(trip.getStatus().equals(TripStatusEnum.SCHEDULED.name())){
             if(request.getBusTypeId() != null) trip.setBusType(busTypeRepository.getReferenceById(request.getBusTypeId()));
             if(request.getRouteId() != null) trip.setRoute(routeRepository.getReferenceById(request.getRouteId()));
-            if(request.getDepartureTime() != null) trip.setDepartureTime(request.getDepartureTime());
+            if(request.getPrice() != null) trip.setPrice(request.getPrice());
+            if(request.getDepartureTime() != null){
+                if(request.getDepartureTime().isBefore(LocalDateTime.now()))
+                    throw new MyAppException(ErrorCode.DEPARTURE_TIME_INVALID);
+                trip.setDepartureTime(request.getDepartureTime());
+            }
         }
         try{
             return tripMapper.toTripResponse(tripRepository.save(trip));
