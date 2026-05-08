@@ -69,7 +69,7 @@ public class BookingOrderService {
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
         Ticket ticket = ticketRepository.findById(request.getTicketId())
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
-        if( !ticket.getTripSeat().getTrip().getId().equals(tripId)) throw new MyAppException(ErrorCode.TICKET_INVALID);
+        if(!ticket.getTripSeat().getTrip().getId().equals(tripId)) throw new MyAppException(ErrorCode.TICKET_INVALID);
 
         if(request.getArrivalId() != null){
             RouteStop arrival = routeStopRepository.findById(request.getArrivalId())

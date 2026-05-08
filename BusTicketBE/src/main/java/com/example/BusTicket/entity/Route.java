@@ -27,5 +27,4 @@ public class Route {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "destination_id", referencedColumnName = "id")
     private Province destinationProvince;
-
 }

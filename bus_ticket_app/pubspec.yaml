@@ -49,6 +49,9 @@ dependencies:
   # Lưu token an toàn
   flutter_secure_storage: ^9.0.0
 
+  #Icons
+  material_design_icons_flutter: ^7.0.7296
+
   # Lưu trữ key-value cục bộ (Dữ liệu thông thường, UI)
   shared_preferences: ^2.2.3
 
@@ -56,6 +59,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
 
   json_annotation: ^4.9.0
+  fluttertoast: ^8.2.4
 
 dev_dependencies:
   flutter_test:

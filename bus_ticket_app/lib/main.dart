@@ -1,10 +1,12 @@
-import 'package:bus_ticket_app/data/services/storage_service.dart';
+import 'package:bus_ticket_app/core/storage/storage_service.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
 import 'package:bus_ticket_app/pages/login_page.dart';
+import 'package:bus_ticket_app/pages/splash_page.dart';
 import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/di/service_locator.dart';
+import 'global_varible.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +28,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'VeXeDat',
       theme: ThemeData(
         fontFamily: 'Lato',
@@ -43,8 +46,7 @@ class MyApp extends StatelessWidget {
         textTheme: const TextTheme(),
         useMaterial3: true,
       ),
-      // home: CustomBottonNav(),
-      home: const LoginPage(),
+      home: const SplashPage(),
     );
   }
 }

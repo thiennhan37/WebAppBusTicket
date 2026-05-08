@@ -1,4 +1,6 @@
+import 'package:bus_ticket_app/data/services/local/auth_storage.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
+import 'package:bus_ticket_app/features/customer/viewmodels/profile_viewmodel.dart';
 import 'package:bus_ticket_app/pages/login_page.dart';
 import 'package:bus_ticket_app/widgets/account_info_widgets/custom_input_field.dart';
 import 'package:bus_ticket_app/widgets/account_info_widgets/infor_banner.dart';
@@ -6,9 +8,10 @@ import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
-import '../data/services/storage_service.dart';
+import '../data/models/update_customer_profile_request_model.dart';
+import '../core/storage/storage_service.dart';
 import '../widgets/account_info_widgets/gender_selector_state.dart';
-
+import 'package:intl/intl.dart';
 class AccountInfoPages extends StatefulWidget {
   const AccountInfoPages({super.key});
 
@@ -17,6 +20,7 @@ class AccountInfoPages extends StatefulWidget {
 }
 
 class _AccountInfoPageState extends State<AccountInfoPages> {
+  final ProfileViewModel viewModel = GetIt.I<ProfileViewModel>();
   String _fullName = '';
   String _phoneNumber = '';
   String _email = '';
@@ -44,7 +48,7 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
   }
 
   void _loadUserData() {
-    final storage = GetIt.I<StorageService>();
+    final storage = GetIt.I<AuthStorage>();
     final userInfo = storage.getUserInfo();
 
     if (userInfo != null) {
@@ -334,27 +338,59 @@ class _AccountInfoPageState extends State<AccountInfoPages> {
   Future<void> _handleSave() async {
     print('--- ĐANG LƯU THÔNG TIN ---');
 
-    final storage = GetIt.I<StorageService>();
-    Map<String, dynamic> userInfo = storage.getUserInfo() ?? {};
+    DateTime parsedDob;
+    try {
+      if (_dob.trim().isEmpty) throw Exception();
+      parsedDob = DateFormat('dd/MM/yyyy').parseStrict(_dob);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ngày sinh không hợp lệ. Vui lòng nhập đúng định dạng dd/MM/yyyy'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return; // Dừng lại không gọi API nếu ngày sinh sai
+    }
 
-    userInfo['fullName'] = _fullName;
-    userInfo['phone'] = _phoneNumber;
-    userInfo['email'] = _email;
-    userInfo['dob'] = _dob;
-    userInfo['gender'] = _gender;
+    final requestData = UpdateCustomerProfileRequestModel(
+      fullName: _fullName,
+      phone: _phoneNumber,
+      email: _email,
+      dob: parsedDob, // Đưa DateTime vào đây
+      gender: _gender,
+      idRegion: _selectedCountry['code'] ?? '+84',
+    );
 
-    await storage.saveUserInfo(userInfo);
+    final isSuccess = await viewModel.saveProfile(requestData);
 
-    // TODO: (Thực tế bạn sẽ gọi thêm AuthViewModel.updateProfile() để đẩy dữ liệu này lên Server nữa)
+    if (!mounted) return;
 
-    if (mounted) {
+    if (isSuccess) {
+      final storage = GetIt.I<AuthStorage >();
+      Map<String, dynamic> userInfo = storage.getUserInfo() ?? {};
+
+      userInfo['fullName'] = _fullName;
+      userInfo['phone'] = _phoneNumber;
+      userInfo['email'] = _email;
+      userInfo['dob'] = _dob;
+      userInfo['gender'] = _gender;
+      userInfo['idRegion'] = _selectedCountry['code'];
+
+      await storage.saveUserInfo(userInfo);
+
       setState(() {});
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Lưu thông tin thành công!'),
+          content: Text('Cập nhật thông tin thành công!'),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(viewModel.errorMessage ?? 'Cập nhật thất bại'),
+          backgroundColor: Colors.red,
         ),
       );
     }

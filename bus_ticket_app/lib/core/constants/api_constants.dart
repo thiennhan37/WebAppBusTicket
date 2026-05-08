@@ -5,9 +5,14 @@ class ApiConstants {
   // Auth endpoints
   static const String sendOtp = '$baseUrl/auth/send-otp';
   static const String verifyOtp = '$baseUrl/auth/verify-otp';
-  static const String logOut = '$baseUrl/auth/logout';
+  static const String logOut = '$baseUrl/auth/log-out';
   static const String sendOtpRegister = '$baseUrl/register/init';
   static const String verifyOtpRegister = '$baseUrl/register/verify';
+  static const String refreshToken = '$baseUrl/auth/refresh-token';
+  static const String getProvinces = '$baseUrl/provinces';
+  static const String getStop = '$baseUrl/stops';
+  static const String searchTrip = '$baseUrl/trips/search';
+  static const String busDiagram = '$baseUrl/trips/bus-diagram';
 
   // HTTP Headers
   static const Map<String, String> headers = {

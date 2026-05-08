@@ -17,22 +17,22 @@ class _HomePagesState extends State<HomePages> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      body: SingleChildScrollView(
+      body: const SingleChildScrollView(
         child: Column(
           children: [
             Stack(
               clipBehavior: Clip.none,
               children: [
-                const HeaderHomePage(),
+                HeaderHomePage(),
                 Padding(
-                  padding: const EdgeInsets.only(top: 180, left: 16, right: 16),
-                  child: const SearchCard(),
+                  padding: EdgeInsets.only(top: 180, left: 16, right: 16),
+                  child: SearchCard(),
                 ),
               ],
             ),
-            const SizedBox(height: 24.0),
-            const ServiceTabs(),
-            const RecentList(),
+            SizedBox(height: 24.0),
+            ServiceTabs(),
+            RecentList(),
           ],
         ),
       ),

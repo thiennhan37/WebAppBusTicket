@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 final List<Map<String, dynamic>> mockNotifications = const [
   {
     'icon': Icons.star,
