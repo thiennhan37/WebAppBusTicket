@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CustomerTripSearchRespone {
+    private String tripId;
     private String departureTime;
     private String arrivalTime;
     private String duration;

@@ -294,6 +294,8 @@ class _SearchCardState extends State<SearchCard> {
                     builder: (context) => SearchResultPage(
                       departureName: _departure!.name,
                       destinationName: _destination!.name,
+                      departureId: _departure!.id,
+                      destinationId: _destination!.id,
                       startDate: _startDate,
                       endDate: _endDate,
                       isRoundTrip: _isRoundTrip,

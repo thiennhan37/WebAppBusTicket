@@ -59,50 +59,51 @@ class ApiClient {
         },
       ),
     );
-  //   dio.interceptors.add(
-  //     InterceptorsWrapper(
-  //       onRequest: (options, handler) {
-  //         print("========== REQUEST ==========");
-  //         print("URL: ${options.method} ${options.uri}");
-  //
-  //         if (options.headers.isNotEmpty) {
-  //           print("Headers:");
-  //           options.headers.forEach((k, v) => print("$k: $v"));
-  //         }
-  //
-  //         if (options.queryParameters.isNotEmpty) {
-  //           print("Query Params:");
-  //           print(options.queryParameters);
-  //         }
-  //
-  //         if (options.data != null) {
-  //           print("Body (DTO):");
-  //           print(options.data);
-  //         }
-  //
-  //         print("=============================");
-  //
-  //         return handler.next(options);
-  //       },
-  //       onResponse: (response, handler) {
-  //         print("========== RESPONSE ==========");
-  //         print("Status Code: ${response.statusCode}");
-  //         print("URL: ${response.requestOptions.method} ${response.requestOptions.uri}");
-  //
-  //         if (!response.headers.isEmpty) {
-  //           print("Headers:");
-  //           response.headers.forEach((k, v) => print("$k: $v"));
-  //         }
-  //
-  //         if (response.data != null) {
-  //           print("Response Data:");
-  //           print(response.data);
-  //         }
-  //
-  //         print("==============================");
-  //
-  //         return handler.next(response);
-  //       },
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          print("========== REQUEST ==========");
+          print("URL: ${options.method} ${options.uri}");
+
+          if (options.headers.isNotEmpty) {
+            print("Headers:");
+            options.headers.forEach((k, v) => print("$k: $v"));
+          }
+
+          if (options.queryParameters.isNotEmpty) {
+            print("Query Params:");
+            print(options.queryParameters);
+          }
+
+          if (options.data != null) {
+            print("Body (DTO):");
+            print(options.data);
+          }
+
+          print("=============================");
+
+          return handler.next(options);
+        }
+        ,
+        onResponse: (response, handler) {
+          print("========== RESPONSE ==========");
+          print("Status Code: ${response.statusCode}");
+          print("URL: ${response.requestOptions.method} ${response.requestOptions.uri}");
+
+          if (!response.headers.isEmpty) {
+            print("Headers:");
+            response.headers.forEach((k, v) => print("$k: $v"));
+          }
+
+          if (response.data != null) {
+            print("Response Data:");
+            print(response.data);
+          }
+
+          print("==============================");
+
+          return handler.next(response);
+        },
   //       onError: (DioException error, handler) {
   //         print("========== ERROR ==========");
   //         print("Error Type: ${error.type}");
@@ -119,8 +120,8 @@ class ApiClient {
   //
   //         return handler.next(error);
   //       },
-  //     ),
-  //   );
+      ),
+    );
 
   }
 

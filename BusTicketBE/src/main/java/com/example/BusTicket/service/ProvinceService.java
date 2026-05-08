@@ -33,5 +33,9 @@ public class ProvinceService {
         List<Stop> stopPage =  stopRepository.findAll(spec);
         return stopPage;
     }
+    public List<Stop> findAllStopsByIdProvince(String provinceId){
+        List<Stop> stop = stopRepository.findALlByProvinceId(provinceId);
+        return stop;
+    }
 
 }

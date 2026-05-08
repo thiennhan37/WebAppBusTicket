@@ -3,7 +3,7 @@ import 'package:bus_ticket_app/data/repositories/location_repository.dart';
 import 'package:bus_ticket_app/data/services/location_api_service.dart';
 import 'package:bus_ticket_app/features/booking/viewmodel/location_viewmodel.dart';
 import 'package:bus_ticket_app/features/booking/viewmodel/search_trip_viewmodel.dart';
-import 'package:bus_ticket_app/features/booking/viewmodel/search_trip_viewmodel.dart';
+import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmodel.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/profile_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 import 'package:bus_ticket_app/data/repositories/AuthRepository.dart';
@@ -31,6 +31,10 @@ void setupServiceLocator() {
 
   getIt.registerFactory<SearchTripViewModel>(
         () => SearchTripViewModel(getIt<TripRepository>()),
+  );
+
+  getIt.registerFactory<SeatSelectionViewModel>(
+        () => SeatSelectionViewModel(getIt<TripRepository>()),
   );
 
   getIt.registerLazySingleton<CustomerApiService>(

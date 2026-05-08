@@ -1,5 +1,4 @@
 import 'package:bus_ticket_app/data/models/trip_model.dart';
-import 'package:bus_ticket_app/data/models/trip_model.dart';
 import 'package:bus_ticket_app/data/repositories/trip_repository.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -22,6 +21,8 @@ class SearchTripViewModel extends ChangeNotifier{
 
     try {
        _trips = await _tripRepository.searchTrip(startProvince, endProvince, date);
+       _isLoading = false;
+       notifyListeners();
     } catch (e) {
       _errorMessage = 'Lỗi kết nối: $e';
       _isLoading = false;

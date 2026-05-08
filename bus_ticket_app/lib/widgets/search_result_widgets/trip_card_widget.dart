@@ -101,7 +101,7 @@ class TripCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.network(
-                  'https://picsum.photos/100/100',
+                  'https://picsum.photos/seed/bus/100/100',
                   width: 60,
                   height: 60,
                   fit: BoxFit.cover,

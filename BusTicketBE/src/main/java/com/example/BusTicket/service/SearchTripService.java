@@ -1,6 +1,7 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.response.CustomerTripSearchRespone;
+import com.example.BusTicket.dto.response.CustomerSearchBusDiagramRespone;
 import com.example.BusTicket.entity.*;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
@@ -24,6 +25,7 @@ public class SearchTripService {
     private final ProvinceRepository provinceRepository;
     private final TripRepository tripRepository;
     private final RouteStopRepository routeStopRepository;
+    private final TripSeatRepository tripSeatRepository;
 
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -114,6 +116,7 @@ public class SearchTripService {
         String busTypeName = trip.getBusType() != null ? trip.getBusType().getName() : "Xe khách";
 
         return CustomerTripSearchRespone.builder()
+            .tripId(tripId)
             .departureTime(departureTime.format(TIME_FORMAT))
             .arrivalTime(arrivalTime.format(TIME_FORMAT))
             .duration(duration)
@@ -128,9 +131,6 @@ public class SearchTripService {
             .build();
     }
 
-    /**
-     * Validate tỉnh khởi hành và tỉnh đến khác nhau
-     */
     private void validateProvinces(String startProvince, String endProvince) {
         if (startProvince.equals(endProvince)) {
             throw new MyAppException(ErrorCode.VALIDATION_FAILED);
@@ -149,5 +149,40 @@ public class SearchTripService {
      */
     private List<Object[]> getRatingAndReviewCount(String busCompanyId) {
         return tripSearchRepository.getCompanyRatings(busCompanyId);
+    }
+
+    /**
+     * Lấy sơ đồ ghế cho một chuyến xe
+     */
+    public CustomerSearchBusDiagramRespone getBusDiagram(String tripId) {
+        log.info("Getting bus diagram for trip: {}", tripId);
+
+        // Lấy Trip entity
+        Trip trip = tripRepository.findById(tripId)
+            .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+
+        // Lấy BusType
+        BusType busType = trip.getBusType();
+        if (busType == null) {
+            throw new MyAppException(ErrorCode.NOT_EXISTED);
+        }
+
+        // Lấy danh sách ghế với trạng thái và giá
+        List<TripSeat> tripSeats = tripSeatRepository.findAllByTripId(tripId);
+
+        // Map sang SeatInfo
+        List<CustomerSearchBusDiagramRespone.SeatInfo> seatInfos = tripSeats.stream()
+            .map(seat -> CustomerSearchBusDiagramRespone.SeatInfo.builder()
+                .seatCode(seat.getSeat())
+                .status(seat.getStatus())
+                .price(seat.getPrice())
+                .build())
+            .collect(Collectors.toList());
+
+        return CustomerSearchBusDiagramRespone.builder()
+            .busTypeName(busType.getName())
+            .diagram(busType.getDiagram())
+            .seats(seatInfos)
+            .build();
     }
 }
