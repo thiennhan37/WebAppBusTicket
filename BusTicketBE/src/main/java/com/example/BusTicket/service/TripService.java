@@ -225,7 +225,8 @@ public class TripService {
         tripSeatRepository.saveAll(tripSeatList);
         return tripMapper.toTripResponse(tripRepository.save(trip));
     }
-    public Boolean cancelTrip(String tripId){
+
+    public void cancelTrip(String tripId){
         Jwt jwt = JwtHelper.getJwt();
         CompanyUser companyUser = companyUserRepository.findById(jwt.getSubject())
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
@@ -233,9 +234,12 @@ public class TripService {
         Trip trip = tripRepository.findById(tripId).orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         if( !busCompany.getId().equals(trip.getBusCompany().getId()))
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
-        if(trip.getStatus().equals(TripStatusEnum.OPEN.name())) trip.setStatus(TripStatusEnum.CANCELLED.name());
+        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
+            throw new MyAppException(ErrorCode.CANCEL_TRIP_INVALID);
+        trip.setStatus(TripStatusEnum.CANCELLED.name());
+
         // hủy các ticket
-        return true;
+
     }
 
     public Page<TripResponse> getAllTrips(String status, String keyword, LocalDate date, String busType, Pageable pageable){
