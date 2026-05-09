@@ -1,14 +1,18 @@
+import 'package:bus_ticket_app/data/models/stop_model.dart';
 import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:diacritic/diacritic.dart';
 
 class SeatSelectionPage extends StatefulWidget {
   final String tripId;
   final String busCompanyName;
   final String departureTime;
   final String date;
+  final String departureProvinceId;
+  final String destinationProvinceId;
 
   const SeatSelectionPage({
     super.key,
@@ -16,6 +20,8 @@ class SeatSelectionPage extends StatefulWidget {
     required this.busCompanyName,
     required this.departureTime,
     required this.date,
+    required this.departureProvinceId,
+    required this.destinationProvinceId,
   });
 
   @override
@@ -25,12 +31,20 @@ class SeatSelectionPage extends StatefulWidget {
 class _SeatSelectionPageState extends State<SeatSelectionPage> {
   late SeatSelectionViewModel _viewModel;
 
+  final ScrollController _departureScrollController = ScrollController();
+  final ScrollController _arrivalScrollController = ScrollController();
+  final TextEditingController _searchTextController = TextEditingController();
+
+  static const double _itemExtent = 160.0;
+
   @override
   void initState() {
     super.initState();
     _viewModel = GetIt.I<SeatSelectionViewModel>();
     _viewModel.fetchBusDiagram(widget.tripId);
   }
+
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
@@ -42,7 +56,14 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              _searchTextController.clear();
+              if (_viewModel.currentStep > 1) {
+                _viewModel.previousStep();
+              } else {
+                Navigator.pop(context);
+              }
+            },
           ),
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,63 +78,14 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {},
-              child: const Text('Chi tiết xe', style: TextStyle(color: Colors.white, decoration: TextDecoration.underline)),
-            ),
-          ],
         ),
         body: Consumer<SeatSelectionViewModel>(
           builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (viewModel.errorMessage != null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(viewModel.errorMessage!, style: const TextStyle(color: Colors.red)),
-                    ElevatedButton(
-                      onPressed: () => viewModel.fetchBusDiagram(widget.tripId),
-                      child: const Text('Thử lại'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (viewModel.busDiagramData == null) {
-              return const Center(child: Text('Không có dữ liệu'));
-            }
-
             return Column(
               children: [
-                _buildStepIndicator(),
-                _buildLegend(),
+                _buildStepIndicator(viewModel.currentStep),
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildFloor(0, 'TẦNG DƯỚI')),
-                            Container(width: 1, height: 400, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
-                            Expanded(child: _buildFloor(1, 'TẦNG TRÊN')),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                  child: _buildCurrentStepContent(viewModel),
                 ),
                 _buildBottomBar(viewModel),
               ],
@@ -124,18 +96,228 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
     );
   }
 
-  Widget _buildStepIndicator() {
+  Widget _buildCurrentStepContent(SeatSelectionViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (viewModel.errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(viewModel.errorMessage!, style: const TextStyle(color: Colors.red)),
+            ElevatedButton(
+              onPressed: () {
+                if (viewModel.currentStep == 1) viewModel.fetchBusDiagram(widget.tripId);
+                if (viewModel.currentStep == 2) viewModel.fetchDepartureStops(widget.departureProvinceId);
+                if (viewModel.currentStep == 3) viewModel.fetchArrivalStops(widget.destinationProvinceId);
+              },
+              child: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    switch (viewModel.currentStep) {
+      case 1:
+        return _buildSeatSelectionStep(viewModel);
+      case 2:
+        return _buildStopSelectionStep(
+          viewModel,
+          isDeparture: true,
+          stops: viewModel.departureStops,
+          selectedStop: viewModel.selectedDepartureStop,
+          onStopSelected: viewModel.selectDepartureStop,
+        );
+      case 3:
+        return _buildStopSelectionStep(
+          viewModel,
+          isDeparture: false,
+          stops: viewModel.arrivalStops,
+          selectedStop: viewModel.selectedArrivalStop,
+          onStopSelected: viewModel.selectArrivalStop,
+        );
+      default:
+        return const SizedBox();
+    }
+  }
+
+  Widget _buildSeatSelectionStep(SeatSelectionViewModel viewModel) {
+    if (viewModel.busDiagramData == null) return const Center(child: Text('Không có dữ liệu sơ đồ'));
+    
+    return Column(
+      children: [
+        _buildLegend(),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildFloor(0, 'TẦNG DƯỚI')),
+                    Container(width: 1, height: 400, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
+                    Expanded(child: _buildFloor(1, 'TẦNG TRÊN')),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStopSelectionStep(
+      SeatSelectionViewModel viewModel, {
+        required bool isDeparture,
+        required List<StopModel> stops,
+        required StopModel? selectedStop,
+        required Function(StopModel) onStopSelected,
+      }) {
+    final scrollController = isDeparture ? _departureScrollController : _arrivalScrollController;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            controller: _searchTextController, // ← kết nối controller
+            onChanged: (value) {
+              viewModel.updateSearchQuery(value);                         // cập nhật ViewModel
+              _scrollToFirstMatch(stops, scrollController, value);       // scroll đến item khớp
+            },
+            decoration: InputDecoration(
+              hintText: 'Tìm điểm ${isDeparture ? "đón" : "trả"} trong danh sách dưới',
+              prefixIcon: const Icon(Icons.search),
+              // Thêm nút xóa khi đang nhập
+              suffixIcon: viewModel.searchQuery.isNotEmpty
+                  ? IconButton(
+                icon: const Icon(Icons.clear, size: 18),
+                onPressed: () {
+                  _searchTextController.clear();
+                  viewModel.updateSearchQuery('');
+                },
+              )
+                  : null,
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView.builder(
+            controller: scrollController,        // ← gắn ScrollController
+            itemCount: stops.length,
+            itemExtent: _itemExtent,             // ← chiều cao cố định để tính offset chính xác
+            itemBuilder: (context, index) {
+              final stop = stops[index];
+              final isSelected = selectedStop?.id == stop.id;
+
+              // Highlight nếu khớp với query đang tìm
+              final query = viewModel.searchQuery;
+
+              final normalizedQuery =
+              removeDiacritics(query.toLowerCase());
+
+              final normalizedName =
+              removeDiacritics(stop.name.toLowerCase());
+
+              final normalizedAddress =
+              removeDiacritics(stop.address.toLowerCase());
+
+              final isHighlighted = query.isNotEmpty &&
+                  (normalizedName.contains(normalizedQuery) ||
+                      normalizedAddress.contains(normalizedQuery));
+
+              return InkWell(
+                onTap: () => onStopSelected(stop),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    // Ưu tiên màu selected > highlighted > mặc định
+                    color: isSelected
+                        ? Colors.blue.withOpacity(0.05)
+                        : isHighlighted
+                        ? Colors.amber.withOpacity(0.08)
+                        : Colors.white,
+                    border: Border(
+                      left: BorderSide(
+                        color: isSelected
+                            ? Colors.blue
+                            : isHighlighted
+                            ? Colors.amber
+                            : Colors.transparent,
+                        width: 4,
+                      ),
+                      bottom: BorderSide(color: Colors.grey[200]!),
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+                        color: isSelected ? Colors.blue : Colors.grey,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text(stop.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                            const SizedBox(height: 4),
+                            Text(stop.address, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.directions_bus, size: 14, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text('Đón bằng xe trung chuyển', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepIndicator(int currentStep) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       color: Colors.blue[600],
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _stepItem('1', 'Chọn chỗ', true),
+          _stepItem('1', 'Chọn chỗ', currentStep >= 1),
           _stepDivider(),
-          _stepItem('2', 'Chọn điểm đón', false),
+          _stepItem('2', 'Chọn điểm đón', currentStep >= 2),
           _stepDivider(),
-          _stepItem('3', 'Chọn điểm trả', false),
+          _stepItem('3', 'Chọn điểm trả', currentStep >= 3),
         ],
       ),
     );
@@ -210,7 +392,6 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   Widget _buildFloor(int floorIndex, String title) {
     final diagram = _viewModel.busDiagramData!.diagram;
     if (floorIndex >= diagram.seatList.length) return const SizedBox();
-    
     final floorSeats = diagram.seatList[floorIndex];
 
     return Column(
@@ -223,8 +404,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
             child: Icon(MdiIcons.steering, color: Colors.grey, size: 30),
           ),
           const SizedBox(height: 16),
-        ]
-        else ...[
+        ] else ...[
           const SizedBox(height: 46),
         ],
         GridView.builder(
@@ -240,17 +420,39 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
           itemBuilder: (context, index) {
             int r = index ~/ diagram.column;
             int c = index % diagram.column;
-            
             if (r >= floorSeats.length || c >= floorSeats[r].length) return const SizedBox();
-            
             final seatCode = floorSeats[r][c];
             if (seatCode == null) return const SizedBox();
-
             return _buildSeat(seatCode);
           },
         ),
       ],
     );
+  }
+  void _scrollToFirstMatch(List<StopModel> stops, ScrollController controller, String query) {
+    if (query.isEmpty) return;
+
+    final normalizedQuery =
+    removeDiacritics(query.toLowerCase());
+
+    final index = stops.indexWhere((stop) {
+      final normalizedName =
+      removeDiacritics(stop.name.toLowerCase());
+
+      final normalizedAddress =
+      removeDiacritics(stop.address.toLowerCase());
+
+      return normalizedName.contains(normalizedQuery) ||
+          normalizedAddress.contains(normalizedQuery);
+    });
+
+    if (index != -1) {
+      controller.animateTo(
+        index * _itemExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   Widget _buildSeat(String seatCode) {
@@ -306,43 +508,90 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   }
 
   Widget _buildBottomBar(SeatSelectionViewModel viewModel) {
-    if (viewModel.selectedSeats.isEmpty) return const SizedBox();
+    if (viewModel.selectedSeats.isEmpty && viewModel.currentStep == 1) return const SizedBox();
+
+    bool canContinue = false;
+    if (viewModel.currentStep == 1 && viewModel.selectedSeats.isNotEmpty) canContinue = true;
+    if (viewModel.currentStep == 2 && viewModel.selectedDepartureStop != null) canContinue = true;
+    if (viewModel.currentStep == 3 && viewModel.selectedArrivalStop != null) canContinue = true;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0, -2))],
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${viewModel.selectedSeats.length} chỗ: ${viewModel.selectedSeats.join(", ")}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          if (viewModel.currentStep > 1)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                Text(
-                  '${_formatPrice(viewModel.totalPrice)}',
-                  style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 18),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info, color: Colors.blue, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Sai hoặc thiếu thông tin?',
+                        style: TextStyle(fontSize: 13, color: Colors.black87),
+                      ),
+                    ),
+                    Text('Báo cáo', style: TextStyle(color: Colors.blue[700], fontWeight: FontWeight.bold, fontSize: 13)),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Chuyển sang bước tiếp theo
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFD54F),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Tiếp tục', style: TextStyle(fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Tạm tính', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    Row(
+                      children: [
+                        Text(
+                          _formatPrice(viewModel.totalPrice),
+                          style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        const Icon(Icons.keyboard_arrow_up, color: Colors.blue),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                onPressed: canContinue ? () {
+                  _searchTextController.clear();
+                  if (viewModel.currentStep == 1) {
+                    viewModel.fetchDepartureStops(widget.departureProvinceId);
+                    viewModel.nextStep();
+                  } else if (viewModel.currentStep == 2) {
+                    viewModel.fetchArrivalStops(widget.destinationProvinceId);
+                    viewModel.nextStep();
+                  } else {
+                    // Xử lý thanh toán hoặc bước tiếp theo
+                  }
+                } : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFD54F),
+                  foregroundColor: Colors.black,
+                  disabledBackgroundColor: Colors.grey[300],
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                child: const Text('Tiếp tục', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ),
+            ],
           ),
         ],
       ),

@@ -1,12 +1,11 @@
 import 'package:bus_ticket_app/core/storage/storage_service.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
-import 'package:bus_ticket_app/pages/login_page.dart';
 import 'package:bus_ticket_app/pages/splash_page.dart';
-import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/di/service_locator.dart';
 import 'global_varible.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +30,6 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       title: 'VeXeDat',
       theme: ThemeData(
-        fontFamily: 'Lato',
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF1E88E5),
           primary: const Color(0xFF1E88E5),
@@ -43,7 +41,9 @@ class MyApp extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-        textTheme: const TextTheme(),
+        textTheme: GoogleFonts.interTextTheme(
+          Theme.of(context).textTheme,
+        ),
         useMaterial3: true,
       ),
       home: const SplashPage(),

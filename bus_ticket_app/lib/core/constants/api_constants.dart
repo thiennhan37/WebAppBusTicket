@@ -10,7 +10,7 @@ class ApiConstants {
   static const String verifyOtpRegister = '$baseUrl/register/verify';
   static const String refreshToken = '$baseUrl/auth/refresh-token';
   static const String getProvinces = '$baseUrl/provinces';
-  static const String getStop = '$baseUrl/stops';
+  static const String getStop = '$baseUrl/trips/stops';
   static const String searchTrip = '$baseUrl/trips/search';
   static const String busDiagram = '$baseUrl/trips/bus-diagram';
 

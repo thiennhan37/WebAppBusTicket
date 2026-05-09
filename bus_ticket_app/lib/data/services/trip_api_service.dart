@@ -26,4 +26,12 @@ class TripApiService{
       requiresToken: false,
     );
   }
+
+  Future<Response> getStops(String provinceId) async {
+    return await _apiClient.get(
+      ApiConstants.getStop,
+      queryParameters: {'provinceID': provinceId},
+      requiresToken: false,
+    );
+  }
 }
