@@ -39,13 +39,13 @@ public class BusCompanyService {
         return companyUser.getBusCompany();
     }
 
-    public BusCompany updateBusCompany(String busCompanyId, ) {
-        Jwt jwt = JwtHelper.getJwt();
-        CompanyUser companyUser = checkPermission(jwt.getSubject(), busCompanyId);
-        BusCompany busCompany = companyUser.getBusCompany();
-
-        return busCompany;
-    }
+//    public BusCompany updateBusCompany(String busCompanyId, ) {
+//        Jwt jwt = JwtHelper.getJwt();
+//        CompanyUser companyUser = checkPermission(jwt.getSubject(), busCompanyId);
+//        BusCompany busCompany = companyUser.getBusCompany();
+//
+//        return busCompany;
+//    }
     private CompanyUser checkPermission(String companyUserId, String busCompanyId){
         CompanyUser companyUser = companyUserRepository.findById(companyUserId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
