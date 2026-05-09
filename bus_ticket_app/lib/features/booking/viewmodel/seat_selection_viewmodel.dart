@@ -2,10 +2,38 @@ import 'package:bus_ticket_app/data/models/bus_diagram_model.dart';
 import 'package:bus_ticket_app/data/models/stop_model.dart';
 import 'package:bus_ticket_app/data/repositories/trip_repository.dart';
 import 'package:flutter/foundation.dart';
+import 'package:string_normalizer/string_normalizer.dart';
 
 class SeatSelectionViewModel extends ChangeNotifier {
   final TripRepository _tripRepository;
   SeatSelectionViewModel(this._tripRepository);
+
+  // --- Thông tin chuyến đi cơ bản (truyền từ trang search) ---
+  String? _departureTime;
+  String? _arrivalTime;
+  String? _departureStation;
+  String? _arrivalStation;
+  String? _date;
+
+  void setTripInfo({
+    required String departureTime,
+    required String arrivalTime,
+    required String departureStation,
+    required String arrivalStation,
+    required String date,
+  }) {
+    _departureTime = departureTime;
+    _arrivalTime = arrivalTime;
+    _departureStation = departureStation;
+    _arrivalStation = arrivalStation;
+    _date = date;
+  }
+
+  String get departureTime => _departureTime ?? '--:--';
+  String get arrivalTime => _arrivalTime ?? '--:--';
+  String get departureStation => _departureStation ?? '';
+  String get arrivalStation => _arrivalStation ?? '';
+  String get date => _date ?? '';
 
   // --- Sơ đồ ghế ---
   BusDiagramData? _busDiagramData;
@@ -18,28 +46,35 @@ class SeatSelectionViewModel extends ChangeNotifier {
   List<StopModel> _departureStops = [];
   List<StopModel> _arrivalStops = [];
 
-  List<StopModel> get departureStops => _departureStops;
-  List<StopModel> get arrivalStops => _arrivalStops;
-
-
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  // Getter trả về danh sách đã lọc theo tên hoặc địa chỉ
   List<StopModel> get filteredDepartureStops {
-    if (_searchQuery.isEmpty) return _departureStops;
-    return _departureStops.where((stop) =>
-      stop.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-      stop.address.toLowerCase().contains(_searchQuery.toLowerCase())
-    ).toList();
+    final query = normalize(_searchQuery);
+
+    if (query.isEmpty) return _departureStops;
+
+    return _departureStops.where((stop) {
+      final name = normalize(stop.name);
+      final address = normalize(stop.address);
+
+      return name.contains(query) ||
+          address.contains(query);
+    }).toList();
   }
 
   List<StopModel> get filteredArrivalStops {
-    if (_searchQuery.isEmpty) return _arrivalStops;
-    return _arrivalStops.where((stop) =>
-      stop.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-      stop.address.toLowerCase().contains(_searchQuery.toLowerCase())
-    ).toList();
+    final query = normalize(_searchQuery);
+
+    if (query.isEmpty) return _arrivalStops;
+
+    return _arrivalStops.where((stop) {
+      final name = normalize(stop.name);
+      final address = normalize(stop.address);
+
+      return name.contains(query) ||
+          address.contains(query);
+    }).toList();
   }
 
   StopModel? _selectedDepartureStop;
@@ -48,6 +83,16 @@ class SeatSelectionViewModel extends ChangeNotifier {
   StopModel? _selectedArrivalStop;
   StopModel? get selectedArrivalStop => _selectedArrivalStop;
 
+  // --- Thông tin liên hệ ---
+  String _contactName = '';
+  String get contactName => _contactName;
+  
+  String _contactPhone = '';
+  String get contactPhone => _contactPhone;
+  
+  String _contactEmail = '';
+  String get contactEmail => _contactEmail;
+
   // --- Trạng thái UI ---
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -55,10 +100,17 @@ class SeatSelectionViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  int _currentStep = 1; // 1: Chọn chỗ, 2: Chọn điểm đón, 3: Chọn điểm trả
+  int _currentStep = 1;
   int get currentStep => _currentStep;
 
   // --- Methods ---
+
+  void updateContactInfo({String? name, String? phone, String? email}) {
+    if (name != null) _contactName = name;
+    if (phone != null) _contactPhone = phone;
+    if (email != null) _contactEmail = email;
+    notifyListeners();
+  }
 
   void updateSearchQuery(String query) {
     _searchQuery = query;
@@ -141,9 +193,9 @@ class SeatSelectionViewModel extends ChangeNotifier {
   }
 
   void nextStep() {
-    if (_currentStep < 3) {
+    if (_currentStep < 5) {
       _currentStep++;
-      _searchQuery = ''; // Reset tìm kiếm khi sang bước mới
+      _searchQuery = '';
       notifyListeners();
     }
   }
@@ -154,6 +206,11 @@ class SeatSelectionViewModel extends ChangeNotifier {
       _searchQuery = '';
       notifyListeners();
     }
+  }
+
+  void goToStep(int step) {
+    _currentStep = step;
+    notifyListeners();
   }
 
   bool isSelected(String seatCode) => _selectedSeats.contains(seatCode);
@@ -175,7 +232,12 @@ class SeatSelectionViewModel extends ChangeNotifier {
     }
     return total;
   }
+
+  String normalize(String text) {
+    return StringNormalizer.normalize(text)
+        .replaceAll('đ', 'd')
+        .replaceAll('Đ', 'D')
+        .toLowerCase()
+        .trim();
+  }
 }
-
-
-

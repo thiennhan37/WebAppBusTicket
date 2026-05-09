@@ -32,7 +32,7 @@ dependencies:
     sdk: flutter
   flutter_svg: ^2.1.0
   intl: ^0.19.0
-  diacritic: ^0.1.5
+  string_normalizer: ^0.4.0
 
   google_fonts: ^6.2.1
   # The following adds the Cupertino Icons font to your application.
