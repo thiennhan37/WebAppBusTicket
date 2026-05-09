@@ -1,95 +1,141 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import {Route, Bus, Ticket, Wallet} from 'lucide-react';
-import QuickStats from './QuickStats';
-import OverviewHeader from './OverViewHeader';
-import SalesChannel from './SalesChannel';
-import UpcomingTrips from './UpcomingTrips';
-import RevenueChart from './RevenueChart';
-import RateTrip from './RateTrip';
+import React, { useState, useRef } from 'react';
+import { 
+  Star, Ticket, Users, Bus
+} from 'lucide-react';
+import OverviewHeader from './OverviewHeader';
+import CompanyAvatar from './CompanyAvatar';
+import DetailedForm from './DetailedForm';
+const initialBusCompany = {
+  id: "BC001",
+  host_Name: "Nguyễn Văn A",
+  company_name: "Nhà xe Hoàng Long",
+  hotline: "0909123456",
+  avatar_url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop", // Ảnh ví dụ thật, không dùng placeholder mờ
+  email: "contact@hoanglong.vn",
+  policy: "Hủy vé trước 24h hoàn 100% tiền vé. Hủy trước 12h hoàn 50%. Không hoàn tiền nếu hủy sát giờ khởi hành.",
+  created_at: "2026-05-09T10:00:00"
+};
 
+// Dữ liệu thống kê mô phỏng (doanh nghiệp)
 const statsData = [
-  { title: 'Tuyến đường', value: '24', trend: '+2 tuyến mới', icon: Route, color: 'text-blue-600', bg: 'bg-blue-100' },
-  { title: 'Chuyến h.động (Hôm nay)', value: '156', trend: 'Hoạt động 98%', icon: Bus, color: 'text-violet-600', bg: 'bg-violet-100' },
-  { title: 'Vé bán ra (Hôm nay)', value: '1,240', trend: '+12% so với hôm qua', icon: Ticket, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-  { title: 'Doanh thu (Hôm nay)', value: '315M', trend: '+5% so với tuần trước', icon: Wallet, color: 'text-amber-600', bg: 'bg-amber-100' },
+  { label: "Tổng chuyến xe", value: "1,245", icon: Bus, color: "text-blue-600", bg: "bg-blue-50" },
+  { label: "Tổng nhân viên", value: "48", icon: Users, color: "text-emerald-600", bg: "bg-emerald-50" },
+  { label: "Vé đã bán (tháng)", value: "8,920", icon: Ticket, color: "text-violet-600", bg: "bg-violet-50" },
+  { label: "Đánh giá", value: "4.8/5", icon: Star, color: "text-amber-500", bg: "bg-amber-50" }
 ];
 
-const revenueData = [
-  { day: 'T2', revenue: 210 },
-  { day: 'T3', revenue: 250 },
-  { day: 'T4', revenue: 280 },
-  { day: 'T5', revenue: 220 },
-  { day: 'T6', revenue: 350 },
-  { day: 'T7', revenue: 420 },
-  { day: 'CN', revenue: 450 },
-];
-
-const fillRateData = [
-  { route: 'HN - Sapa', booked: 38, total: 40 },
-  { route: 'HCM - Đà Lạt', booked: 32, total: 34 },
-  { route: 'HN - Hải Phòng', booked: 25, total: 45 },
-  { route: 'Đà Nẵng - Huế', booked: 15, total: 30 },
-];
-
-const upcomingTrips = [
-  { id: 'TR-101', route: 'Hà Nội - Sapa', time: '10:30', status: 'Sắp khởi hành', fill: '38/40', type: 'Limousine 34T' },
-  { id: 'TR-102', route: 'HCM - Đà Lạt', time: '11:00', status: 'Đang đón khách', fill: '32/34', type: 'Giường nằm 40C' },
-  { id: 'TR-103', route: 'Hà Nội - Hải Phòng', time: '11:30', status: 'Lên lịch', fill: '25/45', type: 'Ghế ngồi 45C' },
-  { id: 'TR-104', route: 'Đà Nẵng - Huế', time: '12:00', status: 'Lên lịch', fill: '15/30', type: 'Limousine 9C' },
-];
-
-const recentActivities = [
-  { id: 1, action: 'Bán vé thành công', details: '2 vé - Chuyến HN-Sapa (10:30)', time: '5 phút trước' },
-  { id: 2, action: 'Gửi link thanh toán', details: 'Khách hàng: Nguyễn Văn A', time: '12 phút trước' },
-  { id: 3, action: 'Cập nhật chuyến', details: 'Gán xe 29B-123.45 cho chuyến TR-102', time: '30 phút trước' },
-  { id: 4, action: 'Bán vé qua tổng đài', details: '1 vé - Chuyến HCM-Đà Lạt', time: '45 phút trước' },
-];
-
-// ==========================================
-// 2. ANIMATION VARIANTS
-// ==========================================
-    const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-        opacity: 1,
-        transition: { staggerChildren: 0.1 }
-    }
-    };
-
-    const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-    };
+  
 
 const Overview = () => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState(initialBusCompany);
+  const [tempData, setTempData] = useState(initialBusCompany);
+
+  const handleEdit = () => {
+    setTempData(formData);
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setFormData(tempData);
+    setIsEditing(false);
+  };
+
+  const handleSave = () => {
+    // Validation cơ bản
+    if (!formData.company_name || !formData.hotline || !formData.email) {
+      alert("Vui lòng điền đầy đủ các trường bắt buộc.");
+      return;
+    }
+
+    setIsSaving(true);
+    // Giả lập API call
+    setTimeout(() => {
+      setIsSaving(false);
+      setIsEditing(false);
+      setTempData(formData);
+    }, 1200);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('vi-VN', options);
+  };
+
+  const fileInputRef = useRef(null);
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Kiểm tra định dạng (tùy chọn)
+      if (!file.type.startsWith('image/')) {
+        alert('Vui lòng chọn file hình ảnh!');
+        return;
+      }
+      // Tạo URL tạm thời để preview
+      const previewUrl = URL.createObjectURL(file);
+      setFormData(prev => ({ ...prev, avatar_url: previewUrl }));
+    }
+  };
+
+  const triggerFileSelect = () => {
+    if (isEditing) fileInputRef.current.click();
+  };
+
   return (
-    <motion.div 
-      className="min-h-screen bg-slate-50 text-slate-800 p-6 font-sans"
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
-      <OverviewHeader itemVariants={itemVariants}></OverviewHeader>
-
-      <QuickStats statsData={statsData} itemVariants={itemVariants}></QuickStats>
-
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            
-        <RevenueChart revenueData={revenueData} itemVariants={itemVariants}></RevenueChart>
-        <SalesChannel/>
-
-      </motion.div>
-
-      {/* --- TABLES & LISTS SECTION --- */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900 font-sans">
+      <div className="max-w-7xl mx-auto space-y-6">
         
-        <UpcomingTrips upcomingTrips={upcomingTrips}/>
-        <RateTrip fillRateData={fillRateData} itemVariants={itemVariants}></RateTrip>
+        <OverviewHeader 
+          isEditing={isEditing}
+          handleEdit={handleEdit}
+          handleCancel={handleCancel}
+          handleSave={handleSave}
+          isSaving={isSaving} />
 
-      </motion.div>
-    </motion.div>
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {statsData.map((stat, index) => (
+            <div 
+              key={index} 
+              className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 group"
+            >
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform duration-300`}>
+                  <stat.icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 font-medium">{stat.label}</p>
+                  <h3 className="text-2xl font-bold text-slate-900 mt-0.5">{stat.value}</h3>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Content Split Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+           
+          {/* Left Column: Avatar & Quick Info */}
+          <CompanyAvatar formData={formData} formatDate={formatDate} 
+            triggerFileSelect={triggerFileSelect} fileInputRef={fileInputRef} 
+            handleFileChange={handleFileChange} isEditing={isEditing} />
+
+          {/* Right Column: Detailed Form */}
+          <DetailedForm
+            formData={formData}
+            isEditing={isEditing}
+            handleChange={handleChange}
+          />
+        </div>
+      </div>
+    </div>
   );
-}
+};
 
 export default Overview;

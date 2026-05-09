@@ -1,0 +1,62 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /vexedat
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/BusTicket"
+    username: BusTicket_User
+    password: 123456
+  data:
+    redis:
+      host: "localhost"
+      port: 6379
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: "nhan88thien@gmail.com"
+    password: "vwda wpdq icbz ibeq"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  jpa:
+    show-sql: false # Hiển thị câu lệnh SQL ra console
+    properties:
+      hibernate:
+        format_sql: false # Định dạng câu SQL cho dễ đọc (không bị dồn trên 1 dòng)
+        highlight_sql: true # Tô màu các từ khóa SQL (Select, From, Where) để dễ quan sát
+        use_sql_comments: true
+        generate_statistics: true
+#            spring.mail.properties.mail.smtp.auth=true bắt buộc xác thực username/pasword tránh spam
+#            spring.mail.properties.mail.smtp.starttls.enable=true
+#            spring.mail.properties.mail.smtp.starttls.required=true
+#            spring.mail.properties.mail.smtp.connectiontimeout=5000
+#            spring.mail.properties.mail.smtp.timeout=5000
+#Thời gian phản hồi (ms): Thời gian chờ phản hồi từ Server sau khi đã gửi một lệnh nào đó. Nếu server quá tải và không trả lời sau 5s, ứng dụng sẽ ngắt.
+#            spring.mail.properties.mail.smtp.writetimeout=5000
+#Thời gian ghi dữ liệu (ms): Thời gian chờ tối đa để đẩy dữ liệu email từ máy bạn lên Server. Hữu ích khi bạn gửi mail có tệp đính kèm lớn.
+
+jwt:
+  signerKey: "NaW3jODSZ4yTtMj7s9CQFJvcLnrSgkq0"
+  accessTime: 9000 #seconds;
+  refreshTime: 86400 #seconds;
+
+booking:
+  holdingSeatTime: 300 #seconds;
+  paymentExpirationTime: 360 #seconds;
+  holdingSeatPrefixKey: "trip_seat_hold:"
+  tempOrderPrefixKey: "temp_order_hold:"
+  compMakeOrderPrefixKey: "comp_make_order:"
+  paymentPrefixKey: "payment:"
+
+momo:
+  partner-code: "MOMO"
+  access-key: "F8BBA842ECF85"
+  secret-key: "K951B6PE1waDMi640xX08PD3vg6EkVlz"
+  endpoint: https://test-payment.momo.vn/v2/gateway/api/create
+  refund-url: https://test-payment.momo.vn/v2/gateway/api/refund
+  redirect-url: http://localhost:5173/payment-success
+  ipn-url: https://unquote-crumpet-gaffe.ngrok-free.dev/vexedat/momo/ipn
