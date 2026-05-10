@@ -20,6 +20,7 @@ import com.example.BusTicket.repository.jpa.*;
 import com.example.BusTicket.util.IdUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,10 @@ public class BookingOrderService {
     private final TripRepository tripRepository;
     private final RouteStopRepository routeStopRepository;
     private final TicketMapper ticketMapper;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    @Value("${booking.customerHoldingSeatPrefixKey}")
+    private String CUSTOMER_HOLD_INFO_PREFIX;
 
 
     public BookingOrderResponse getBookingOrder(String bookingOrderId) {
@@ -54,6 +59,10 @@ public class BookingOrderService {
 
         for(TripSeat ts : tripSeatList) ts.setStatus(TripSeatEnum.BOOKED.name());
         for(Ticket t : ticketList) t.setStatus(TicketStatusEnum.PAID.name());
+        BookingOrder bookingOrder = ticketList.isEmpty() ? bookingOrderRepository.findById(bookingOrderId).orElse(null) : ticketList.get(0).getBookingOrder();
+        if(bookingOrder != null && bookingOrder.getBookingUser() != null){
+            redisTemplate.delete(CUSTOMER_HOLD_INFO_PREFIX + bookingOrder.getBookingUser().getId());
+        }
 
         tripSeatRepository.saveAll(tripSeatList);
         ticketRepository.saveAll(ticketList);

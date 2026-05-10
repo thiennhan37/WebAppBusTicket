@@ -22,6 +22,7 @@ public class CustomerSearchBusDiagramRespone {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class SeatInfo {
+        private String seatId;
         private String seatCode;
         private String status; // AVAILABLE, HELD, BOOKED
         private Long price;

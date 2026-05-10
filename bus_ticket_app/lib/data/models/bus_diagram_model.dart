@@ -41,11 +41,12 @@ class Diagram {
 
 @JsonSerializable()
 class SeatStatus {
+  final String seatId;
   final String seatCode;
   final String status;
   final int price;
 
-  SeatStatus({required this.seatCode, required this.status, required this.price});
+  SeatStatus({required this.seatId ,required this.seatCode, required this.status, required this.price});
 
   factory SeatStatus.fromJson(Map<String, dynamic> json) => _$SeatStatusFromJson(json);
   Map<String, dynamic> toJson() => _$SeatStatusToJson(this);

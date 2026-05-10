@@ -62,4 +62,15 @@ class TripRepository{
       throw Exception('Lỗi không xác định: $e');
     }
   }
+
+  Future<Response> holdSeats(String tripId, List<String> tripSeatIdList) async {
+    try {
+      return await _tripApiService.holdSeats(tripId, tripSeatIdList);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response!;
+      }
+      rethrow;
+    }
+  }
 }

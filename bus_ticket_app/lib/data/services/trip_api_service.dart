@@ -34,4 +34,14 @@ class TripApiService{
       requiresToken: false,
     );
   }
+
+  Future<Response> holdSeats(String tripId, List<String> tripSeatIdList) async {
+    return await _apiClient.post(
+      '${ApiConstants.baseUrl}/customer/orders/hold-seats/$tripId',
+      data: {
+        'tripSeatIdList': tripSeatIdList,
+      },
+      requiresToken: true,
+    );
+  }
 }

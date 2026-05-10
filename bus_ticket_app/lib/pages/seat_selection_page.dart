@@ -1,5 +1,6 @@
 import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmodel.dart';
 import 'package:bus_ticket_app/widgets/seat_selection_widgets/contact_info_widget.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/payment_selection_widget.dart';
 import 'package:bus_ticket_app/widgets/seat_selection_widgets/seat_diagram_widget.dart';
 import 'package:bus_ticket_app/widgets/seat_selection_widgets/step_indicator_widget.dart';
 import 'package:bus_ticket_app/widgets/seat_selection_widgets/stop_selection_widget.dart';
@@ -38,6 +39,34 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
     super.initState();
     _viewModel = GetIt.I<SeatSelectionViewModel>();
     _viewModel.fetchBusDiagram(widget.tripId);
+  }
+
+  void _showErrorDialog(BuildContext context, SeatSelectionViewModel viewModel) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Thông báo'),
+          content: Text(viewModel.errorMessage ?? 'Lỗi đặt vé'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                if (viewModel.lastErrorCode == 4010) {
+                  // Tải lại sơ đồ ghế và quay về Bước 1 (Chọn chỗ)
+                  viewModel.refreshBusDiagram(widget.tripId);
+                  viewModel.goToStep(1);
+                } else if (viewModel.lastErrorCode == 4013) {
+                  Navigator.of(context).pop(); // Quay về SearhResultPage
+                }
+              },
+              child: const Text('Đóng'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -101,25 +130,6 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (viewModel.errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(viewModel.errorMessage!, style: const TextStyle(color: Colors.red)),
-            ElevatedButton(
-              onPressed: () {
-                if (viewModel.currentStep == 1) viewModel.fetchBusDiagram(widget.tripId);
-                if (viewModel.currentStep == 2) viewModel.fetchDepartureStops(widget.departureProvinceId);
-                if (viewModel.currentStep == 3) viewModel.fetchArrivalStops(widget.destinationProvinceId);
-              },
-              child: const Text('Thử lại'),
-            ),
-          ],
-        ),
-      );
-    }
-
     switch (viewModel.currentStep) {
       case 1:
         return const SeatDiagramWidget();
@@ -141,6 +151,8 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
         return const ContactInfoWidget();
       case 5:
         return TripSummaryWidget(date: widget.date);
+      case 6:
+        return const PaymentSelectionWidget();
       default:
         return const SizedBox();
     }
@@ -155,6 +167,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
     if (viewModel.currentStep == 3 && viewModel.selectedArrivalStop != null) canContinue = true;
     if (viewModel.currentStep == 4 && viewModel.contactName.isNotEmpty && viewModel.contactPhone.isNotEmpty) canContinue = true;
     if (viewModel.currentStep == 5) canContinue = true;
+    if (viewModel.currentStep == 6 && viewModel.selectedPaymentMethod != null) canContinue = true;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -172,33 +185,39 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('Tạm tính', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    const Text('Tổng tiền', style: TextStyle(color: Colors.grey, fontSize: 12)),
                     Row(
                       children: [
                         Text(
                           _formatPrice(viewModel.totalPrice),
-                          style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 18),
+                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
                         ),
-                        const Icon(Icons.keyboard_arrow_up, color: Colors.blue),
+                        const Icon(Icons.keyboard_arrow_up, color: Colors.grey),
                       ],
                     ),
                   ],
                 ),
               ),
               ElevatedButton(
-                onPressed: canContinue ? () {
-                  if (viewModel.currentStep == 1) {
-                    viewModel.fetchDepartureStops(widget.departureProvinceId);
-                    viewModel.nextStep();
-                  } else if (viewModel.currentStep == 2) {
-                    viewModel.fetchArrivalStops(widget.destinationProvinceId);
-                    viewModel.nextStep();
-                  } else if (viewModel.currentStep == 3) {
-                    viewModel.nextStep();
-                  } else if (viewModel.currentStep == 4) {
+                onPressed: canContinue ? () async {
+                  if (viewModel.currentStep == 5) {
+                    final success = await viewModel.holdSeats(widget.tripId);
+                    if (success) {
+                      viewModel.nextStep();
+                    } else {
+                      if (context.mounted) {
+                        _showErrorDialog(context, viewModel);
+                      }
+                    }
+                  } else if (viewModel.currentStep < 6) {
+                    if (viewModel.currentStep == 1) {
+                      viewModel.fetchDepartureStops(widget.departureProvinceId);
+                    } else if (viewModel.currentStep == 2) {
+                      viewModel.fetchArrivalStops(widget.destinationProvinceId);
+                    }
                     viewModel.nextStep();
                   } else {
-                    // Bước cuối cùng: Xác nhận đặt vé
+                    _handlePayment(viewModel);
                   }
                 } : null,
                 style: ElevatedButton.styleFrom(
@@ -209,19 +228,34 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   elevation: 0,
                 ),
-                child: Text(viewModel.currentStep == 5 ? 'Thanh toán' : 'Tiếp tục', 
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (viewModel.currentStep == 6)
+                      const Icon(Icons.lock, size: 18),
+                    if (viewModel.currentStep == 6)
+                      const SizedBox(width: 8),
+                    Text(viewModel.currentStep >= 5 ? 'Thanh toán' : 'Tiếp tục', 
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  ],
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            viewModel.currentStep < 4 ? 'Dễ dàng thay đổi điểm đón trả sau khi đặt' : 'Bạn có thể mua thêm tiện ích ở bước tiếp theo',
+            viewModel.currentStep == 6 
+              ? 'Sớm nhận biển số xe, số điện thoại tài xế sau khi đặt'
+              : (viewModel.currentStep < 4 ? 'Dễ dàng thay đổi điểm đón trả sau khi đặt' : 'Bạn có thể mua thêm tiện ích ở bước tiếp theo'),
             style: const TextStyle(color: Colors.grey, fontSize: 11),
           ),
         ],
       ),
     );
+  }
+
+  void _handlePayment(SeatSelectionViewModel viewModel) {
+    print('Thực hiện thanh toán mã đơn hàng: ${viewModel.orderCode} qua: ${viewModel.selectedPaymentMethod}');
   }
 
   String _formatPrice(int price) {
