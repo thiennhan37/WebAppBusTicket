@@ -20,8 +20,8 @@ const DetailedForm = ({formData, isEditing, handleChange}) => {
                     </div>
                     <input
                       type="text"
-                      name="company_name"
-                      value={formData.company_name}
+                      name="companyName"
+                      value={formData?.companyName || ""}
                       onChange={handleChange}
                       disabled={true}
                       className={`block w-full pl-10 pr-4 py-2.5 sm:text-sm rounded-xl transition-all 
@@ -40,8 +40,8 @@ const DetailedForm = ({formData, isEditing, handleChange}) => {
                     </div>
                     <input
                       type="text"
-                      name="host_Name"
-                      value={formData.host_Name}
+                      name="hostName"
+                      value={formData?.hostName || ""}
                       onChange={handleChange}
                       disabled={true}
                       className={`block w-full pl-10 pr-4 py-2.5 sm:text-sm rounded-xl transition-all 
@@ -60,7 +60,7 @@ const DetailedForm = ({formData, isEditing, handleChange}) => {
                     <input
                       type="text"
                       name="hotline"
-                      value={formData.hotline}
+                      value={formData?.hotline || ""}
                       onChange={handleChange}
                       disabled={true}
                       className={`block w-full pl-10 pr-4 py-2.5 sm:text-sm rounded-xl transition-all
@@ -79,7 +79,7 @@ const DetailedForm = ({formData, isEditing, handleChange}) => {
                     <input
                       type="email"
                       name="email"
-                      value={formData.email}
+                      value={formData?.email || ""}
                       onChange={handleChange}
                       disabled={true}
                       className={`block w-full pl-10 pr-4 py-2.5 sm:text-sm rounded-xl transition-all ${
@@ -94,7 +94,7 @@ const DetailedForm = ({formData, isEditing, handleChange}) => {
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">Chính sách nhà xe</label>
                   <textarea
                     name="policy"
-                    value={formData.policy}
+                    value={formData?.policy || ""}
                     onChange={handleChange}
                     disabled={!isEditing}
                     rows={4}

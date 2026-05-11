@@ -13,7 +13,7 @@ import Rating from './pages/Rating'
 import StaffManagement from './pages/StaffManagement/StaffManagement'
 import PaymentSuccess from './components/generalComponent/PaymentSuccess'
 import RedirectPayment from './pages/Payment/RedirectPayment'
-
+import { Toaster } from 'sonner'
 function App() { 
               {/* <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
@@ -22,6 +22,9 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+      
+        <Toaster position="top-right" richColors />
+
         <Routes>
           <Route path='/payment-success' element={<PaymentSuccess/>}></Route>
           <Route path='/redirect-momo/payment/:paymentId' element={<RedirectPayment/>}></Route>

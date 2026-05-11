@@ -20,6 +20,7 @@ public enum ErrorCode {
     ERROR_MOMO_REFUND(1010, "Hoàn tiền Momo thất bại", HttpStatus.BAD_REQUEST),
     ERROR_MOMO_IPN(1011, "Momo không phản hồi IPN", HttpStatus.BAD_REQUEST),
     ERROR_SIGNATURE(1011, "Chữ kí chưa xác thực", HttpStatus.UNAUTHORIZED),
+    ERROR_S3(1012, "S3 Amazon bị lỗi", HttpStatus.BAD_REQUEST),
 
 
     COMPANY_NOT_EXISTED(4001, "Nhà xe không tồn tại", HttpStatus.BAD_REQUEST),

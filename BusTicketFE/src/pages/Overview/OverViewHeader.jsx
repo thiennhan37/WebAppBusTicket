@@ -1,6 +1,6 @@
 import { Edit2, Loader2, Save, X } from "lucide-react";
 
-const OverviewHeader = ({isEditing, handleEdit, handleCancel, handleSave, isSaving}) =>{
+const OverviewHeader = ({isEditing, handleEdit, handleCancel, handleUpdate}) =>{
     return( 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -21,19 +21,19 @@ const OverviewHeader = ({isEditing, handleEdit, handleCancel, handleSave, isSavi
               <>
                 <button 
                   onClick={handleCancel}
-                  disabled={isSaving}
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 
+              border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors 
+              disabled:opacity-50 font-medium"
                 >
                   <X className="w-4 h-4" />
                   Hủy
                 </button>
                 <button 
-                  onClick={handleSave}
-                  disabled={isSaving}
+                  onClick={handleUpdate}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-70 font-medium"
-                >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                > 
+                  <Save className="w-4 h-4" />
+                  Lưu thay đổi
                 </button>
               </>
             )}
