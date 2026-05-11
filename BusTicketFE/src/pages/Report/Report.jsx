@@ -1,12 +1,11 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import {Route, Bus, Ticket, Wallet} from 'lucide-react';
 import QuickStats from './QuickStats';
 import ReportHeader from './ReportHeader';
 import SalesChannel from './SalesChannel';
 import UpcomingTrips from './UpcomingTrips';
 import RevenueChart from './RevenueChart';
-import RateTrip from './RateTrip';
+import TicketSales from './TicketSales';
 
 const statsData = [
   { title: 'Tuyến đường', value: '24', trend: '+2 tuyến mới', icon: Route, color: 'text-blue-600', bg: 'bg-blue-100' },
@@ -25,11 +24,11 @@ const revenueData = [
   { day: 'CN', revenue: 450 },
 ];
 
-const fillRateData = [
-  { route: 'HN - Sapa', booked: 38, total: 40 },
-  { route: 'HCM - Đà Lạt', booked: 32, total: 34 },
-  { route: 'HN - Hải Phòng', booked: 25, total: 45 },
-  { route: 'Đà Nẵng - Huế', booked: 15, total: 30 },
+const salesData = [
+  { route: 'HN - Sapa', soldCount: 38 },
+  { route: 'HCM - Đà Lạt', soldCount: 32 },
+  { route: 'HN - Hải Phòng', soldCount: 25 },
+  { route: 'Đà Nẵng - Huế', soldCount: 15 },
 ];
 
 const upcomingTrips = [
@@ -82,7 +81,7 @@ const Report = () => {
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <UpcomingTrips upcomingTrips={upcomingTrips}/>
-        <RateTrip fillRateData={fillRateData} itemVariants={itemVariants}></RateTrip>
+        <TicketSales salesData={salesData} itemVariants={itemVariants}></TicketSales>
 
       </motion.div>
     </motion.div>

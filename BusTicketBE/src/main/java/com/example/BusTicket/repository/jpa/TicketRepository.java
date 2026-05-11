@@ -44,6 +44,12 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
         WHERE t.status = 'PAID' AND t.id IN :ticketIds
     """)
     List<Ticket> getTicketListForCancel(@Param("ticketIds") List<String> ticketIds);
+
+    @Query("""
+        SELECT t.status as status, count(t.id) FROM Ticket t
+        WHERE t.bookingOrder.createdAt >= :start AND t.bookingOrder.createdAt < :end
+    """)
+    List<Object[]> countByStatusInMonth(String busCompanyId,LocalDateTime start,LocalDateTime end);
 }
 
 
