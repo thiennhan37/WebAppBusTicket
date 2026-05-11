@@ -1,6 +1,7 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
+import com.example.BusTicket.dto.request.CompanyUpRequest;
 import com.example.BusTicket.dto.request.UpdateTicketRequest;
 import com.example.BusTicket.dto.response.BookingOrderResponse;
 import com.example.BusTicket.dto.response.TicketResponse;
@@ -22,15 +23,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class BusCompanyService {
-    private final BookingOrderRepository bookingOrderRepository;
-    private final BookingOrderMapper bookingOrderMapper;
-    private final TicketRepository ticketRepository;
-    private final TripSeatRepository tripSeatRepository;
     private final CompanyUserRepository companyUserRepository;
-    private final TripRepository tripRepository;
-    private final RouteStopRepository routeStopRepository;
-    private final TicketMapper ticketMapper;
     private final BusCompanyRepository busCompanyRepository;
+    private final S3Service s3Service;
 
 
     public BusCompany getBusCompany(String busCompanyId) {
@@ -39,13 +34,22 @@ public class BusCompanyService {
         return companyUser.getBusCompany();
     }
 
-//    public BusCompany updateBusCompany(String busCompanyId, ) {
-//        Jwt jwt = JwtHelper.getJwt();
-//        CompanyUser companyUser = checkPermission(jwt.getSubject(), busCompanyId);
-//        BusCompany busCompany = companyUser.getBusCompany();
-//
-//        return busCompany;
-//    }
+    public BusCompany updateBusCompany(String busCompanyId, CompanyUpRequest request) {
+        Jwt jwt = JwtHelper.getJwt();
+        CompanyUser companyUser = checkPermission(jwt.getSubject(), busCompanyId);
+        BusCompany busCompany = companyUser.getBusCompany();
+        if(request.getPolicy() != null && !request.getPolicy().isBlank()) busCompany.setPolicy(request.getPolicy());
+        if(request.getAvatarFile() != null){
+            try{
+                String avatarUrl = s3Service.uploadFile(request.getAvatarFile());
+                busCompany.setAvatarUrl(avatarUrl);
+            }catch (Exception e){
+                throw new MyAppException(ErrorCode.ERROR_S3);
+            }
+        }
+        busCompanyRepository.save(busCompany);
+        return busCompany;
+    }
     private CompanyUser checkPermission(String companyUserId, String busCompanyId){
         CompanyUser companyUser = companyUserRepository.findById(companyUserId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
