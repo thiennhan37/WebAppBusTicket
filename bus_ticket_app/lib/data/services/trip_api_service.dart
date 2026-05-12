@@ -37,10 +37,35 @@ class TripApiService{
 
   Future<Response> holdSeats(String tripId, List<String> tripSeatIdList) async {
     return await _apiClient.post(
-      '${ApiConstants.baseUrl}/customer/orders/hold-seats/$tripId',
+      '${ApiConstants.holdSeats}$tripId',
       data: {
         'tripSeatIdList': tripSeatIdList,
       },
+      requiresToken: true,
+    );
+  }
+
+  Future<Response> payment({
+    required String orderId,
+    required String customerName,
+    required String customerPhone,
+    required String customerEmail,
+  }) async {
+    return await _apiClient.post(
+      '${ApiConstants.momoPayment}$orderId',
+      data: {
+        'customerName': customerName,
+        'customerPhone': customerPhone,
+        'customerEmail': customerEmail,
+      },
+      requiresToken: true,
+    );
+  }
+
+  Future<Response> checkPaymentStatus(String bookingOrderId) async {
+    return await _apiClient.get(
+      ApiConstants.checkPaymentStatus,
+      queryParameters: {'bookingOrderId': bookingOrderId},
       requiresToken: true,
     );
   }

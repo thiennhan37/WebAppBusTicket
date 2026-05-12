@@ -4,10 +4,9 @@ import 'package:bus_ticket_app/data/models/trip_model.dart';
 import 'package:bus_ticket_app/data/services/trip_api_service.dart';
 import 'package:dio/dio.dart';
 
-class TripRepository{
+class TripRepository {
   final TripApiService _tripApiService;
   TripRepository(this._tripApiService);
-
 
   Future<List<TripModel>> searchTrip(String startProvince, String endProvince, String date) async {
     try {
@@ -71,6 +70,36 @@ class TripRepository{
         return e.response!;
       }
       rethrow;
+    }
+  }
+
+  Future<Response> payment({
+    required String orderId,
+    required String customerName,
+    required String customerPhone,
+    required String customerEmail,
+  }) async {
+    try {
+      return await _tripApiService.payment(
+        orderId: orderId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerEmail: customerEmail,
+      );
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response!;
+      }
+      rethrow;
+    }
+  }
+
+  Future<bool> checkPaymentStatus(String bookingOrderId) async {
+    try {
+      final response = await _tripApiService.checkPaymentStatus(bookingOrderId);
+      return response.data['result'] == true;
+    } catch (e) {
+      return false;
     }
   }
 }

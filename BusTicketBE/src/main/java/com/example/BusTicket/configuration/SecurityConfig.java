@@ -40,7 +40,9 @@ public class SecurityConfig {
     private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
             "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order", "/auth/change-password"};
     private final String[] CUSTOMER_ENDPOINTS = {"/trips/search", "/trips/stops", "/trips/bus-diagram"};
-    private final String[] CUSTOMER_POST_ENDPOINTS = {"/customer/orders/hold-seats", "/customer/orders/book-order"};
+    private final String[] CUSTOMER_POST_ENDPOINTS = {"/customer/orders/hold-seats/**", "/customer/orders/payment/**"};
+    private final String[] CUSTOMER_GET_ENDPOINTS = {"/customer/orders/payment-status"};
+
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
     @Autowired
@@ -52,7 +54,8 @@ public class SecurityConfig {
                 request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Browser gửi OPTIONS trước (CORS)
                         .requestMatchers(HttpMethod.GET, CUSTOMER_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST, CUSTOMER_POST_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, CUSTOMER_POST_ENDPOINTS).hasRole(RoleEnum.CUSTOMER.name())
+                        .requestMatchers(HttpMethod.GET, CUSTOMER_GET_ENDPOINTS).hasRole(RoleEnum.CUSTOMER.name())
                         .requestMatchers(HttpMethod.POST, AUTH_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()

@@ -87,16 +87,6 @@ class _ContactInfoWidgetState extends State<ContactInfoWidget> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CountryPickerWidget(
-                selectedCountry: _selectedCountry,
-                countries: CountryConstants.countries,
-                onCountrySelected: (country) {
-                  setState(() {
-                    _selectedCountry = country;
-                  });
-                },
-              ),
-              const SizedBox(width: 12),
               Expanded(
                 child: CustomInputField(
                   label: 'Số điện thoại',

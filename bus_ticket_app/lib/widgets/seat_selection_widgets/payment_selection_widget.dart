@@ -1,9 +1,32 @@
 import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PaymentSelectionWidget extends StatelessWidget {
   const PaymentSelectionWidget({super.key});
+
+  Future<void> _handleMomoPayment(SeatSelectionViewModel viewModel) async {
+    // Gọi API payment (ViewModel đã có logic chỉ gửi request 1 lần)
+    final success = await viewModel.processPayment();
+    
+    if (success && viewModel.paymentData != null) {
+      final deeplink = viewModel.paymentData!['qrCodeUrl'] ?? viewModel.paymentData!['deeplink'];
+      final payUrl = viewModel.paymentData!['payUrl'];
+
+      // Thử mở ứng dụng MoMo bằng qrCodeUrl (deeplink) hoặc payUrl
+      String? urlToOpen = deeplink ?? payUrl;
+      
+      if (urlToOpen != null && urlToOpen.isNotEmpty) {
+        final url = Uri.parse(urlToOpen);
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+          return;
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +40,7 @@ class PaymentSelectionWidget extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10),
-            color: const Color(0xFFFFF8E1), // Màu vàng cam nhạt
+            color: const Color(0xFFFFF8E1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -26,7 +49,7 @@ class PaymentSelectionWidget extends StatelessWidget {
                   style: TextStyle(fontSize: 14, color: Colors.black87),
                 ),
                 Text(
-                  '09:50',
+                  viewModel.remainingTimeFormatted,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -42,7 +65,7 @@ class PaymentSelectionWidget extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 2. Thông báo bảo mật (Màu xanh lá)
+                // 2. Thông báo bảo mật
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -66,21 +89,11 @@ class PaymentSelectionWidget extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                // 3. Tiêu đề Phương thức thanh toán
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Phương thức thanh toán',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Chọn', style: TextStyle(color: Colors.blue)),
-                    ),
-                  ],
+                const Text(
+                  'Phương thức thanh toán',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
 
                 // 4. Lựa chọn MoMo
                 _buildPaymentOption(
@@ -91,8 +104,58 @@ class PaymentSelectionWidget extends StatelessWidget {
                   icon: Icons.account_balance_wallet,
                   iconColor: Colors.pink,
                   isSelected: viewModel.selectedPaymentMethod == 'momo',
-                  onTap: () => viewModel.selectPaymentMethod('momo'),
+                  onTap: () {
+                    viewModel.selectPaymentMethod('momo');
+                    _handleMomoPayment(viewModel);
+                  },
                 ),
+
+                // HIỂN THỊ QR CODE CHO MOMO SỬ DỤNG qr_flutter
+                if (viewModel.selectedPaymentMethod == 'momo') ...[
+                  if (viewModel.isLoading && viewModel.paymentData == null)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (viewModel.paymentData != null)
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey[200]!),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Quét mã QR để thanh toán',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                            const SizedBox(height: 12),
+                            // Sử dụng QrImageView để tạo mã QR từ chuỗi qrCodeUrl (momo://...)
+                            QrImageView(
+                              data: viewModel.paymentData!['qrCodeUrl'] ?? '',
+                              version: QrVersions.auto,
+                              size: 200.0,
+                              backgroundColor: Colors.white,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Sử dụng App MoMo để quét mã',
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
 
                 const SizedBox(height: 12),
 
@@ -107,28 +170,7 @@ class PaymentSelectionWidget extends StatelessWidget {
                   isSelected: viewModel.selectedPaymentMethod == 'vnpay',
                   onTap: () => viewModel.selectPaymentMethod('vnpay'),
                 ),
-
                 const SizedBox(height: 24),
-
-                // 6. Thông báo tích điểm (Màu vàng)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFFDE7),
-                    border: Border.all(color: const Color(0xFFFFF9C4)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.stars, color: Colors.orange[400], size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Bạn nhận được 74 điểm cho đơn hàng.',
-                        style: TextStyle(color: Colors.orange[900], fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),

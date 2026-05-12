@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bus_ticket_app/data/models/bus_diagram_model.dart';
 import 'package:bus_ticket_app/data/models/stop_model.dart';
 import 'package:bus_ticket_app/data/repositories/trip_repository.dart';
@@ -92,8 +94,92 @@ class SeatSelectionViewModel extends ChangeNotifier {
   String? _orderCode;
   String? get orderCode => _orderCode;
 
+  Map<String, dynamic>? _paymentData;
+  Map<String, dynamic>? get paymentData => _paymentData;
+
+  bool _isPaymentSuccessful = false;
+  bool get isPaymentSuccessful => _isPaymentSuccessful;
+
+  // --- Timers ---
+  Timer? _paymentTimer;
+  Timer? _statusCheckTimer;
+  int _remainingSeconds = 600; // 10 phút
+  bool _isTimerExpired = false;
+
+  int get remainingSeconds => _remainingSeconds;
+  bool get isTimerExpired => _isTimerExpired;
+
+  String get remainingTimeFormatted {
+    int minutes = _remainingSeconds ~/ 60;
+    int seconds = _remainingSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  void startPaymentTimer() {
+    _paymentTimer?.cancel();
+    _remainingSeconds = 600;
+    _isTimerExpired = false;
+    _paymentTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        _remainingSeconds--;
+        notifyListeners();
+      } else {
+        _isTimerExpired = true;
+        _paymentTimer?.cancel();
+        stopStatusCheck();
+        notifyListeners();
+      }
+    });
+  }
+
+  void stopPaymentTimer() {
+    _paymentTimer?.cancel();
+    _remainingSeconds = 600;
+    _isTimerExpired = false;
+    _paymentData = null;
+    _orderCode = null; // Clear orderCode when stopping
+    stopStatusCheck();
+  }
+
+  void startStatusCheck() {
+    _statusCheckTimer?.cancel();
+    // Only start polling if Momo is selected and orderCode exists
+    if (_selectedPaymentMethod != 'momo' || _orderCode == null) return;
+
+    _statusCheckTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      // Logic: Only poll if in payment step, Momo is selected, and not already successful
+      if (_currentStep == 6 && _selectedPaymentMethod == 'momo' && _orderCode != null && !_isPaymentSuccessful) {
+        print('Checking payment status for OrderId: $_orderCode');
+        final isPaid = await _tripRepository.checkPaymentStatus(_orderCode!);
+        if (isPaid) {
+          _isPaymentSuccessful = true;
+          _statusCheckTimer?.cancel();
+          _paymentTimer?.cancel();
+          notifyListeners();
+        }
+      } else {
+        print('Stopping payment status check timer');
+        timer.cancel();
+      }
+    });
+  }
+
+  void stopStatusCheck() {
+    _statusCheckTimer?.cancel();
+    _statusCheckTimer = null;
+  }
+
   void selectPaymentMethod(String method) {
     _selectedPaymentMethod = method;
+    if (method == 'momo') {
+      // If we already have payment data, start checking immediately
+      if (_paymentData != null) {
+        startStatusCheck();
+      }
+    } else {
+      // If switched to other method, stop checking Momo status
+      stopStatusCheck();
+    }
     notifyListeners();
   }
 
@@ -133,6 +219,9 @@ class SeatSelectionViewModel extends ChangeNotifier {
     _searchQuery = '';
     _selectedPaymentMethod = null;
     _orderCode = null;
+    _paymentData = null;
+    _isPaymentSuccessful = false;
+    stopPaymentTimer();
     notifyListeners();
 
     try {
@@ -155,7 +244,6 @@ class SeatSelectionViewModel extends ChangeNotifier {
       final newData = await _tripRepository.getBusDiagram(tripId);
       _busDiagramData = newData;
       
-      // Lọc lại danh sách ghế đã chọn
       final validSeats = <String>{};
       for (var seatCode in _selectedSeats) {
         try {
@@ -228,13 +316,15 @@ class SeatSelectionViewModel extends ChangeNotifier {
       final int code = data['code'];
       _lastErrorCode = code;
 
-      if (code == 0) {
-        _orderCode = data['result'];
+      if (code == 1000 || code == 0) {
+        _orderCode = data['data'] ?? data['result'];
         _isLoading = false;
+        _paymentData = null;
+        _isPaymentSuccessful = false;
+        startPaymentTimer();
         notifyListeners();
         return true;
       } else if (code == 4010) {
-        // Lỗi 4010: Ghế đã có người đặt
         final newData = await _tripRepository.getBusDiagram(tripId);
         _busDiagramData = newData;
         
@@ -276,6 +366,51 @@ class SeatSelectionViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> processPayment() async {
+    if (_orderCode == null) {
+      _errorMessage = "Không tìm thấy mã đơn hàng";
+      notifyListeners();
+      return false;
+    }
+
+    if (_paymentData != null) {
+      startStatusCheck();
+      return true;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _tripRepository.payment(
+        orderId: _orderCode!,
+        customerName: _contactName,
+        customerPhone: _contactPhone,
+        customerEmail: _contactEmail,
+      );
+
+      final data = response.data;
+      if (data['code'] == 0 || data['code'] == 1000) {
+        _paymentData = data['result'] ?? data['data'];
+        _isLoading = false;
+        startStatusCheck();
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = data['message'] ?? "Lỗi thanh toán";
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = "Lỗi kết nối thanh toán";
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   void toggleSeatSelection(String seatCode) {
     final seat = _busDiagramData?.seats.firstWhere((s) => s.seatCode == seatCode);
     if (seat == null || seat.status != 'AVAILABLE') return;
@@ -302,6 +437,9 @@ class SeatSelectionViewModel extends ChangeNotifier {
     if (_currentStep < 6) {
       _currentStep++;
       _searchQuery = '';
+      if (_currentStep == 6 && _selectedPaymentMethod == 'momo') {
+        startStatusCheck();
+      }
       notifyListeners();
     }
   }
@@ -310,12 +448,20 @@ class SeatSelectionViewModel extends ChangeNotifier {
     if (_currentStep > 1) {
       _currentStep--;
       _searchQuery = '';
+      if (_currentStep != 6) {
+        stopStatusCheck();
+      }
       notifyListeners();
     }
   }
 
   void goToStep(int step) {
     _currentStep = step;
+    if (_currentStep == 6 && _selectedPaymentMethod == 'momo') {
+      startStatusCheck();
+    } else {
+      stopStatusCheck();
+    }
     notifyListeners();
   }
 
@@ -345,5 +491,12 @@ class SeatSelectionViewModel extends ChangeNotifier {
         .replaceAll('Đ', 'D')
         .toLowerCase()
         .trim();
+  }
+
+  @override
+  void dispose() {
+    _paymentTimer?.cancel();
+    _statusCheckTimer?.cancel();
+    super.dispose();
   }
 }

@@ -13,6 +13,9 @@ class ApiConstants {
   static const String getStop = '$baseUrl/trips/stops';
   static const String searchTrip = '$baseUrl/trips/search';
   static const String busDiagram = '$baseUrl/trips/bus-diagram';
+  static const String holdSeats = '$baseUrl/customer/orders/hold-seats/';
+  static const String momoPayment = '$baseUrl/customer/orders/payment/';
+  static const String checkPaymentStatus = '$baseUrl/customer/orders/payment-status';
 
   // HTTP Headers
   static const Map<String, String> headers = {

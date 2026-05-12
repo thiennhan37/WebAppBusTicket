@@ -41,7 +41,6 @@ class TripSummaryWidget extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(date, style: const TextStyle(fontWeight: FontWeight.bold)),
                     const Spacer(),
-                    const Text('Chi tiết', style: TextStyle(color: Colors.blue, fontSize: 13, decoration: TextDecoration.underline)),
                   ],
                 ),
                 const Divider(height: 24),
@@ -71,20 +70,18 @@ class TripSummaryWidget extends StatelessWidget {
                 
                 // Lộ trình
                 _buildTimelineItem(
-                  time: '22:31',
                   location: viewModel.selectedDepartureStop?.name ?? 'Điểm đón',
                   address: viewModel.selectedDepartureStop?.address ?? '',
                   isStart: true,
                 ),
                 _buildTimelineItem(
-                  time: '07:41',
                   location: viewModel.selectedArrivalStop?.name ?? 'Điểm trả',
                   address: viewModel.selectedArrivalStop?.address ?? '',
                   isStart: false,
                 ),
                 
                 const Divider(height: 32),
-                Text('Phí hủy 30% trước 23:01 • 27/02/2026', 
+                Text('Phí hủy 30% trước ${date}',
                   style: TextStyle(color: Colors.orange.shade700, fontSize: 12)),
               ],
             ),
@@ -114,14 +111,12 @@ class TripSummaryWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTimelineItem({required String time, required String location, required String address, required bool isStart}) {
+  Widget _buildTimelineItem({required String location, required String address, required bool isStart}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Column(
           children: [
-            Text(time, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            const SizedBox(height: 4),
             Container(
               width: 12,
               height: 12,
