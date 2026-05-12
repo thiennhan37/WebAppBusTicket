@@ -44,6 +44,13 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
         WHERE t.status = 'PAID' AND t.id IN :ticketIds
     """)
     List<Ticket> getTicketListForCancel(@Param("ticketIds") List<String> ticketIds);
+
+    @Query("""
+        SELECT t FROM Ticket t
+        WHERE t.tripSeat.id = :tripSeatId
+            AND t.status IN ('HOLDING', 'PAID')
+        ORDER BY t.updatedAt DESC
+        LIMIT 1
+    """)
+    Ticket findLatestHoldingTicketByTripSeatId(@Param("tripSeatId") String tripSeatId);
 }
-
-

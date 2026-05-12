@@ -4,9 +4,9 @@ server:
     context-path: /vexedat
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3306/BusTicket"
+    url: "jdbc:mysql://bus-ticket-db.ct08sy4g6odv.ap-southeast-2.rds.amazonaws.com:3306/BusTicket?useSSL=false&serverTimezone=UTC"
     username: BusTicket_User
-    password: 123456
+    password: "vexedat.com"
   data:
     redis:
       host: "localhost"
@@ -15,7 +15,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: "nhan88thien@gmail.com"
-    password: "vwda wpdq icbz ibeq"
+    password: "xugt gszv ofoa wasq"
     properties:
       mail:
         smtp:
@@ -51,6 +51,7 @@ booking:
   tempOrderPrefixKey: "temp_order_hold:"
   compMakeOrderPrefixKey: "comp_make_order:"
   paymentPrefixKey: "payment:"
+  customerHoldingSeatPrefixKey: "customer_seat_hold:"
 
 momo:
   partner-code: "MOMO"

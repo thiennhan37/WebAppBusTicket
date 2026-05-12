@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
+@Builder
 public class BookingOrderCrRequest {
 
     @NotNull(message = "BookingOrder Id không được rỗng")

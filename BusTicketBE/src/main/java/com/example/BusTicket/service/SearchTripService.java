@@ -173,6 +173,7 @@ public class SearchTripService {
         // Map sang SeatInfo
         List<CustomerSearchBusDiagramRespone.SeatInfo> seatInfos = tripSeats.stream()
             .map(seat -> CustomerSearchBusDiagramRespone.SeatInfo.builder()
+                .seatId(seat.getId())
                 .seatCode(seat.getSeat())
                 .status(seat.getStatus())
                 .price(seat.getPrice())

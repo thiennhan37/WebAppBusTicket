@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -144,6 +145,56 @@ public class PaymentService {
             System.out.println("co loi extraData");
         }
         return result;
+    }
+
+    public MomoPaymentResponse getMomoQrForCustomer(String paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        if (payment.getStatus().equals(PaymentEnum.SUCCESSFUL.name())) {
+            throw new MyAppException(ErrorCode.PAYMENT_COMPLETED);
+        }
+
+        // Validate that current customer owns this payment
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentCustomerId = authentication != null ? authentication.getName() : null;
+        if (currentCustomerId == null) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        String paymentOwnerId = payment.getBookingOrder().getBookingUser().getId();
+        if (!currentCustomerId.equals(paymentOwnerId)) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        String payUrlKey = paymentPrefixKey + paymentId;
+        String qrCodeKey = paymentPrefixKey + paymentId + ":qr";
+        String payUrl = redisTemplate.opsForValue().get(payUrlKey);
+        String qrCodeUrl = redisTemplate.opsForValue().get(qrCodeKey);
+
+        if (payUrl == null || qrCodeUrl == null) {
+            String bookingOrderId = payment.getBookingOrder().getId();
+            MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder()
+                    .bookingOrderId(bookingOrderId)
+                    .paymentId(payment.getId())
+                    .orderInfo("Thanh toán hóa đơn #" + bookingOrderId)
+                    .build();
+
+            MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest);
+            redisTemplate.opsForValue().set(payUrlKey, response.getPayUrl(), Duration.ofSeconds(paymentExpirationTime));
+            redisTemplate.opsForValue().set(qrCodeKey, response.getQrCodeUrl(), Duration.ofSeconds(paymentExpirationTime));
+
+            payUrl = response.getPayUrl();
+            qrCodeUrl = response.getQrCodeUrl();
+        }
+
+        if (payUrl == null || qrCodeUrl == null) {
+            throw new MyAppException(ErrorCode.PAYMENT_INVALID);
+        }
+
+        return MomoPaymentResponse.builder()
+                .payUrl(payUrl)
+                .qrCodeUrl(qrCodeUrl)
+                .build();
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

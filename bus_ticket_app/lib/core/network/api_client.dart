@@ -147,7 +147,7 @@ class ApiClient {
       if (response.statusCode == 200) {
         final newAccessToken = response.data['result']['accessToken'];
         final newRefreshToken = response.data['result']['refreshToken'];
-
+        print("accesstoken: ${newAccessToken}");
         await _authStorage.saveTokens(newAccessToken, newRefreshToken);
         return true;
       }

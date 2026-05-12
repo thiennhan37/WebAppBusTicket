@@ -44,4 +44,5 @@ public class BookingOrderController {
 //    ApiResponse<Boolean> cancelTicket(@RequestBody BookingOrderCrRequest request, @PathVariable("id") String tripId) {
 //        return ApiResponse.success(bookingOrderService.bookOrderByCompany(request, tripId));
 //    }
+
 }
