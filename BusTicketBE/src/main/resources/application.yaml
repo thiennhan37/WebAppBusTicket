@@ -45,8 +45,8 @@ jwt:
   refreshTime: 86400 #seconds;
 
 booking:
-  holdingSeatTime: 200 #seconds;
-  paymentExpirationTime: 200 #seconds;
+  holdingSeatTime: 300 #seconds;
+  paymentExpirationTime: 360 #seconds;
   holdingSeatPrefixKey: "trip_seat_hold:"
   tempOrderPrefixKey: "temp_order_hold:"
   compMakeOrderPrefixKey: "comp_make_order:"
@@ -60,10 +60,10 @@ momo:
   endpoint: https://test-payment.momo.vn/v2/gateway/api/create
   refund-url: https://test-payment.momo.vn/v2/gateway/api/refund
   redirect-url: http://localhost:5173/payment-success
-  ipn-url:  https://gothic-clumsily-arguably.ngrok-free.dev/vexedat/momo/ipn
+  ipn-url: https://unquote-crumpet-gaffe.ngrok-free.dev/vexedat/momo/ipn
 
 aws:
-  #  access-key: ${AWS_ACCESS_KEY}
-  #  secret-key: ${AWS_SECRET_KEY}
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
   region: ap-southeast-2
   bucket-name: bus-ticket-images

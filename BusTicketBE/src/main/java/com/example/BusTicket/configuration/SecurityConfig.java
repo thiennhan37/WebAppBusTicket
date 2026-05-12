@@ -33,10 +33,10 @@ public class SecurityConfig {
         "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
             "/register/verify", "/auth/log-out"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type"};
-    private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**"};
+    private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**", "/api/**"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open"};
-    private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes"};
+    private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes", "/nhaxe/bus-company"};
     private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
             "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order", "/auth/change-password"};
     private final String[] CUSTOMER_ENDPOINTS = {"/trips/search", "/trips/stops", "/trips/bus-diagram"};
