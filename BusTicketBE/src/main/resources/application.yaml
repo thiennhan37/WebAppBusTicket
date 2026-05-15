@@ -64,6 +64,7 @@ booking:
   tempOrderPrefixKey: "temp_order_hold:"
   compMakeOrderPrefixKey: "comp_make_order:"
   paymentPrefixKey: "payment:"
+  customerHoldingSeatPrefixKey: "customer_seat_hold:"
 
 momo:
   partner-code: "MOMO"
