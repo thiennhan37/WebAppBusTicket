@@ -7,6 +7,7 @@ import com.example.BusTicket.dto.request.MomoRefundRequest;
 import com.example.BusTicket.dto.response.MomoPaymentResponse;
 import com.example.BusTicket.dto.response.MomoRefundResponse;
 import com.example.BusTicket.entity.BookingOrder;
+import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.enums.MomoEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
@@ -33,7 +34,7 @@ public class MomoService{
     private final String PAYMENT_PREFIX = "PAYMENT_";
     private final String REFUND_PREFIX = "REFUND_";
 
-    public MomoPaymentResponse createMomoPayment(MomoPaymentRequest request) {
+    public MomoPaymentResponse createMomoPayment(MomoPaymentRequest request, AccountType type) {
         String requestId = UUID.randomUUID().toString();
         String orderId = UUID.randomUUID().toString();
 
@@ -44,7 +45,7 @@ public class MomoService{
         Long amount = bookingOrder.getTotalCost();
         String orderInfo = request.getOrderInfo();
         ExtraDataDTO extraDataDTO = ExtraDataDTO.builder()
-                .type(MomoEnum.PAYMENT.name())
+                .type(type.name())
                 .bookingOrderId(bookingOrderId)
                 .paymentId(paymentId)
                 .build();

@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @Builder
 public class RouteReportResp {
-    private RouteResponse route;
+    private String routeName;
     private Long ticketCount;
     
 } 

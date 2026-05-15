@@ -11,6 +11,7 @@ import com.example.BusTicket.dto.response.PaymentResponse;
 import com.example.BusTicket.dto.response.PaymentUrlResponse;
 import com.example.BusTicket.entity.BookingOrder;
 import com.example.BusTicket.entity.Payment;
+import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.enums.MomoEnum;
 import com.example.BusTicket.enums.PaymentEnum;
 import com.example.BusTicket.exception.ErrorCode;
@@ -75,7 +76,7 @@ public class PaymentService {
                     .paymentId(payment.getId())
                     .orderInfo("Thanh toán hóa đơn #" + bookingOrderId)
                     .build();
-            MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest);
+            MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest, AccountType.COMPANY);
             redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId(), response.getPayUrl(),
                     Duration.ofSeconds(paymentExpirationTime));
             payUrl = response.getPayUrl();
@@ -125,7 +126,7 @@ public class PaymentService {
                     if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
                 }
                 else{
-                    log.info("Thanh toán trùng lặp và không có refund");
+                    log.info("Lỗi ipn trùng cho cùng 1 đơn thanh toán và không có refund");
                 }
             }
             else{

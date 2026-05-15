@@ -1,4 +1,5 @@
 import React from 'react';
+import {motion} from 'framer-motion';
 import {Route, Bus, Ticket, Wallet} from 'lucide-react';
 import QuickStats from './QuickStats';
 import ReportHeader from './ReportHeader';
@@ -6,23 +7,18 @@ import SalesChannel from './SalesChannel';
 import UpcomingTrips from './UpcomingTrips';
 import RevenueChart from './RevenueChart';
 import TicketSales from './TicketSales';
+import { useQueryClient } from '@tanstack/react-query';
+import ReportService from '../../Services/ReportService';
+import { useQuery } from '@tanstack/react-query';
 
 const statsData = [
-  { title: 'Tuyến đường', value: '24', trend: '+2 tuyến mới', icon: Route, color: 'text-blue-600', bg: 'bg-blue-100' },
+  { title: 'Nhân viên', value: '24', trend: '+2 nhân viên mới', icon: Route, color: 'text-blue-600', bg: 'bg-blue-100' },
   { title: 'Chuyến h.động (Hôm nay)', value: '156', trend: 'Hoạt động 98%', icon: Bus, color: 'text-violet-600', bg: 'bg-violet-100' },
   { title: 'Vé bán ra (Hôm nay)', value: '1,240', trend: '+12% so với hôm qua', icon: Ticket, color: 'text-emerald-600', bg: 'bg-emerald-100' },
   { title: 'Doanh thu (Hôm nay)', value: '315M', trend: '+5% so với tuần trước', icon: Wallet, color: 'text-amber-600', bg: 'bg-amber-100' },
 ];
 
-const revenueData = [
-  { day: 'T2', revenue: 210 },
-  { day: 'T3', revenue: 250 },
-  { day: 'T4', revenue: 280 },
-  { day: 'T5', revenue: 220 },
-  { day: 'T6', revenue: 350 },
-  { day: 'T7', revenue: 420 },
-  { day: 'CN', revenue: 450 },
-];
+
 
 const salesData = [
   { route: 'HN - Sapa', soldCount: 38 },
@@ -59,6 +55,40 @@ const recentActivities = [
   };
 
 const Report = () => {
+  const queryClient = useQueryClient();
+  const {data: staffReportData, isLoading} = useQuery({
+    queryKey: ['report-staffs'],
+    queryFn: () => ReportService.getStaffReport().data.result,  
+  });
+  const {data: revenueReportData, isLoading: revenueIsLoading} = useQuery({
+    queryKey: ['report-revenue'],
+    queryFn: async () => {
+      const response = await ReportService.getRevenueReport().data.result;
+      return response;
+    } 
+  });  
+
+  const {data: ticketReportData, isLoading: ticketIsLoading} = useQuery({
+    queryKey: ['report-ticket'],
+    queryFn: () => ReportService.getTicketReport().data.result,
+  });
+  const {data: tripReportData, isLoading: tripIsLoading} = useQuery({
+    queryKey: ['report-trip'],
+    queryFn: () => ReportService.getTripReport().data.result,
+  });
+  const {data: routeReportData, isLoading: routeIsLoading} = useQuery({
+    queryKey: ['report-route'],
+    queryFn: () => ReportService.getRouteReport().data.result,
+  });  
+  const revenueData = [
+  { day: 'T2', revenue: revenueReportData?.revenueWeekList?.[0] },
+  { day: 'T3', revenue: revenueReportData?.revenueWeekList?.[1] },
+  { day: 'T4', revenue: revenueReportData?.revenueWeekList?.[2] },
+  { day: 'T5', revenue: revenueReportData?.revenueWeekList?.[3] },
+  { day: 'T6', revenue: revenueReportData?.revenueWeekList?.[4] },
+  { day: 'T7', revenue: revenueReportData?.revenueWeekList?.[5] },
+  { day: 'CN', revenue: revenueReportData?.revenueWeekList?.[6] },
+];
   return (
     <motion.div 
       className="min-h-screen bg-slate-50 text-slate-800 p-6 font-sans"

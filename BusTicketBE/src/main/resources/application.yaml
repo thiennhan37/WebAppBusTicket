@@ -2,11 +2,24 @@ server:
   port: 8080
   servlet:
     context-path: /vexedat
+  tomcat:
+    connection-timeout: 120000
+  compression:
+    enabled: true
 spring:
+  mvc:
+    async:
+      request-timeout: 120000
   datasource:
-    url: "jdbc:mysql://bus-ticket-db.ct08sy4g6odv.ap-southeast-2.rds.amazonaws.com:3306/BusTicket?useSSL=false&serverTimezone=UTC"
-    username: BusTicket_User
-    password: "vexedat.com"
+#    url: "jdbc:mysql://bus-ticket-db.ct08sy4g6odv.ap-southeast-2.rds.amazonaws.com:3306/BusTicket?useSSL=false&serverTimezone=UTC"
+#    username: BusTicket_User
+#    password: "vexedat.com"
+      url: "jdbc:mysql://localhost:3306/BusTicket"
+      username: BusTicket_User
+      password: 123456
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
   data:
     redis:
       host: "localhost"
@@ -67,3 +80,12 @@ aws:
 
   region: ap-southeast-2
   bucket-name: bus-ticket-images
+
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        SQL: DEBUG
+#        type:
+#          descriptor:
+#            sql=TRACE:

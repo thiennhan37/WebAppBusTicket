@@ -24,6 +24,38 @@ public interface TripRepository extends JpaRepository<Trip, String> {
             WHERE ts.id IN :tripSeatIdList
            \s""")
     List<Trip> getTripForCancelTicket(@Param("tripSeatIdList") List<String> tripSeatIdList);
+
+    @Query("""
+            SELECT COUNT(t) FROM Trip t\s
+            WHERE t.busCompany.id = :busCompanyId
+            AND t.status = 'OPEN'
+            AND t.departureTime >= :start\s
+            AND t.departureTime < :end\s
+           \s""")
+    Long countActiveTrip(@Param("busCompanyId") String busCompanyId,
+        @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("""
+        SELECT t FROM Trip t
+        WHERE t.busCompany.id = :busCompanyId
+        AND t.status = 'OPEN'
+        AND t.departureTime >= :now
+        ORDER BY t.departureTime ASC
+    """)
+    List<Trip> getNextScheduledTripList(
+            @Param("busCompanyId") String busCompanyId,
+            @Param("now") LocalDateTime now,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT t FROM Trip t
+            WHERE t.status = 'OPEN' AND t.departureTime <= :now
+            """
+    )
+    List<Trip> getClosedTripForUpdate(@Param("now") LocalDateTime now);
+
+
 }
 
 
