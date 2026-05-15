@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/bottom_navigation.dart';
+
 class SeatSelectionPage extends StatefulWidget {
   final String tripId;
   final String busCompanyName;
@@ -230,7 +232,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const HomePages()),
+                      MaterialPageRoute(builder: (context) => const CustomBottonNav()),
                       (route) => false,
                     );
                   },

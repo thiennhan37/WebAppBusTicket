@@ -248,7 +248,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
       for (var seatCode in _selectedSeats) {
         try {
           final seat = newData.seats.firstWhere((s) => s.seatCode == seatCode);
-          if (seat.status == 'AVAILABLE') {
+          if (seat.status.toUpperCase() == 'AVAILABLE') {
             validSeats.add(seatCode);
           }
         } catch (_) {}
@@ -344,7 +344,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
         for (var seatCode in _selectedSeats) {
           try {
             final seat = newData.seats.firstWhere((s) => s.seatCode == seatCode);
-            if (seat.status == 'AVAILABLE') {
+            if (seat.status.toUpperCase() == 'AVAILABLE') {
               stillAvailable.add(seatCode);
             } else {
               takenSeats.add(seatCode);
@@ -429,7 +429,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
     if (!hasSeat) return;
 
     final seat = _busDiagramData!.seats.firstWhere((s) => s.seatCode == seatCode);
-    if (seat.status != 'AVAILABLE') return;
+    if (seat.status.toUpperCase() != 'AVAILABLE') return;
 
     if (_selectedSeats.contains(seatCode)) {
       _selectedSeats.remove(seatCode);

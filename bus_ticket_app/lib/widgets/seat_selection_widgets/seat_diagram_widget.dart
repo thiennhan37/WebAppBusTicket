@@ -123,14 +123,17 @@ class SeatDiagramWidget extends StatelessWidget {
   }
 
   Widget _buildSeat(SeatSelectionViewModel viewModel, String seatCode) {
-    final status = viewModel.getSeatStatus(seatCode);
+    final status = viewModel.getSeatStatus(seatCode).toUpperCase();
     final isSelected = viewModel.isSelected(seatCode);
 
     Color bgColor = Colors.white;
     Color borderColor = Colors.grey[400]!;
     Widget? child;
 
-    if (status == 'BOOKED' || status == 'HELD') {
+    // Cập nhật logic: Mọi ghế không phải AVAILABLE và không phải NONE đều coi là đã bị đặt/không bán
+    bool isNotAvailable = status != 'AVAILABLE' && status != 'NONE';
+
+    if (isNotAvailable) {
       bgColor = Colors.grey[300]!;
       borderColor = Colors.grey[300]!;
       child = const Icon(Icons.close, size: 16, color: Colors.white);
@@ -141,7 +144,7 @@ class SeatDiagramWidget extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: () => viewModel.toggleSeatSelection(seatCode),
+      onTap: isNotAvailable ? null : () => viewModel.toggleSeatSelection(seatCode),
       child: Container(
         decoration: BoxDecoration(
           color: bgColor,
@@ -164,7 +167,7 @@ class SeatDiagramWidget extends StatelessWidget {
               seatCode,
               style: TextStyle(
                 fontSize: 10,
-                color: (status == 'BOOKED' || status == 'HELD') ? Colors.white : Colors.grey[600],
+                color: isNotAvailable ? Colors.white : Colors.grey[600],
                 fontWeight: FontWeight.bold,
               ),
             ),

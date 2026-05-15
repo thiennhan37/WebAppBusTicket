@@ -1,6 +1,6 @@
 class ApiConstants {
   // Base URL
-  static const String baseUrl = 'http://10.251.12.121:8080/vexedat';
+  static const String baseUrl = 'http://10.251.3.60:8080/vexedat';
 
   // Auth endpoints
   static const String sendOtp = '$baseUrl/auth/send-otp';
