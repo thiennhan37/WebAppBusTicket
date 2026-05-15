@@ -1,14 +1,19 @@
-//package com.example.BusTicket.dto.response.report;
-//
-//import lombok.Data;
-//
-//@Data
-//public class TicketReportResp {
-//    private Long ticketCountCurrentMonth;
-//    private Long ticketCountLastMonth;
-//    private Long revenueCurrentMonth;
-//    private Long revenueLastMonth;
-//    private Long paidTicketCount;
-//    private Long
-//}
+package com.example.BusTicket.dto.response.report;
+
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class TicketReportResp {
+    private Long ticketCountCurrentMonth;
+    private Long ticketCountLastMonth;
+    // theo tháng
+    private Long paidTicketCount;
+    private Long holdingTicketCount;
+    private Long cancelledTicketCount;
+    private Long expiredTicketCount;
+    private Long appBookedTicketCount;
+    private Long phoneBookedTicketCount;
+}
 

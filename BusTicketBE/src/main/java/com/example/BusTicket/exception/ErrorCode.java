@@ -35,7 +35,7 @@ public enum ErrorCode {
     ROUTE_NOT_EXISTED(4007, "Tuyến đường không tồn tại", HttpStatus.BAD_REQUEST),
     DEPARTURE_TIME_INVALID(4007, "Thời gian xuất bến không hợp lệ", HttpStatus.BAD_REQUEST),
     DURATION_TIME_INVALID(4007, "Thời gian di chuyển không hợp lệ", HttpStatus.BAD_REQUEST),
-    INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành phải sớm ít nhất 1 tiếng", HttpStatus.BAD_REQUEST),
     BOOKING_TRIP_INVALID(4008, "Đặt chuyến xe không hợp lệ", HttpStatus.BAD_REQUEST),
     PAYMENT_INVALID(4008, "Không thể thanh toán", HttpStatus.BAD_REQUEST),
     PAYMENT_COMPLETED(4009, "Đơn hàng đã được thanh toán", HttpStatus.BAD_REQUEST),

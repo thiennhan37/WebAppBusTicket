@@ -34,11 +34,12 @@ public class PaymentController {
     ApiResponse<PaymentUrlResponse> getPayUrlForCustomer(@RequestBody Map<String, String> request) {
         return ApiResponse.success(paymentService.getPayUrlForCustomer(request.get("paymentId")));
     }
-
+    // test
     @PostMapping("/payment")
     ApiResponse<MomoPaymentResponse> createPayment(@RequestBody MomoPaymentRequest request) {
         return ApiResponse.success(momoService.createMomoPayment(request, AccountType.COMPANY));
     }
+    //test
     @PostMapping("/refund")
     ApiResponse<MomoRefundResponse> createRefund(@RequestBody MomoRefundRequest request) {
         return ApiResponse.success(momoService.createMomoRefund(request));

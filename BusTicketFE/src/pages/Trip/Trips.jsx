@@ -11,6 +11,7 @@ import TripUpdate from './TripUpdate';
 import ConfirmModal from '../../components/other/ConfirmModal';
 import StatusModal from '../../components/other/StatusModal';
 const Trips = () =>{
+  const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   // code useSearchParams with page, date, status, keyword, sinh ra code
@@ -60,7 +61,6 @@ const Trips = () =>{
     setIsUpdateOpen(true);
   }
 
-  const queryClient = useQueryClient();
   const [reportUpdate, setReportUpdate] = useState("") 
   const [showConfirmOpen, setShowConfirmOpen] = useState(false);
   const hideReportUpdate = () => {

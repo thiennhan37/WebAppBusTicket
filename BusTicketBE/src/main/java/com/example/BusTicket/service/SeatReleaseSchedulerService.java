@@ -61,7 +61,7 @@ public class SeatReleaseSchedulerService {
                 }
             }
 
-            log.info("<<< Seat release scheduler completed");
+//            log.info("<<< Seat release scheduler completed");
         } catch (Exception e) {
             log.error("Error in seat release scheduler: ", e);
         }
