@@ -16,11 +16,6 @@ import org.springframework.web.bind.annotation.*;
 public class CustomerBookingOrderController {
     private final CustomerBookingForOrderService customerBookingForOrderService;
 
-//    @PostMapping("/customer/orders/hold-seats/{id}")
-//    ApiResponse<MomoPaymentResponse> holdSeatsAndBookOrderByCustomer(@RequestBody CustomerHoldAndPayRequest request, @PathVariable("id") String tripId) {
-//        return ApiResponse.success(customerBookingForOrderService.holdSeatsAndBookOrderByCustomer(request, tripId));
-//    }
-
     @PostMapping("/customer/orders/hold-seats/{id}")
     public ApiResponse<String> holdSeats(@RequestBody CompHoldSeatRequest request, @PathVariable("id") String tripId) {
         // JWT validation tự động qua @PreAuthorize

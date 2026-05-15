@@ -8,6 +8,8 @@ import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.repository.jpa.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -26,6 +28,10 @@ public class SearchTripService {
     private final TripRepository tripRepository;
     private final RouteStopRepository routeStopRepository;
     private final TripSeatRepository tripSeatRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    @Value("${booking.holdingSeatPrefixKey}")
+    private String holdingSeatPrefixKey;
 
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -170,14 +176,35 @@ public class SearchTripService {
         // Lấy danh sách ghế với trạng thái và giá
         List<TripSeat> tripSeats = tripSeatRepository.findAllByTripId(tripId);
 
+        List<String> availableSeatIds = tripSeats.stream()
+                .filter(seat -> "AVAILABLE".equals(seat.getStatus()))
+                .map(TripSeat::getId)
+                .toList();
+
+        List<String> redisKeys = availableSeatIds.stream()
+                .map(id -> holdingSeatPrefixKey + id)
+                .toList();
+        List<String> redisValues = redisKeys.isEmpty() ? List.of() : redisTemplate.opsForValue().multiGet(redisKeys);
+
+        Map<String, Boolean> heldInRedis = new HashMap<>();
+        for (int i = 0; i < availableSeatIds.size(); i++) {
+            heldInRedis.put(availableSeatIds.get(i), redisValues != null && redisValues.get(i) != null);
+        }
+
         // Map sang SeatInfo
         List<CustomerSearchBusDiagramRespone.SeatInfo> seatInfos = tripSeats.stream()
-            .map(seat -> CustomerSearchBusDiagramRespone.SeatInfo.builder()
-                .seatId(seat.getId())
-                .seatCode(seat.getSeat())
-                .status(seat.getStatus())
-                .price(seat.getPrice())
-                .build())
+            .map(seat -> {
+            String seatStatus = seat.getStatus();
+            if ("AVAILABLE".equals(seatStatus) && Boolean.TRUE.equals(heldInRedis.get(seat.getId()))) {
+                seatStatus = "HELD";
+            }
+            return CustomerSearchBusDiagramRespone.SeatInfo.builder()
+                    .seatId(seat.getId())
+                    .seatCode(seat.getSeat())
+                    .status(seatStatus)
+                    .price(seat.getPrice())
+                    .build();
+        })
             .collect(Collectors.toList());
 
         return CustomerSearchBusDiagramRespone.builder()

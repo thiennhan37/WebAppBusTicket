@@ -42,7 +42,8 @@ public class SecurityConfig {
             "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order", "/auth/change-password"};
     private final String[] CUSTOMER_ENDPOINTS = {"/trips/search", "/trips/stops", "/trips/bus-diagram"};
     private final String[] CUSTOMER_POST_ENDPOINTS = {"/customer/orders/hold-seats/**", "/customer/orders/payment/**"};
-    private final String[] CUSTOMER_GET_ENDPOINTS = {"/customer/orders/payment-status"};
+    private final String[] CUSTOMER_GET_ENDPOINTS = {"/customer/orders/payment-status", "/customer/orders/recent",
+    "/customer/orders/unhold-seats/{orderId}"};
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
