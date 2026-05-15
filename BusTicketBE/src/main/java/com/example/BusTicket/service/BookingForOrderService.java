@@ -147,7 +147,7 @@ public class BookingForOrderService {
                 .paymentId(payment.getId())
                 .orderInfo("Thanh toán hóa đơn #" + bookingOrderId)
                 .build();
-        MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest);
+        MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest, AccountType.COMPANY);
         redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId(), response.getPayUrl(),
                 Duration.ofSeconds(paymentExpirationTime));
         return payment;

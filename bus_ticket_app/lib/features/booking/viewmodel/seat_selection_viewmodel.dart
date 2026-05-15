@@ -307,9 +307,20 @@ class SeatSelectionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final tripSeatIdList = _selectedSeats.map((seatCode) {
-        return _busDiagramData!.seats.firstWhere((s) => s.seatCode == seatCode).seatId;
-      }).toList();
+      final List<String> tripSeatIdList = [];
+      for (var seatCode in _selectedSeats) {
+        try {
+          final seat = _busDiagramData!.seats.firstWhere((s) => s.seatCode == seatCode);
+          tripSeatIdList.add(seat.seatId);
+        } catch (_) {}
+      }
+
+      if (tripSeatIdList.isEmpty) {
+        _errorMessage = "Vui lòng chọn ghế";
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
 
       final response = await _tripRepository.holdSeats(tripId, tripSeatIdList);
       final data = response.data;
@@ -412,8 +423,13 @@ class SeatSelectionViewModel extends ChangeNotifier {
   }
 
   void toggleSeatSelection(String seatCode) {
-    final seat = _busDiagramData?.seats.firstWhere((s) => s.seatCode == seatCode);
-    if (seat == null || seat.status != 'AVAILABLE') return;
+    if (_busDiagramData == null) return;
+
+    final hasSeat = _busDiagramData!.seats.any((s) => s.seatCode == seatCode);
+    if (!hasSeat) return;
+
+    final seat = _busDiagramData!.seats.firstWhere((s) => s.seatCode == seatCode);
+    if (seat.status != 'AVAILABLE') return;
 
     if (_selectedSeats.contains(seatCode)) {
       _selectedSeats.remove(seatCode);
@@ -479,8 +495,10 @@ class SeatSelectionViewModel extends ChangeNotifier {
     if (_busDiagramData == null) return 0;
     int total = 0;
     for (var seatCode in _selectedSeats) {
-      final seat = _busDiagramData!.seats.firstWhere((s) => s.seatCode == seatCode);
-      total += seat.price;
+      try {
+        final seat = _busDiagramData!.seats.firstWhere((s) => s.seatCode == seatCode);
+        total += seat.price;
+      } catch (_) {}
     }
     return total;
   }

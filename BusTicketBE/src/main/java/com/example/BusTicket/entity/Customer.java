@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Builder
 public class Customer implements InfoAccount {
     @Id
-    @Column(name = "ID", length = 20, nullable = false)
+    @Column(name = "ID", length = 50, nullable = false)
     private String id;
 
     @Column(name = "email", length = 255, nullable = false, unique = true)

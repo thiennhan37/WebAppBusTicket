@@ -1,16 +1,15 @@
 package com.example.BusTicket.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
+@Getter
+@Setter
 public class BookingOrder {
     @Id
     private String id;
