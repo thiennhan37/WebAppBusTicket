@@ -133,7 +133,7 @@ public class PaymentService {
                     if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
                 }
                 else{
-                    log.info("Thanh toán trùng lặp và không có refund");
+                    log.info("Lỗi ipn trùng cho cùng 1 đơn thanh toán và không có refund");
                 }
             }
             else{

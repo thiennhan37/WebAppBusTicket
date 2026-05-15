@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
@@ -290,5 +291,12 @@ public class TripService {
         return tripSimpleResponseList;
     }
 
-    
+    @Scheduled(cron = "0 0 0 * * *")
+    public void updateClosedTrip(){
+        System.out.println("update closed trip");
+        LocalDateTime now = LocalDateTime.now();
+        List<Trip> tripList = tripRepository.getClosedTripForUpdate(now);
+        for(Trip t : tripList) t.setStatus(TripStatusEnum.CLOSED.name());
+        tripRepository.saveAll(tripList);
+    }
 }
