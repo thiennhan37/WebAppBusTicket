@@ -31,7 +31,6 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Override
     public Jwt decode(String token) throws JwtException {
         try {
-//            System.out.println("token in decode :" + token + "\n");
             JwtInfo jwtInfo = jwtService.parseToken(token);
             if(Objects.isNull(nimbusJwtDecoder)){
                 SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS256");
@@ -40,6 +39,7 @@ public class CustomJwtDecoder implements JwtDecoder {
                         .build();
             }
         } catch (JOSEException | ParseException | MyAppException e) {
+            log.error(">>> DECODE FAILED: {}", e.getMessage()); // thêm
             throw new JwtException("INVALID_TOKEN_SECURITY");
         }
 

@@ -52,7 +52,7 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
         AND t.bookingOrder.trip.busCompany.id = :busCompanyId
         GROUP BY t.status
     """)
-    List<Object[]> countByStatusInMonth(@Param("busCompanyId") String busCompanyId, 
+    List<Object[]> countByStatusInMonth(@Param("busCompanyId") String busCompanyId,
         @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
@@ -66,8 +66,16 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
         AND t.bookingOrder.trip.busCompany.id = :busCompanyId
     """)
     Object[] countByIssuerInMonth(@Param("busCompanyId") String busCompanyId,
-            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end, 
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
             @Param("statusList") List<String> statusList);
+
+
+    @Query("""
+        SELECT t FROM Ticket t
+        WHERE t.tripSeat.id = :tripSeatId
+            AND t.status IN ('HOLDING', 'PAID')
+        ORDER BY t.updatedAt DESC
+        LIMIT 1
+    """)
+    Ticket findLatestHoldingTicketByTripSeatId(@Param("tripSeatId") String tripSeatId);
 }
-
-

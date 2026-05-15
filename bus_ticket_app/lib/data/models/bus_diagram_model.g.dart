@@ -58,6 +58,7 @@ Map<String, dynamic> _$DiagramToJson(Diagram instance) => <String, dynamic>{
     };
 
 SeatStatus _$SeatStatusFromJson(Map<String, dynamic> json) => SeatStatus(
+      seatId: json['seatId'] as String,
       seatCode: json['seatCode'] as String,
       status: json['status'] as String,
       price: (json['price'] as num).toInt(),
@@ -65,6 +66,7 @@ SeatStatus _$SeatStatusFromJson(Map<String, dynamic> json) => SeatStatus(
 
 Map<String, dynamic> _$SeatStatusToJson(SeatStatus instance) =>
     <String, dynamic>{
+      'seatId': instance.seatId,
       'seatCode': instance.seatCode,
       'status': instance.status,
       'price': instance.price,

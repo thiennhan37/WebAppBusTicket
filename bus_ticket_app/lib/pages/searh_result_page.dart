@@ -189,15 +189,16 @@ class _SearchResultPageState extends State<SearchResultPage> {
                 return TripCard(
                   trip: trip,
                   onBookPressed: () {
-                    // Chuyển sang trang sơ đồ ghế
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => SeatSelectionPage(
-                          tripId: trip.id ?? '',
-                          busCompanyName: trip.busCompanyName ?? 'Nhà xe',
-                          departureTime: trip.departureTime ?? '--:--',
+                          tripId: trip.id,
+                          busCompanyName: trip.busCompanyName,
+                          departureTime: trip.departureTime,
                           date: "${widget.startDate.day.toString().padLeft(2, '0')}/${widget.startDate.month.toString().padLeft(2, '0')}/${widget.startDate.year}",
+                          departureProvinceId: widget.departureId,
+                          destinationProvinceId: widget.destinationId,
                         ),
                       ),
                     );

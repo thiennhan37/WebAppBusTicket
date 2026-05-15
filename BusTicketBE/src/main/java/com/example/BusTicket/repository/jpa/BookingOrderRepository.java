@@ -16,7 +16,7 @@ import java.util.List;
 
 @Repository
 public interface BookingOrderRepository extends JpaRepository<BookingOrder, String> {
-
+    
 }
 
 

@@ -1,6 +1,6 @@
 class ApiConstants {
   // Base URL
-  static const String baseUrl = 'http://172.28.96.1:8080/vexedat';
+  static const String baseUrl = 'http://10.251.12.121:8080/vexedat';
 
   // Auth endpoints
   static const String sendOtp = '$baseUrl/auth/send-otp';
@@ -10,9 +10,12 @@ class ApiConstants {
   static const String verifyOtpRegister = '$baseUrl/register/verify';
   static const String refreshToken = '$baseUrl/auth/refresh-token';
   static const String getProvinces = '$baseUrl/provinces';
-  static const String getStop = '$baseUrl/stops';
+  static const String getStop = '$baseUrl/trips/stops';
   static const String searchTrip = '$baseUrl/trips/search';
   static const String busDiagram = '$baseUrl/trips/bus-diagram';
+  static const String holdSeats = '$baseUrl/customer/orders/hold-seats/';
+  static const String momoPayment = '$baseUrl/customer/orders/payment/';
+  static const String checkPaymentStatus = '$baseUrl/customer/orders/payment-status';
 
   // HTTP Headers
   static const Map<String, String> headers = {

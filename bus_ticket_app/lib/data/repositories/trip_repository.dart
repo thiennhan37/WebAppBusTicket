@@ -1,12 +1,12 @@
 import 'package:bus_ticket_app/data/models/bus_diagram_model.dart';
+import 'package:bus_ticket_app/data/models/stop_model.dart';
 import 'package:bus_ticket_app/data/models/trip_model.dart';
 import 'package:bus_ticket_app/data/services/trip_api_service.dart';
 import 'package:dio/dio.dart';
 
-class TripRepository{
+class TripRepository {
   final TripApiService _tripApiService;
   TripRepository(this._tripApiService);
-
 
   Future<List<TripModel>> searchTrip(String startProvince, String endProvince, String date) async {
     try {
@@ -40,6 +40,66 @@ class TripRepository{
       throw Exception('Lỗi kết nối mạng: ${e.message}');
     } catch (e) {
       throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  Future<List<StopModel>> getStops(String provinceId) async {
+    try {
+      final response = await _tripApiService.getStops(provinceId);
+      final data = response.data['result'] as List?;
+      if (data != null) {
+        return data.map((json) => StopModel.fromJson(json)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final errorMessage = e.response?.data['message'] ?? 'Có lỗi xảy ra khi lấy danh sách điểm đón/trả';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Lỗi kết nối mạng: ${e.message}');
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  Future<Response> holdSeats(String tripId, List<String> tripSeatIdList) async {
+    try {
+      return await _tripApiService.holdSeats(tripId, tripSeatIdList);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response!;
+      }
+      rethrow;
+    }
+  }
+
+  Future<Response> payment({
+    required String orderId,
+    required String customerName,
+    required String customerPhone,
+    required String customerEmail,
+  }) async {
+    try {
+      return await _tripApiService.payment(
+        orderId: orderId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        customerEmail: customerEmail,
+      );
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response!;
+      }
+      rethrow;
+    }
+  }
+
+  Future<bool> checkPaymentStatus(String bookingOrderId) async {
+    try {
+      final response = await _tripApiService.checkPaymentStatus(bookingOrderId);
+      return response.data['result'] == true;
+    } catch (e) {
+      return false;
     }
   }
 }

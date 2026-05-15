@@ -39,7 +39,7 @@ public class SeatReservationService {
     }
     public boolean tryHoldSeats(String creatingStaffId, String bookingUserId, String orderId,
                                 List<String> tripSeatIdList, int ttlSeconds) {
-        String compMakeOrderKey = compMakeOrderPrefixKey + creatingStaffId;
+        String compMakeOrderKey = compMakeOrderPrefixKey + resolveOrderActorId(creatingStaffId, bookingUserId);
         String tempOrderKey = tempOrderPrefixKey + orderId;
 
         List<String> keys = new ArrayList<>();
@@ -64,7 +64,7 @@ public class SeatReservationService {
         };
     }
     public void deleteInvalidOrder(String creatingStaffId, String orderId, List<String> tripSeatIdList){
-        String compMakeOrderKey = compMakeOrderPrefixKey + creatingStaffId;
+        String compMakeOrderKey = compMakeOrderPrefixKey + resolveOrderActorId(creatingStaffId, null);
         String tempOrderKey = tempOrderPrefixKey + orderId;
 
         List<String> keys = new ArrayList<>();
@@ -86,6 +86,12 @@ public class SeatReservationService {
                 throw new MyAppException(ErrorCode.TRIP_SEAT_INVALID);
             }
         }
+    }
+
+    private String resolveOrderActorId(String creatingStaffId, String bookingUserId){
+        if(creatingStaffId != null && !creatingStaffId.isBlank()) return creatingStaffId;
+        if(bookingUserId != null && !bookingUserId.isBlank()) return bookingUserId;
+        throw new MyAppException(ErrorCode.INVALID_PARAMETER);
     }
 
 }

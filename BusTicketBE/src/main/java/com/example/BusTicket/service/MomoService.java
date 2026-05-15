@@ -104,7 +104,6 @@ public class MomoService{
         String transId = request.getTransId().toString();
         String amount = request.getAmount().toString();
         String description = request.getDescription();
-
         String rawData = "accessKey=" + momoConfiguration.getAccessKey() +
                 "&amount=" + amount +
                 "&description=" + description +

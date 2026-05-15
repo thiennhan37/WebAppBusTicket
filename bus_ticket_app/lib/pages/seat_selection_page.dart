@@ -1,7 +1,13 @@
 import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmodel.dart';
+import 'package:bus_ticket_app/pages/home_pages.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/contact_info_widget.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/payment_selection_widget.dart';import 'package:bus_ticket_app/widgets/seat_selection_widgets/payment_success_widget.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/seat_diagram_widget.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/step_indicator_widget.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/stop_selection_widget.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/trip_summary_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
 class SeatSelectionPage extends StatefulWidget {
@@ -9,6 +15,8 @@ class SeatSelectionPage extends StatefulWidget {
   final String busCompanyName;
   final String departureTime;
   final String date;
+  final String departureProvinceId;
+  final String destinationProvinceId;
 
   const SeatSelectionPage({
     super.key,
@@ -16,6 +24,8 @@ class SeatSelectionPage extends StatefulWidget {
     required this.busCompanyName,
     required this.departureTime,
     required this.date,
+    required this.departureProvinceId,
+    required this.destinationProvinceId,
   });
 
   @override
@@ -30,323 +40,439 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
     super.initState();
     _viewModel = GetIt.I<SeatSelectionViewModel>();
     _viewModel.fetchBusDiagram(widget.tripId);
+    _viewModel.addListener(_onViewModelChanged);
   }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _viewModel.stopStatusCheck(); // Dừng polling ngay lập tức
+    _viewModel.dispose(); // Hủy toàn bộ timer và dispose ViewModel (do ViewModel là factory)
+    super.dispose();
+  }
+
+  void _onViewModelChanged() {
+    if (!mounted) return;
+
+    if (_viewModel.isPaymentSuccessful) {
+      _viewModel.stopStatusCheck();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => PaymentSuccessWidget(
+            orderId: _viewModel.orderCode ?? '',
+            totalPrice: _viewModel.totalPrice,
+            contactEmail: _viewModel.contactEmail,
+            busCompanyName: widget.busCompanyName,
+            date: widget.date,
+            time: widget.departureTime,
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (_viewModel.isTimerExpired) {
+      _viewModel.stopPaymentTimer();
+      _showTimeoutDialog();
+    }
+  }
+
+  void _showTimeoutDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Hết thời gian'),
+          content: const Text('Thời gian giữ chỗ của bạn đã hết. Vui lòng thực hiện lại giao dịch.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); 
+                Navigator.of(context).pop(); 
+              },
+              child: const Text('Đồng ý'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showExitConfirmationDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(Icons.help_outline, size: 50, color: Colors.blue[300]),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Bạn cần xem hoặc đổi thông tin?',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(color: Colors.black54, fontSize: 14, height: 1.5),
+                  children: [
+                    const TextSpan(text: 'Nhấn Chi tiết để xem hoặc đổi thông tin.\nNhấn Dừng thanh toán để trở về Trang chủ,\n'),
+                    TextSpan(
+                      text: 'Vexere sẽ giữ chỗ cho bạn trong tối đa 10 phút.',
+                      style: TextStyle(color: Colors.red[400], fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _viewModel.stopStatusCheck(); // Dừng check khi bấm dừng thanh toán
+                        Navigator.pop(context); 
+                        _showHoldSuccessDialog();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      child: const Text('Dừng thanh toán', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showHoldSuccessDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F5E9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Icon(Icons.check, size: 50, color: Color(0xFF66BB6A)),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Chỗ sẽ được giữ trong 10 phút',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(color: Colors.black54, fontSize: 14, height: 1.5),
+                  children: [
+                    const TextSpan(text: 'Bạn có thể thanh toán cho đơn hàng này trong Đơn hàng\nhoặc trong phần Chờ thanh toán ở Trang chủ.\n'),
+                    TextSpan(
+                      text: 'Sau thời gian trên, chỗ sẽ bị hủy.',
+                      style: TextStyle(color: Colors.red[400]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const HomePages()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0D2E57),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, SeatSelectionViewModel viewModel) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Thông báo'),
+          content: Text(viewModel.errorMessage ?? 'Lỗi đặt vé'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                if (viewModel.lastErrorCode == 4010) {
+                  viewModel.refreshBusDiagram(widget.tripId);
+                  viewModel.goToStep(1);
+                } else if (viewModel.lastErrorCode == 4013) {
+                  Navigator.of(context).pop(); 
+                }
+              },
+              child: const Text('Đóng'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: _viewModel,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.blue[600],
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.busCompanyName,
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                '${widget.departureTime} • ${widget.date}',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {},
-              child: const Text('Chi tiết xe', style: TextStyle(color: Colors.white, decoration: TextDecoration.underline)),
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          if (_viewModel.currentStep == 6) {
+            _showExitConfirmationDialog();
+          } else if (_viewModel.currentStep > 1) {
+            _viewModel.previousStep();
+          } else {
+            Navigator.pop(context);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.blue[600],
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                if (_viewModel.currentStep == 6) {
+                  _showExitConfirmationDialog();
+                } else if (_viewModel.currentStep > 1) {
+                  _viewModel.previousStep();
+                } else {
+                  Navigator.pop(context);
+                }
+              },
             ),
-          ],
-        ),
-        body: Consumer<SeatSelectionViewModel>(
-          builder: (context, viewModel, child) {
-            if (viewModel.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (viewModel.errorMessage != null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(viewModel.errorMessage!, style: const TextStyle(color: Colors.red)),
-                    ElevatedButton(
-                      onPressed: () => viewModel.fetchBusDiagram(widget.tripId),
-                      child: const Text('Thử lại'),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (viewModel.busDiagramData == null) {
-              return const Center(child: Text('Không có dữ liệu'));
-            }
-
-            return Column(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStepIndicator(),
-                _buildLegend(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildFloor(0, 'TẦNG DƯỚI')),
-                            Container(width: 1, height: 400, color: Colors.grey[300], margin: const EdgeInsets.symmetric(horizontal: 8)),
-                            Expanded(child: _buildFloor(1, 'TẦNG TRÊN')),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                Text(
+                  widget.busCompanyName,
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                _buildBottomBar(viewModel),
+                Text(
+                  '${widget.departureTime} • ${widget.date}',
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
               ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      color: Colors.blue[600],
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _stepItem('1', 'Chọn chỗ', true),
-          _stepDivider(),
-          _stepItem('2', 'Chọn điểm đón', false),
-          _stepDivider(),
-          _stepItem('3', 'Chọn điểm trả', false),
-        ],
-      ),
-    );
-  }
-
-  Widget _stepItem(String number, String label, bool isActive) {
-    return Row(
-      children: [
-        Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: isActive ? Colors.white : Colors.transparent,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 1),
-          ),
-          child: Center(
-            child: Text(
-              number,
-              style: TextStyle(color: isActive ? Colors.blue[600] : Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ),
+          body: Consumer<SeatSelectionViewModel>(
+            builder: (context, viewModel, child) {
+              return Column(
+                children: [
+                  StepIndicatorWidget(currentStep: viewModel.currentStep),
+                  Expanded(
+                    child: _buildCurrentStepContent(viewModel),
+                  ),
+                  _buildBottomBar(viewModel),
+                ],
+              );
+            },
+          ),
         ),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: isActive ? Colors.white : Colors.white70, fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _stepDivider() {
-    return Container(
-      width: 20,
-      height: 1,
-      color: Colors.white38,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-    );
-  }
-
-  Widget _buildLegend() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _legendItem(Colors.white, Icons.check_box_outline_blank, 'Còn trống', borderColor: Colors.grey),
-          _legendItem(Colors.grey[300]!, Icons.close, 'Ghế không bán', iconColor: Colors.white),
-          _legendItem(const Color(0xFF4CAF50).withOpacity(0.2), Icons.check_box, 'Đang chọn', iconColor: const Color(0xFF4CAF50), textColor: const Color(0xFF4CAF50)),
-        ],
       ),
     );
   }
 
-  Widget _legendItem(Color color, IconData icon, String label, {Color? borderColor, Color? iconColor, Color? textColor}) {
-    return Row(
-      children: [
-        Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-            border: borderColor != null ? Border.all(color: borderColor) : null,
-          ),
-          child: Icon(icon, size: 14, color: iconColor ?? Colors.transparent),
-        ),
-        const SizedBox(width: 8),
-        Text(label, style: TextStyle(fontSize: 12, color: textColor ?? Colors.black87)),
-      ],
-    );
-  }
-
-  Widget _buildFloor(int floorIndex, String title) {
-    final diagram = _viewModel.busDiagramData!.diagram;
-    if (floorIndex >= diagram.seatList.length) return const SizedBox();
-    
-    final floorSeats = diagram.seatList[floorIndex];
-
-    return Column(
-      children: [
-        Text(title, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
-        const SizedBox(height: 16),
-        if (floorIndex == 0) ...[
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Icon(MdiIcons.steering, color: Colors.grey, size: 30),
-          ),
-          const SizedBox(height: 16),
-        ]
-        else ...[
-          const SizedBox(height: 46),
-        ],
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: diagram.column,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.8,
-          ),
-          itemCount: diagram.row * diagram.column,
-          itemBuilder: (context, index) {
-            int r = index ~/ diagram.column;
-            int c = index % diagram.column;
-            
-            if (r >= floorSeats.length || c >= floorSeats[r].length) return const SizedBox();
-            
-            final seatCode = floorSeats[r][c];
-            if (seatCode == null) return const SizedBox();
-
-            return _buildSeat(seatCode);
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSeat(String seatCode) {
-    final status = _viewModel.getSeatStatus(seatCode);
-    final isSelected = _viewModel.isSelected(seatCode);
-
-    Color bgColor = Colors.white;
-    Color borderColor = Colors.grey[400]!;
-    Widget? child;
-
-    if (status == 'BOOKED' || status == 'HELD') {
-      bgColor = Colors.grey[300]!;
-      borderColor = Colors.grey[300]!;
-      child = const Icon(Icons.close, size: 16, color: Colors.white);
-    } else if (isSelected) {
-      bgColor = const Color(0xFF4CAF50).withOpacity(0.1);
-      borderColor = const Color(0xFF4CAF50);
-      child = const Icon(Icons.check_box, size: 16, color: Color(0xFF4CAF50));
+  Widget _buildCurrentStepContent(SeatSelectionViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return GestureDetector(
-      onTap: () => _viewModel.toggleSeatSelection(seatCode),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: borderColor, width: 1.5),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (child != null) child else Container(
-              width: 10,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              seatCode,
-              style: TextStyle(
-                fontSize: 10,
-                color: (status == 'BOOKED' || status == 'HELD') ? Colors.white : Colors.grey[600],
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    switch (viewModel.currentStep) {
+      case 1:
+        return const SeatDiagramWidget();
+      case 2:
+        return StopSelectionWidget(
+          isDeparture: true,
+          stops: viewModel.filteredDepartureStops,
+          selectedStop: viewModel.selectedDepartureStop,
+          onStopSelected: viewModel.selectDepartureStop,
+        );
+      case 3:
+        return StopSelectionWidget(
+          isDeparture: false,
+          stops: viewModel.filteredArrivalStops,
+          selectedStop: viewModel.selectedArrivalStop,
+          onStopSelected: viewModel.selectArrivalStop,
+        );
+      case 4:
+        return const ContactInfoWidget();
+      case 5:
+        return TripSummaryWidget(date: widget.date);
+      case 6:
+        return const PaymentSelectionWidget();
+      default:
+        return const SizedBox();
+    }
   }
 
   Widget _buildBottomBar(SeatSelectionViewModel viewModel) {
-    if (viewModel.selectedSeats.isEmpty) return const SizedBox();
+    if (viewModel.selectedSeats.isEmpty && viewModel.currentStep == 1) return const SizedBox();
+
+    bool canContinue = false;
+    if (viewModel.currentStep == 1 && viewModel.selectedSeats.isNotEmpty) canContinue = true;
+    if (viewModel.currentStep == 2 && viewModel.selectedDepartureStop != null) canContinue = true;
+    if (viewModel.currentStep == 3 && viewModel.selectedArrivalStop != null) canContinue = true;
+    if (viewModel.currentStep == 4 && viewModel.contactName.isNotEmpty && viewModel.contactPhone.isNotEmpty) canContinue = true;
+    if (viewModel.currentStep == 5) canContinue = true;
+    if (viewModel.currentStep == 6 && viewModel.selectedPaymentMethod != null) canContinue = true;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0, -2))],
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${viewModel.selectedSeats.length} chỗ: ${viewModel.selectedSeats.join(", ")}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Tổng tiền', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    Row(
+                      children: [
+                        Text(
+                          _formatPrice(viewModel.totalPrice),
+                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Text(
-                  '${_formatPrice(viewModel.totalPrice)}',
-                  style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              ElevatedButton(
+                onPressed: canContinue ? () async {
+                  if (viewModel.currentStep == 5) {
+                    final success = await viewModel.holdSeats(widget.tripId);
+                    if (success) {
+                      viewModel.nextStep();
+                    } else {
+                      if (context.mounted) {
+                        _showErrorDialog(context, viewModel);
+                      }
+                    }
+                  } else if (viewModel.currentStep < 6) {
+                    if (viewModel.currentStep == 1) {
+                      viewModel.fetchDepartureStops(widget.departureProvinceId);
+                    } else if (viewModel.currentStep == 2) {
+                      viewModel.fetchArrivalStops(widget.destinationProvinceId);
+                    }
+                    viewModel.nextStep();
+                  } else {
+                    _handlePayment(viewModel);
+                  }
+                } : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFD54F),
+                  foregroundColor: Colors.black,
+                  disabledBackgroundColor: Colors.grey[300],
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (viewModel.currentStep == 6)
+                      const Icon(Icons.lock, size: 18),
+                    if (viewModel.currentStep == 6)
+                      const SizedBox(width: 8),
+                    Text(viewModel.currentStep >= 5 ? 'Thanh toán' : 'Tiếp tục', 
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  ],
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              // Chuyển sang bước tiếp theo
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFD54F),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Tiếp tục', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(
+            viewModel.currentStep == 6 
+              ? 'Sớm nhận biển số xe, số điện thoại tài xế sau khi đặt'
+              : (viewModel.currentStep < 4 ? 'Dễ dàng thay đổi điểm đón trả sau khi đặt' : 'Bạn có thể mua thêm tiện ích ở bước tiếp theo'),
+            style: const TextStyle(color: Colors.grey, fontSize: 11),
           ),
         ],
       ),
     );
+  }
+
+  void _handlePayment(SeatSelectionViewModel viewModel) {
+    // Gọi processPayment() để kích hoạt timer kiểm tra trạng thái
+    viewModel.processPayment();
   }
 
   String _formatPrice(int price) {

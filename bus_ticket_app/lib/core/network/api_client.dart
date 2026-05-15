@@ -104,22 +104,22 @@ class ApiClient {
 
           return handler.next(response);
         },
-  //       onError: (DioException error, handler) {
-  //         print("========== ERROR ==========");
-  //         print("Error Type: ${error.type}");
-  //         print("Status Code: ${error.response?.statusCode}");
-  //         print("URL: ${error.requestOptions.method} ${error.requestOptions.uri}");
-  //         print("Error Message: ${error.message}");
-  //
-  //         if (error.response?.data != null) {
-  //           print("Error Response Data:");
-  //           print(error.response?.data);
-  //         }
-  //
-  //         print("===========================");
-  //
-  //         return handler.next(error);
-  //       },
+        onError: (DioException error, handler) {
+          print("========== ERROR ==========");
+          print("Error Type: ${error.type}");
+          print("Status Code: ${error.response?.statusCode}");
+          print("URL: ${error.requestOptions.method} ${error.requestOptions.uri}");
+          print("Error Message: ${error.message}");
+
+          if (error.response?.data != null) {
+            print("Error Response Data:");
+            print(error.response?.data);
+          }
+
+          print("===========================");
+
+          return handler.next(error);
+        },
       ),
     );
 
@@ -147,7 +147,7 @@ class ApiClient {
       if (response.statusCode == 200) {
         final newAccessToken = response.data['result']['accessToken'];
         final newRefreshToken = response.data['result']['refreshToken'];
-
+        print("accesstoken: ${newAccessToken}");
         await _authStorage.saveTokens(newAccessToken, newRefreshToken);
         return true;
       }
