@@ -69,8 +69,11 @@ public class CustomerBookingForOrderService {
         if (!bookingOrder.getBookingUser().getId().equals(customer.getId()))
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
 
-        Payment payment = paymentRepository.findByBookingOrderIdAndType(bookingOrderId, MomoEnum.PAYMENT.name());
-        return payment != null && PaymentEnum.SUCCESSFUL.name().equals(payment.getStatus());
+        return paymentRepository.existsByBookingOrderIdAndTypeAndStatus(
+                bookingOrderId,
+                MomoEnum.PAYMENT.name(),
+                PaymentEnum.SUCCESSFUL.name()
+        );
     }
 
     @Transactional
@@ -97,7 +100,12 @@ public class CustomerBookingForOrderService {
                 .build();
 
         BookingOrderResponse bookingOrderResponse = bookOrderByCustomer(bookingRequest, tripId, request.getCustomerName(), request.getCustomerPhone(), request.getCustomerEmail());
-        return momoService.createMomoPayment(MomoPaymentRequest.builder().bookingOrderId(bookingOrderResponse.getId()).orderInfo("Thanh toán hóa đơn #" + bookingOrderResponse.getId()).build());
+        return momoService.createMomoPayment(
+                MomoPaymentRequest.builder()
+                        .bookingOrderId(bookingOrderResponse
+                                .getId()).orderInfo("Thanh toán hóa đơn #" + bookingOrderResponse.getId())
+                        .build()
+                , AccountType.CUSTOMER);
     }
 
 
@@ -129,7 +137,6 @@ public class CustomerBookingForOrderService {
             seatReservationService.deleteInvalidOrder(customer.getId(), orderId, tripSeatIdList);
             throw new MyAppException(ErrorCode.TRIP_SEAT_BOOKED);
         }
-
         String holdInfo = customer.getId() + ":" + orderId + ":" + String.join(",", tripSeatIdList);
         redisTemplate.opsForValue().set(holdInfoKey, holdInfo, Duration.ofSeconds(holdingSeatTime));
         return orderId;
@@ -345,7 +352,7 @@ public class CustomerBookingForOrderService {
                 .orderInfo("Thanh toán hóa đơn #" + bookingOrder.getId())
                 .build();
 
-        MomoPaymentResponse momoResponse = momoService.createMomoPayment(momoPaymentRequest);
+        MomoPaymentResponse momoResponse = momoService.createMomoPayment(momoPaymentRequest, AccountType.CUSTOMER);
 
         // Lưu payment URL vào Redis
         redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId(),
@@ -363,7 +370,7 @@ public class CustomerBookingForOrderService {
         Payment payment = paymentService.createPayment(request);
         MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder().bookingOrderId(bookingOrder.getId())
                 .paymentId(payment.getId()).orderInfo("Thanh toán hóa đơn #" + bookingOrder.getId()).build();
-        MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest);
+        MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest, AccountType.CUSTOMER);
         redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId(), response.getPayUrl(), Duration.ofSeconds(holdingSeatTime));
         return payment;
     }

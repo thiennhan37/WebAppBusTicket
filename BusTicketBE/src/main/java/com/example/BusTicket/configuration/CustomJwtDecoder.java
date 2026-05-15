@@ -31,9 +31,6 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Override
     public Jwt decode(String token) throws JwtException {
         try {
-            log.info(">>> decode() called, token prefix: {}",
-                    token != null ? token.substring(0, 20) : "NULL");
-//            System.out.println("token in decode :" + token + "\n");
             JwtInfo jwtInfo = jwtService.parseToken(token);
             if(Objects.isNull(nimbusJwtDecoder)){
                 SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS256");

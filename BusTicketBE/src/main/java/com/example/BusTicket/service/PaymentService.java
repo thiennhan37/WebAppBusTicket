@@ -11,6 +11,7 @@ import com.example.BusTicket.dto.response.PaymentResponse;
 import com.example.BusTicket.dto.response.PaymentUrlResponse;
 import com.example.BusTicket.entity.BookingOrder;
 import com.example.BusTicket.entity.Payment;
+import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.enums.MomoEnum;
 import com.example.BusTicket.enums.PaymentEnum;
 import com.example.BusTicket.exception.ErrorCode;
@@ -31,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +54,10 @@ public class PaymentService {
     @Value("${booking.paymentPrefixKey}")
     private String paymentPrefixKey;
     private final BookingOrderRepository bookingOrderRepository;
+    @Value("${booking.holdingSeatTime}")
+    private int holdingSeatTime;
+    @Value("${booking.customerHoldingSeatPrefixKey}")
+    private String customerHoldingSeatPrefixKey;
 
     public Payment createPayment(PaymentRequest request){
         Payment payment = paymentMapper.toPayment(request);
@@ -76,7 +83,7 @@ public class PaymentService {
                     .paymentId(payment.getId())
                     .orderInfo("Thanh toán hóa đơn #" + bookingOrderId)
                     .build();
-            MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest);
+            MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest, AccountType.COMPANY);
             redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId(), response.getPayUrl(),
                     Duration.ofSeconds(paymentExpirationTime));
             payUrl = response.getPayUrl();
@@ -107,7 +114,7 @@ public class PaymentService {
         String paymentId = extraDataDTO.getPaymentId();
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
-        if(type.equals(MomoEnum.PAYMENT.name())){
+        if(type.equals(AccountType.COMPANY.name())){
             // chưa lưu lịch sử khi thanh toán/refund thành công
             log.info("xử lí payment");
             int updatedRow = paymentRepository.updateToSuccess(paymentId);
@@ -137,12 +144,49 @@ public class PaymentService {
                 paymentRepository.save(payment);
             }
             bookingOrderService.paymentSuccessfully(bookingOrderId);
-        }
-        else if(type.equals(MomoEnum.REFUND.name()) ){
-            System.out.println("refund ticket service");
-        }
-        else{
-            System.out.println("co loi extraData");
+        }else if(type.equals(AccountType.CUSTOMER.name())){
+            boolean refunded = false;
+            long responseTimeMillis = Long.parseLong(payload.get("responseTime").toString());
+            LocalDateTime paymentTime = Instant.ofEpochMilli(responseTimeMillis)
+                    .atZone(ZoneId.systemDefault()).toLocalDateTime();
+            LocalDateTime expiredTime = payment.getBookingOrder().getCreatedAt().plusSeconds(holdingSeatTime);
+            if (paymentTime.isAfter(expiredTime)) {
+                log.info("Payment received after holding time expired. Refunding payment for booking order: {}", bookingOrderId);
+                Long amount = Long.valueOf(payload.get("amount").toString());
+                Long parentTransId = Long.valueOf(payload.get("transId").toString());
+                String description = "Hoàn tiền cho thanh toán quá hạn hóa đơn #" + bookingOrderId;
+                boolean refundResult = refundPayment(parentTransId, bookingOrderId, amount, description);
+                if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
+                refunded = true;
+            } else {
+                log.info("Payment received within holding time. Processing payment for booking order: {}", bookingOrderId);
+                int updateRow = paymentRepository.updateToSuccess(paymentId);
+                if(updateRow != 1){
+                    log.info("Payment update failed for paymentId: {}", paymentId);
+                    if (PaymentEnum.SUCCESSFUL.name().equals(payment.getStatus())) {
+                        log.info("Duplicate IPN for already successful payment, skipping refund");
+                        refunded = false;
+                    } else {
+                        log.info("Refunding payment due to update failure");
+                        Long amount = Long.valueOf(payload.get("amount").toString());
+                        Long parentTransId = Long.valueOf(payload.get("transId").toString());
+                        String description = "Hoàn tiền cho thanh toán hóa đơn #" + bookingOrderId;
+                        boolean refundResult = refundPayment(parentTransId, bookingOrderId, amount, description);
+                        if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
+                        refunded = true;
+                    }
+                } else {
+                    payment.setMomoOrderId(momoOrderId);
+                    payment.setTransId(Long.valueOf(payload.get("transId").toString()));
+                    payment.setUpdatedAt(LocalDateTime.now());
+                    payment.setStatus(PaymentEnum.SUCCESSFUL.name());
+                    paymentRepository.save(payment);
+                    log.info("Payment successfully processed for booking order: {}", bookingOrderId);
+                }
+            }
+            if (!refunded) {
+                bookingOrderService.paymentSuccessfully(bookingOrderId);
+            }
         }
         return result;
     }
@@ -179,7 +223,7 @@ public class PaymentService {
                     .orderInfo("Thanh toán hóa đơn #" + bookingOrderId)
                     .build();
 
-            MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest);
+            MomoPaymentResponse response = momoService.createMomoPayment(momoPaymentRequest, AccountType.CUSTOMER);
             redisTemplate.opsForValue().set(payUrlKey, response.getPayUrl(), Duration.ofSeconds(paymentExpirationTime));
             redisTemplate.opsForValue().set(qrCodeKey, response.getQrCodeUrl(), Duration.ofSeconds(paymentExpirationTime));
 

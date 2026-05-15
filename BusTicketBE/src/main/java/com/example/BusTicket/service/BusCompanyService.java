@@ -25,7 +25,7 @@ import java.util.List;
 public class BusCompanyService {
     private final CompanyUserRepository companyUserRepository;
     private final BusCompanyRepository busCompanyRepository;
-    private final S3Service s3Service;
+//    private final S3Service s3Service;
 
 
     public BusCompany getBusCompany(String busCompanyId) {
@@ -34,22 +34,22 @@ public class BusCompanyService {
         return companyUser.getBusCompany();
     }
 
-    public BusCompany updateBusCompany(String busCompanyId, CompanyUpRequest request) {
-        Jwt jwt = JwtHelper.getJwt();
-        CompanyUser companyUser = checkPermission(jwt.getSubject(), busCompanyId);
-        BusCompany busCompany = companyUser.getBusCompany();
-        if(request.getPolicy() != null && !request.getPolicy().isBlank()) busCompany.setPolicy(request.getPolicy());
-        if(request.getAvatarFile() != null){
-            try{
-                String avatarUrl = s3Service.uploadFile(request.getAvatarFile());
-                busCompany.setAvatarUrl(avatarUrl);
-            }catch (Exception e){
-                throw new MyAppException(ErrorCode.ERROR_S3);
-            }
-        }
-        busCompanyRepository.save(busCompany);
-        return busCompany;
-    }
+//    public BusCompany updateBusCompany(String busCompanyId, CompanyUpRequest request) {
+//        Jwt jwt = JwtHelper.getJwt();
+//        CompanyUser companyUser = checkPermission(jwt.getSubject(), busCompanyId);
+//        BusCompany busCompany = companyUser.getBusCompany();
+//        if(request.getPolicy() != null && !request.getPolicy().isBlank()) busCompany.setPolicy(request.getPolicy());
+//        if(request.getAvatarFile() != null){
+//            try{
+//                String avatarUrl = s3Service.uploadFile(request.getAvatarFile());
+//                busCompany.setAvatarUrl(avatarUrl);
+//            }catch (Exception e){
+//                throw new MyAppException(ErrorCode.ERROR_S3);
+//            }
+//        }
+//        busCompanyRepository.save(busCompany);
+//        return busCompany;
+//    }
     private CompanyUser checkPermission(String companyUserId, String busCompanyId){
         CompanyUser companyUser = companyUserRepository.findById(companyUserId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));

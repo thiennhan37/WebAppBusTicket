@@ -22,6 +22,9 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
     int updateToSuccess(@Param("id") String id);
 
     Payment findByBookingOrderIdAndType(String bookingOrderId, String type);
+    Payment findByMomoOrderId(String momoOrderId);
+
+    boolean existsByBookingOrderIdAndTypeAndStatus(String bookingOrderId, String type, String status);
 }
 
 

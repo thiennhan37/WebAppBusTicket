@@ -26,23 +26,11 @@ public class SeatReleaseSchedulerService {
     @Value("${booking.holdingSeatTime}")
     private int holdingSeatTime;
 
-    /**
-     * Chạy mỗi 1 phút để kiểm tra và khôi phục ghế đã hết hạn hold
-     * Tìm các ghế có status = HELD và đã giữ quá lâu, sau đó:
-     * - Xóa tickets chưa thanh toán (HOLDING)
-     * - Restore status ghế về AVAILABLE
-     */
     @Scheduled(fixedRate = 60000) // 60 seconds
     public void releaseExpiredHeldSeats() {
         try {
-            log.info(">>> Starting seat release scheduler...");
-
-            // Tìm tất cả ghế có status = HELD
             List<TripSeat> heldSeats = tripSeatRepository.findAllByStatus(TripSeatEnum.HELD.name());
-            log.info("Found {} held seats", heldSeats.size());
-
             if (heldSeats.isEmpty()) {
-                log.info("No held seats to release");
                 return;
             }
 
@@ -59,12 +47,12 @@ public class SeatReleaseSchedulerService {
 
                         // Nếu vượt quá thời gian hold, thực hiện restore
                         if (secondsHeld > holdingSeatTime) {
-                            log.info("Releasing seat {} (held for {} seconds)", tripSeat.getId(), secondsHeld);
+//                            log.info("Releasing seat {} (held for {} seconds)", tripSeat.getId(), secondsHeld);
 
                             // Thực hiện release trong transaction riêng
                             releaseSeatWithTicket(tripSeat, latestTicket);
 
-                            log.info("Seat {} released successfully", tripSeat.getId());
+//                            log.info("Seat {} released successfully", tripSeat.getId());
                         }
                     }
                 } catch (Exception e) {

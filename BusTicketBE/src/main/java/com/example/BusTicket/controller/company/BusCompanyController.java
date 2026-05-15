@@ -23,11 +23,11 @@ public class BusCompanyController {
     ApiResponse<BusCompany> getBusCompany(@PathVariable("id") String busCompanyId){
         return ApiResponse.success(busCompanyService.getBusCompany(busCompanyId));
     }
-    @PutMapping(value = "/bus-company/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ApiResponse<BusCompany> updateBusCompany(@PathVariable("id") String busCompanyId,
-                                             @ModelAttribute CompanyUpRequest request){
-        return ApiResponse.success(busCompanyService.updateBusCompany(busCompanyId, request));
-    }
+//    @PutMapping(value = "/bus-company/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    ApiResponse<BusCompany> updateBusCompany(@PathVariable("id") String busCompanyId,
+//                                             @ModelAttribute CompanyUpRequest request){
+//        return ApiResponse.success(busCompanyService.updateBusCompany(busCompanyId, request));
+//    }
 
 
 }
