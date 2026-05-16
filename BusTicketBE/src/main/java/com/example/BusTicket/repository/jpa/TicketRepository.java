@@ -47,11 +47,14 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
     List<Ticket> getTicketListForCancel(@Param("ticketIds") List<String> ticketIds);
 
     @Query("""
-        SELECT t.status as status, count(t.id) FROM Ticket t
-        WHERE t.bookingOrder.createdAt >= :start AND t.bookingOrder.createdAt < :end
-        AND t.bookingOrder.trip.busCompany.id = :busCompanyId
+        SELECT t.status as status, count(t.id)
+        FROM Ticket t
+        JOIN t.bookingOrder bo
+        WHERE t.updatedAt >= :start
+            AND t.updatedAt < :end
+            AND bo.trip.busCompany.id = :busCompanyId
         GROUP BY t.status
-    """)
+   """)
     List<Object[]> countByStatusInMonth(@Param("busCompanyId") String busCompanyId,
         @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
@@ -61,8 +64,8 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
         SUM(CASE WHEN t.bookingOrder.creatingStaff IS NOT NULL THEN 1 ELSE 0 END)
         FROM Ticket t
         WHERE t.status IN :statusList
-        AND t.bookingOrder.createdAt >= :start
-        AND t.bookingOrder.createdAt < :end
+        AND t.updatedAt >= :start
+        AND t.updatedAt < :end
         AND t.bookingOrder.trip.busCompany.id = :busCompanyId
     """)
     Object[] countByIssuerInMonth(@Param("busCompanyId") String busCompanyId,
@@ -72,6 +75,8 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
 
     @Query("""
         SELECT t FROM Ticket t
+        JOIN FETCH t.bookingOrder bo
+        JOIN FETCH bo.bookingUser
         WHERE t.tripSeat.id = :tripSeatId
             AND t.status IN ('HOLDING', 'PAID')
         ORDER BY t.updatedAt DESC

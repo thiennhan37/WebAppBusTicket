@@ -28,7 +28,7 @@ public enum ErrorCode {
     COMPANY_NOT_EXISTED(4001, "Nhà xe không tồn tại", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(4002, "Email này đã được sử dụng", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_EXISTED(4003, "Tài khoản không tồn tại", HttpStatus.BAD_REQUEST),
-    ACCOUNT_BLOCKED(4004, "Tài khoản đã bị khóa", HttpStatus.FORBIDDEN),
+    ACCOUNT_BLOCKED(4004, "Tài khoản đã bị khóa", HttpStatus.UNAUTHORIZED),
     HOTLINE_EXISTED(4004, "Số hotline đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
     INFO_EXISTED(4005, "Thông tin đã tồn tại", HttpStatus.BAD_REQUEST),
     NOT_EXISTED(4006, "Dữ liệu không tồn tại", HttpStatus.BAD_REQUEST),
@@ -44,6 +44,7 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCHES(4012, "Mật khẩu không khớp", HttpStatus.BAD_REQUEST),
     NEW_PASSWORD_NOT_MATCHES(4013, "Mật khẩu mới không khớp", HttpStatus.BAD_REQUEST),
     NEW_PASSWORD_DUPLICATE(4014, "Mật khẩu mới không được trùng với mật khẩu cũ", HttpStatus.BAD_REQUEST),
+    LOGIN_FAILED(4015, "Tài khoản hoặc mật khẩu không chính xác", HttpStatus.UNAUTHORIZED),
 
     INVALID_GMAIL(4021, "Không tìm thấy gmail này trong hệ thống", HttpStatus.BAD_REQUEST),
     INVALID_OTP(4022, "Sai OTP hoặc OTP đã hết hạn", HttpStatus.BAD_REQUEST),

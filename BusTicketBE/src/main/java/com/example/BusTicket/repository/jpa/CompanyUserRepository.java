@@ -16,12 +16,12 @@ public interface CompanyUserRepository extends JpaRepository<CompanyUser, String
     Optional<CompanyUser> findByEmail(String email);
 
     @Query("""
-        SELECT COUNT(*) FROM CompanyUser user WHERE\s
-        createdAt >= :start AND createdAt < :end
-        AND user.busCompany.id = :busCompanyId
-       \s""")
-    Long countByCreatedInMonth(@Param("busCompanyId") String busCompanyId,
-                               @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-    
+        SELECT COUNT(*) FROM CompanyUser user
+        WHERE user.busCompany.id = :busCompanyId
+        AND  createdAt < :end
+       """)
+    Long countBeforeMonth(@Param("busCompanyId") String busCompanyId,
+                               @Param("end") LocalDateTime end);
+    Long countByBusCompanyId(String busCompanyId);
 
 }

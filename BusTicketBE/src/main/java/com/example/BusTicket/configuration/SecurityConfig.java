@@ -31,10 +31,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
     private final String[] AUTH_ENDPOINTS = {"/nhaxe/auth/login", "/nhaxe/auth/logout", "/auth/refresh-token",
         "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
-            "/register/verify", "/auth/log-out"};
+            "/register/verify", "/auth/log-out", "/admin/auth/login"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type"};
-    private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**", "/api/**"};
-    private final String[] ADMIN_ENDPOINTS = {"/users"};
+    private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**", "/api/**", "/admin/create"};
+    private final String[] ADMIN_ENDPOINTS = {"/users", "/admin/company-page", "/admin/company-register-page",
+        "/admin/company-status"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open",
         "/nhaxe/report"};
     private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes", "/nhaxe/bus-company"};
@@ -48,6 +49,9 @@ public class SecurityConfig {
     private CustomJwtDecoder customJwtDecoder;
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @Autowired
+    private CustomJwtAuthenticationConverter customJwtAuthenticationConverter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity){
         httpSecurity.cors(Customizer.withDefaults()); // Bật CORS
@@ -67,13 +71,15 @@ public class SecurityConfig {
                             .hasAnyRole(RoleEnum.MANAGER.name(), RoleEnum.STAFF.name())
                         .requestMatchers(HttpMethod.POST, COMPANY_UPDATE_ENDPOINTS)
                             .hasAnyRole(RoleEnum.MANAGER.name(), RoleEnum.STAFF.name())
+                        .requestMatchers(HttpMethod.PUT, ADMIN_ENDPOINTS).hasRole(RoleEnum.ADMIN.name())
                         .anyRequest().authenticated()
                         //Tất cả API khác → bắt buộc có JWT
         );
         httpSecurity.oauth2ResourceServer(oAuth2 ->
                 oAuth2.jwt(jwtConfigurer ->
                                 jwtConfigurer.decoder(customJwtDecoder)
-                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                                        .jwtAuthenticationConverter(customJwtAuthenticationConverter)
+//                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
 
                         )
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)

@@ -17,6 +17,9 @@ const AuthenticateService = {
     }, 
     changePassword({oldPassword, newPassword}){
         return api.put("/auth/change-password", {oldPassword, newPassword});
+    },
+    loginAdmin({email, password}){
+        return publicApi.post("/admin/auth/login", {email, password});
     }
 }
 

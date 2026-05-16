@@ -41,7 +41,8 @@ public class SeatReleaseSchedulerService {
                     // Lấy ticket mới nhất liên quan đến ghế này
                     var latestTicket = ticketRepository.findLatestHoldingTicketByTripSeatId(tripSeat.getId());
 
-                    if (latestTicket != null && latestTicket.getUpdatedAt() != null) {
+                    if (latestTicket != null && latestTicket.getUpdatedAt() != null
+                            && latestTicket.getBookingOrder().getBookingUser() != null) {
                         long secondsHeld = java.time.temporal.ChronoUnit.SECONDS
                                 .between(latestTicket.getUpdatedAt(), now);
 
