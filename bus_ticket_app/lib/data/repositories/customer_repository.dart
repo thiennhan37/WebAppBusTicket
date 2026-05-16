@@ -1,5 +1,6 @@
 // lib/data/repositories/customer_repository.dart
 import 'package:bus_ticket_app/data/models/order_model.dart';
+import 'package:bus_ticket_app/data/models/order_detail_model.dart';
 import 'package:dio/dio.dart';
 import '../models/update_customer_profile_request_model.dart';
 import '../services/customer_api_service.dart';
@@ -31,6 +32,36 @@ class CustomerRepository {
     } on DioException catch (e) {
       if (e.response != null) {
         final errorMessage = e.response?.data['message'] ?? 'Không thể tải danh sách vé';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Lỗi kết nối mạng: ${e.message}');
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  Future<bool> unholdSeats(String orderId) async {
+    try {
+      final response = await _customerApiService.unholdSeats(orderId);
+      return response.data['result'] == true;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final errorMessage = e.response?.data['message'] ?? 'Không thể hủy đơn hàng';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Lỗi kết nối mạng: ${e.message}');
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  Future<OrderDetailModel> getOrderDetail(String orderId) async {
+    try {
+      final response = await _customerApiService.getOrderDetail(orderId);
+      return OrderDetailModel.fromJson(response.data['result']);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final errorMessage = e.response?.data['message'] ?? 'Không thể tải chi tiết đơn hàng';
         throw Exception(errorMessage);
       }
       throw Exception('Lỗi kết nối mạng: ${e.message}');

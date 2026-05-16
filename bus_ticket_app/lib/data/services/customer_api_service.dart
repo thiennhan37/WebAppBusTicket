@@ -18,4 +18,12 @@ class CustomerApiService {
   Future<Response> getRecentOrders() async {
     return await _apiClient.get(ApiConstants.getRecentOrders);
   }
+
+  Future<Response> unholdSeats(String orderId) async {
+    return await _apiClient.post('${ApiConstants.unholdSeats}$orderId');
+  }
+
+  Future<Response> getOrderDetail(String orderId) async {
+    return await _apiClient.get('${ApiConstants.orderDetail}$orderId');
+  }
 }

@@ -1,10 +1,9 @@
 import 'dart:convert';
-
+import 'package:flutter/material.dart';
 import '../../../core/storage/storage_service.dart';
 import '../../models/province_model.dart';
 
-
-class BookingStorage {
+class BookingStorage extends ChangeNotifier {
   final StorageService _storage;
 
   BookingStorage(this._storage);
@@ -16,6 +15,7 @@ class BookingStorage {
     } else {
       await _storage.writeString('saved_departure', jsonEncode(province.toJson()));
     }
+    notifyListeners(); // Thông báo cho các widget đang lắng nghe
   }
 
   ProvinceModel? getDeparture() {
@@ -30,6 +30,7 @@ class BookingStorage {
     } else {
       await _storage.writeString('saved_destination', jsonEncode(province.toJson()));
     }
+    notifyListeners(); // Thông báo cho các widget đang lắng nghe
   }
 
   ProvinceModel? getDestination() {

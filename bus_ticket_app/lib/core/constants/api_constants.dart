@@ -2,7 +2,6 @@ class ApiConstants {
   // Base URL
   static const String baseUrl = 'http://localhost:8080/vexedat';
 
-  // Auth endpoints
   static const String sendOtp = '$baseUrl/auth/send-otp';
   static const String verifyOtp = '$baseUrl/auth/verify-otp';
   static const String logOut = '$baseUrl/auth/log-out';
@@ -18,6 +17,8 @@ class ApiConstants {
   static const String checkPaymentStatus = '$baseUrl/customer/orders/payment-status';
   static const String getRecentOrders = '$baseUrl/customer/orders/recent';
   static const String updateProfile = '$baseUrl/customer/profile';
+  static const String orderDetail = '$baseUrl/customer/order/detail/';
+  static const String unholdSeats = '$baseUrl/customer/orders/unhold-seats/';
 
   // HTTP Headers
   static const Map<String, String> headers = {

@@ -54,4 +54,27 @@ class MyTicketsViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> cancelOrder(String orderId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final success = await _repository.unholdSeats(orderId);
+      if (success) {
+        await fetchOrders(); // Tải lại danh sách sau khi hủy thành công
+        return true;
+      }
+      _isLoading = false;
+      _errorMessage = "Hủy đơn hàng thất bại";
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
 }
