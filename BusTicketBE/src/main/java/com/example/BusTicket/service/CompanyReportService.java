@@ -55,18 +55,15 @@ public class CompanyReportService {
         BusCompany busCompany = checkCompany(JwtHelper.getJwt());
         String busCompanyId = busCompany.getId();
         LocalDate now = LocalDate.now();
-        LocalDateTime start = now.withDayOfMonth(1).atStartOfDay();
-        LocalDateTime end = now.plusMonths(1)
-                .withDayOfMonth(1)
-                .atStartOfDay();
+        LocalDateTime end = now.withDayOfMonth(1).atStartOfDay();
 
         Long staffCountCurrentMonth =  
-            companyUserRepository.countByCreatedInMonth(busCompanyId,start, end);
-        Long staffCountLastMonth = 
-            companyUserRepository.countByCreatedInMonth(busCompanyId,start.minusMonths(1), end.minusMonths(1));
+            companyUserRepository.countByBusCompanyId(busCompanyId);
+        Long staffCountPreviousMonth =
+            companyUserRepository.countBeforeMonth(busCompanyId , end);
         return StaffReportResp.builder()
                 .staffCountCurrentMonth(staffCountCurrentMonth)
-                .staffCountLastMonth(staffCountLastMonth)
+                .staffCountPreviousMonth(staffCountPreviousMonth)
                 .build();
     }
     public RevenueReportResp getRevenueReportResp()
@@ -115,17 +112,17 @@ public class CompanyReportService {
                 .atStartOfDay();
 
         List<Object[]> ticketCountCurrentMonthList = ticketRepository.countByStatusInMonth(busCompanyId, start, end);
-        List<Object[]> ticketCountLastMonthList =
+        List<Object[]> ticketCountPreviousMonthList =
                 ticketRepository.countByStatusInMonth(busCompanyId, start.minusMonths(1), end.minusMonths(1));
         long ticketCountCurrentMonth = 0L;
-        long ticketCountLastMonth = 0L;
+        long ticketCountPreviousMonth = 0L;
 
-        for(Object[] x : ticketCountLastMonthList){
+        for(Object[] x : ticketCountPreviousMonthList){
             String ticketStatus = x[0].toString();
             long value = Long.parseLong(x[1].toString());
             if(ticketStatus.equals(TicketStatusEnum.PAID.name())
                     || ticketStatus.equals(TicketStatusEnum.HOLDING.name())){
-                ticketCountLastMonth += value;
+                ticketCountPreviousMonth += value;
             }
         }
 
@@ -139,10 +136,10 @@ public class CompanyReportService {
             }
             ticketCountCurrentMonthMap.put(ticketStatus, value);
         }
-        Long paidTicketCount = ticketCountCurrentMonthMap.get(TicketStatusEnum.PAID.name());
-        Long cancelledTicketCount = ticketCountCurrentMonthMap.get(TicketStatusEnum.CANCELLED.name());
-        Long expiredTicketCount = ticketCountCurrentMonthMap.get(TicketStatusEnum.EXPIRED.name());
-        Long holdingTicketCount = ticketCountCurrentMonthMap.get(TicketStatusEnum.HOLDING.name());
+        Long paidTicketCount = ticketCountCurrentMonthMap.getOrDefault(TicketStatusEnum.PAID.name(), 0L);
+        Long cancelledTicketCount = ticketCountCurrentMonthMap.getOrDefault(TicketStatusEnum.CANCELLED.name(), 0L);
+        Long expiredTicketCount = ticketCountCurrentMonthMap.getOrDefault(TicketStatusEnum.EXPIRED.name(), 0L);
+        Long holdingTicketCount = ticketCountCurrentMonthMap.getOrDefault(TicketStatusEnum.HOLDING.name(), 0L);
 
         List<String> statusList = new ArrayList<>();
         statusList.add(TicketStatusEnum.PAID.name());
@@ -157,7 +154,7 @@ public class CompanyReportService {
         
         return TicketReportResp.builder()
             .ticketCountCurrentMonth(ticketCountCurrentMonth)
-            .ticketCountLastMonth(ticketCountLastMonth)
+            .ticketCountPreviousMonth(ticketCountPreviousMonth)
             .paidTicketCount(paidTicketCount)
             .holdingTicketCount(holdingTicketCount)
             .cancelledTicketCount(cancelledTicketCount)

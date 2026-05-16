@@ -8,6 +8,7 @@ const AuthProvider = ({children}) => {
     const [loading, setLoading] = useState(true);
     useEffect(() =>{
         const savedUser = localStorage.getItem("user");
+        console.log("savedUser", savedUser);
         if(savedUser){
             //eslint-disable-next-line
             setUser(JSON.parse(savedUser));
@@ -21,18 +22,26 @@ const AuthProvider = ({children}) => {
     }, [])
 
     const login = (data) => {
+        localStorage.clear();
         localStorage.setItem("accessToken", data.accessToken);
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("company", JSON.stringify(data.company));
         setUser(data.user);
         setCompany(data.company);
     }
-    const logout = () => {
+    const loginAdmin = (data) => {
+        localStorage.clear();
+        localStorage.setItem("accessToken", data.accessToken);
+        const user = {...data.user, role: "ADMIN"};
+        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
+    }
+    const logout = () => { 
         localStorage.clear();
         setUser(null);
         setCompany(null);
     }
-    return <AuthContext.Provider value={{user, login, logout, loading, company}}> 
+    return <AuthContext.Provider value={{user, login, logout, loading, company, loginAdmin}}> 
         {!loading && children}
     </AuthContext.Provider>
 }

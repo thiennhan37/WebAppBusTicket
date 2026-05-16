@@ -13,5 +13,5 @@ public class CompanyUpRequest {
 
     private String policy;
     private MultipartFile avatarFile;
-
+    private String status;
 }

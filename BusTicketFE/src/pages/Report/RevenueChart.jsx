@@ -3,14 +3,14 @@ import { Tooltip as RechartsTooltip } from 'recharts';
 
 const RevenueChart = ({revenueData}) => {
     return (    
-    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm lg:col-span-2">
+    <div className="bg-blue-50 p-6 rounded-2xl border border-slate-100 shadow-sm lg:col-span-2">
         <div className="flex justify-between items-center mb-6">
         <div>
             <h2 className="text-base font-bold text-slate-800">Doanh thu 7 ngày gần nhất</h2>
-            <p className="text-xs text-slate-500">Đơn vị: Triệu VNĐ</p>
+            <p className="text-xs text-slate-500">Đơn vị: VNĐ</p>
         </div>
-        <div className="flex gap-2">
-            <button className="px-3 py-1 bg-slate-100 text-xs font-medium rounded-lg hover:bg-slate-200 transition-colors">Tuần</button>
+        <div className="flex gap-2"> 
+            <button className="px-3 py-1 bg-slate-300 text-xs font-medium rounded-lg hover:bg-slate-400 transition-colors">Tuần</button>
         </div>
         </div>
         <div className="h-72 w-full">

@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class TicketReportResp {
     private Long ticketCountCurrentMonth;
-    private Long ticketCountLastMonth;
+    private Long ticketCountPreviousMonth;
     // theo tháng
     private Long paidTicketCount;
     private Long holdingTicketCount;

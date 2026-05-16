@@ -9,7 +9,7 @@ const ReportHeader = ({ itemVariants }) => {
           <h1 className="text-2xl font-bold text-slate-900">Thống kê hệ thống</h1>
           <p className="text-sm text-slate-500 mt-1">Hôm nay: {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
-        <div className="flex gap-3">
+        {/* <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium shadow-sm">
             <CalendarDays size={18} />
             Chuyến hôm nay
@@ -22,7 +22,7 @@ const ReportHeader = ({ itemVariants }) => {
             <PlusCircle size={18} />
             Tạo chuyến
           </button>
-        </div>
+        </div> */}
       </motion.div>
     );
 }
