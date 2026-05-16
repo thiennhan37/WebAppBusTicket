@@ -52,7 +52,6 @@ public class CustomerBookingForOrderService {
     @Value("${booking.customerHoldingSeatPrefixKey}")
     private String CUSTOMER_HOLD_INFO_PREFIX;
 
-
     public boolean isOrderPaid(String bookingOrderId){
         Jwt jwt = JwtHelper.getJwt();
         BookingOrder bookingOrder = bookingOrderRepository.findById(bookingOrderId)
@@ -70,7 +69,6 @@ public class CustomerBookingForOrderService {
                 PaymentEnum.SUCCESSFUL.name()
         );
     }
-
 
 
     @Transactional
@@ -101,7 +99,75 @@ public class CustomerBookingForOrderService {
             seatReservationService.deleteInvalidOrder(customer.getId(), orderId, tripSeatIdList);
             throw new MyAppException(ErrorCode.TRIP_SEAT_BOOKED);
         }
-//        tripSeatRepository.updateStatusByIds(tripSeatIdList, TripSeatEnum.HELD.name(), List.of(TripSeatEnum.AVAILABLE.name()));
+
+        int updatedSeats = tripSeatRepository.updateStatusByIds(
+                tripSeatIdList,
+                TripSeatEnum.HELD.name(),
+                List.of(TripSeatEnum.AVAILABLE.name())
+        );
+        if(updatedSeats != tripSeatIdList.size()){
+            seatReservationService.deleteInvalidOrder(customer.getId(), orderId, tripSeatIdList);
+            throw new MyAppException(ErrorCode.TRIP_SEAT_BOOKED);
+        }
+
+        // Tính tổng tiền tại thời điểm giữ ghế
+        Long totalCost = tripSeatList.stream()
+                .mapToLong(tripSeat -> tripSeat.getPrice() != null ? tripSeat.getPrice() : 0).sum();
+
+        // Tạo booking order tạm thời (sẽ được cập nhật thông tin khách khi khách gọi createPayment)
+        BookingOrder bookingOrder = BookingOrder.builder()
+                .id(orderId)
+                .trip(trip)
+                .bookingUser(customer)
+                .customerName(customer.getFullName())
+                .customerPhone(customer.getPhone())
+                .customerEmail(customer.getEmail())
+                .createdAt(LocalDateTime.now())
+                .creatingStaff(null)
+                .totalCost(totalCost)
+                .build();
+        bookingOrderRepository.save(bookingOrder);
+
+        // Tạo ticket với trạng thái HOLDING để đảm bảo booking flow khi payment thành công
+        List<RouteStop> upStops = routeStopRepository.findAllByRouteIdAndType(trip.getRoute().getId(), "UP");
+        List<RouteStop> downStops = routeStopRepository.findAllByRouteIdAndType(trip.getRoute().getId(), "DOWN");
+        if (upStops.isEmpty() || downStops.isEmpty()) {
+            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
+        }
+
+        RouteStop arrival = upStops.stream().min(java.util.Comparator.comparing(RouteStop::getId))
+                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
+        RouteStop destination = downStops.stream().max(java.util.Comparator.comparing(RouteStop::getId))
+                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
+
+        List<Ticket> ticketList = saveTicketList(tripSeatList, bookingOrder, arrival, destination);
+
+        // Lưu lịch sử booking tạm thời
+        saveHistoryForBooking(bookingOrder, customer, ticketList);
+
+        // Tạo payment PENDING cho order này
+        PaymentRequest paymentRequest = PaymentRequest.builder()
+                .amount(totalCost)
+                .bookingOrderId(bookingOrder.getId())
+                .type(MomoEnum.PAYMENT.name())
+                .build();
+
+        Payment payment = paymentService.createPayment(paymentRequest);
+
+        // Tạo momo payment (QR + payUrl) lưu vào redis để khách lấy QR sau
+        MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder()
+                .bookingOrderId(bookingOrder.getId())
+                .paymentId(payment.getId())
+                .orderInfo("Thanh toán hóa đơn #" + bookingOrder.getId())
+                .build();
+
+        MomoPaymentResponse momoResponse = momoService.createMomoPayment(momoPaymentRequest, AccountType.CUSTOMER);
+        redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId(),
+                momoResponse.getPayUrl(), Duration.ofSeconds(holdingSeatTime));
+        redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId() + ":qr",
+                momoResponse.getQrCodeUrl(), Duration.ofSeconds(holdingSeatTime));
+
+        // vẫn lưu hold info cho client
         String holdInfo = customer.getId() + ":" + orderId + ":" + String.join(",", tripSeatIdList);
         redisTemplate.opsForValue().set(holdInfoKey, holdInfo, Duration.ofSeconds(holdingSeatTime));
         return orderId;
@@ -119,119 +185,27 @@ public class CustomerBookingForOrderService {
         Jwt jwt = JwtHelper.getJwt();
         Customer customer = customerRepository.findById(jwt.getSubject())
                 .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
-        // 2. Validate order exists trong Redis và thuộc về customer này
-        String holdInfoKey = getCustomerHoldInfoKey(customer.getId());
-        String holdInfo = redisTemplate.opsForValue().get(holdInfoKey);
 
-        if (holdInfo == null) {
-            throw new MyAppException(ErrorCode.NOT_EXISTED);
-        }
-
-        // Parse thông tin từ Redis: customerId:orderId:tripSeatIds
-        String[] parts = holdInfo.split(":");
-        if (parts.length != 3) {
-            throw new MyAppException(ErrorCode.INVALID_FORMAT);
-        }
-
-        String redisCustomerId = parts[0];
-        String redisOrderId = parts[1];
-        String tripSeatIdsStr = parts[2];
-
-        // Validate orderId khớp
-        if (!redisOrderId.equals(orderId)) {
-            throw new MyAppException(ErrorCode.NOT_EXISTED);
-        }
-
-        // Validate customer sở hữu order này
-        if (!redisCustomerId.equals(customer.getId())) {
-            throw new MyAppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        // Parse tripSeatIds
-        List<String> tripSeatIdList = List.of(tripSeatIdsStr.split(","));
-
-        // 3. Lấy tripId từ một trong các tripSeat
-        TripSeat firstTripSeat = tripSeatRepository.findById(tripSeatIdList.get(0))
-                .orElseThrow(() -> new MyAppException(ErrorCode.TRIP_SEAT_INVALID));
-        String tripId = firstTripSeat.getTrip().getId();
-
-        // 4. Validate trip và seats
-        Trip trip = tripRepository.findById(tripId)
+        // 2. Load booking order và kiểm tra quyền sở hữu
+        BookingOrder bookingOrder = bookingOrderRepository.findById(orderId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
-        if (!trip.getStatus().equals(TripStatusEnum.OPEN.name())) {
-            throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
-        }
+        if (bookingOrder.getBookingUser() == null || !bookingOrder.getBookingUser().getId().equals(customer.getId()))
+            throw new MyAppException(ErrorCode.ACCESS_DENIED);
 
-        // Validate seats vẫn available và thuộc về trip
-        seatReservationService.checkValidOrder(orderId, tripSeatIdList);
-        List<TripSeat> tripSeatList = tripSeatRepository.getValidTripSeatList(tripSeatIdList, trip.getId());
-        if (tripSeatIdList.size() != tripSeatList.size()) {
-            throw new MyAppException(ErrorCode.TRIP_SEAT_BOOKED);
-        }
-
-        // 5. Tạo booking order từ thông tin đã hold
-        // Lấy arrival và destination stops (tương tự logic cũ)
-        List<RouteStop> upStops = routeStopRepository.findAllByRouteIdAndType(trip.getRoute().getId(), "UP");
-        List<RouteStop> downStops = routeStopRepository.findAllByRouteIdAndType(trip.getRoute().getId(), "DOWN");
-        if (upStops.isEmpty() || downStops.isEmpty()) {
-            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
-        }
-
-        RouteStop arrival = upStops.stream().min(java.util.Comparator.comparing(RouteStop::getId))
-                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
-        RouteStop destination = downStops.stream().max(java.util.Comparator.comparing(RouteStop::getId))
-                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
-
-        // Tính tổng tiền
-        Long totalCost = tripSeatList.stream()
-                .mapToLong(tripSeat -> tripSeat.getPrice() != null ? tripSeat.getPrice() : 0).sum();
-
-        // Tạo booking order
-        BookingOrder bookingOrder = BookingOrder.builder()
-                .id(orderId)
-                .trip(trip)
-                .bookingUser(customer)
-                .createdAt(LocalDateTime.now())
-                .creatingStaff(null)
-                .customerEmail(request.getCustomerEmail())
-                .customerName(request.getCustomerName())
-                .customerPhone(request.getCustomerPhone())
-                .totalCost(totalCost)
-                .build();
-
+        // 3. Cập nhật thông tin liên hệ khách (tên, phone, email)
+        if (request.getCustomerName() != null && !request.getCustomerName().isBlank())
+            bookingOrder.setCustomerName(request.getCustomerName());
+        if (request.getCustomerPhone() != null && !request.getCustomerPhone().isBlank())
+            bookingOrder.setCustomerPhone(request.getCustomerPhone());
+        if (request.getCustomerEmail() != null && !request.getCustomerEmail().isBlank())
+            bookingOrder.setCustomerEmail(request.getCustomerEmail());
         bookingOrderRepository.save(bookingOrder);
 
-        // Tạo tickets
-        List<Ticket> ticketList = saveTicketList(tripSeatList, bookingOrder, arrival, destination);
+        // 4. Lấy payment đã tạo khi hold và trả về momo QR cho khách
+        Payment payment = paymentRepository.findByBookingOrderIdAndType(orderId, MomoEnum.PAYMENT.name());
+        if (payment == null) throw new MyAppException(ErrorCode.NOT_EXISTED);
 
-        // Lưu history
-        saveHistoryForBooking(bookingOrder, customer, ticketList);
-
-        // 6. Tạo payment và MoMo QR
-        PaymentRequest paymentRequest = PaymentRequest.builder()
-                .amount(bookingOrder.getTotalCost())
-                .bookingOrderId(bookingOrder.getId())
-                .type(MomoEnum.PAYMENT.name())
-                .build();
-
-        Payment payment = paymentService.createPayment(paymentRequest);
-
-        MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder()
-                .bookingOrderId(bookingOrder.getId())
-                .paymentId(payment.getId())
-                .orderInfo("Thanh toán hóa đơn #" + bookingOrder.getId())
-                .build();
-
-        MomoPaymentResponse momoResponse = momoService.createMomoPayment(momoPaymentRequest, AccountType.CUSTOMER);
-
-        // Lưu payment URL vào Redis
-        redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId(),
-                momoResponse.getPayUrl(), Duration.ofSeconds(holdingSeatTime));
-
-        // Xóa hold info từ Redis sau khi tạo payment thành công
-        seatReservationService.deleteInvalidOrder(customer.getId(), orderId, tripSeatIdList);
-
-        return momoResponse;
+        return paymentService.getMomoQrForCustomer(payment.getId());
     }
 
 

@@ -2,6 +2,7 @@ package com.example.BusTicket.controller.customer;
 
 
 import com.example.BusTicket.dto.response.ApiResponse;
+import com.example.BusTicket.dto.response.CustomerDetailOrderRespone;
 import com.example.BusTicket.dto.response.CustomerOrderHistoryResponse;
 import com.example.BusTicket.service.CustomerManagerBookingOrderService;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,10 @@ public class CustomerManagerBookingOrderController {
     @PostMapping("/customer/orders/unhold-seats/{orderId}")
     public ApiResponse<Boolean> unHoldSeats(@PathVariable("orderId") String orderId) {
         return ApiResponse.success(customerManagerBookingOrderService.unHoldSeatsByCustomer(orderId));
+    }
+
+    @GetMapping("customer/order/detail/{orderId}")
+    public ApiResponse<CustomerDetailOrderRespone> detailOrder(@PathVariable("orderId") String orderId) {
+        return ApiResponse.success(customerManagerBookingOrderService.getOrderDetail(orderId));
     }
 }

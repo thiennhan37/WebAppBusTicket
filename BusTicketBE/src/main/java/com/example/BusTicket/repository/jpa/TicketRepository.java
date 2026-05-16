@@ -71,19 +71,27 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
 
 
     @Query("""
-        SELECT t FROM Ticket t
-        WHERE t.tripSeat.id = :tripSeatId
-            AND t.status IN ('HOLDING', 'PAID')
-        ORDER BY t.updatedAt DESC
-        LIMIT 1
-    """)
-    Ticket findLatestHoldingTicketByTripSeatId(@Param("tripSeatId") String tripSeatId);
+         SELECT t FROM Ticket t
+         JOIN FETCH t.bookingOrder bo
+         LEFT JOIN FETCH bo.bookingUser
+         WHERE t.tripSeat.id = :tripSeatId
+             AND t.status IN ('HOLDING', 'EXPIRED')
+         ORDER BY t.updatedAt DESC
+         LIMIT 1
+     """)
+     Ticket findLatestHoldingTicketByTripSeatId(@Param("tripSeatId") String tripSeatId);
 
     @Query("""
         SELECT t FROM Ticket t
         WHERE t.bookingOrder.id IN :orderIds
     """)
     List<Ticket> findAllByBookingOrderIds(@Param("orderIds") List<String> orderIds);
+
+    @Query("""
+    SELECT t FROM Ticket t WHERE t.bookingOrder.id = :bookingOrderId
+    """)
+    List<Ticket> findAllByBookingOrderId(@Param("bookingOrderId") String bookingOrderId);
+
     @Query("""
             SELECT ts FROM TripSeat ts
             WHERE ts.id IN :ids AND ts.trip.id = :tripId AND ts.status IN :statuses

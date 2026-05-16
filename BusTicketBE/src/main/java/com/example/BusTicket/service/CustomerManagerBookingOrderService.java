@@ -3,6 +3,7 @@ package com.example.BusTicket.service;
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.request.*;
 import com.example.BusTicket.dto.response.BookingOrderResponse;
+import com.example.BusTicket.dto.response.CustomerDetailOrderRespone;
 import com.example.BusTicket.dto.response.CustomerOrderHistoryResponse;
 import com.example.BusTicket.dto.response.MomoPaymentResponse;
 import com.example.BusTicket.entity.*;
@@ -123,6 +124,39 @@ public class CustomerManagerBookingOrderService {
         seatReservationService.deleteInvalidOrder(customer.getId(), orderId, tripSeatIdList);
         redisTemplate.delete(holdInfoKey);
         return true;
+    }
+
+    public CustomerDetailOrderRespone getOrderDetail(String bookingOrderId){
+        Jwt jwt = JwtHelper.getJwt();
+        BookingOrder bookingOrder = bookingOrderRepository.findById(bookingOrderId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+
+        Customer customer = customerRepository.findById(jwt.getSubject())
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+
+        if (!bookingOrder.getBookingUser().getId().equals(customer.getId()))
+            throw new MyAppException(ErrorCode.ACCESS_DENIED);
+
+        List<Ticket> ticketList = ticketRepository.findAllByBookingOrderId(bookingOrderId);
+        if(ticketList.isEmpty()) throw new MyAppException(ErrorCode.NOT_EXISTED);
+
+        Ticket firstTicket = ticketList.getFirst();
+        return CustomerDetailOrderRespone.builder()
+                .bookingOrderId(bookingOrder.getId())
+                .pickupProvince(firstTicket.getArrival().getStop().getProvince().getName())
+                .dropoffProvince(firstTicket.getDestination().getStop().getProvince().getName())
+                .pickupStop(firstTicket.getArrival().getStop().getName())
+                .dropoffStop(firstTicket.getDestination().getStop().getName())
+                .busCompanyName(bookingOrder.getTrip().getBusCompany().getCompanyName())
+                .departureTime(bookingOrder.getTrip().getDepartureTime())
+                .busType(bookingOrder.getTrip().getBusType().getName())
+                .seatCount(ticketList.size())
+                .seatCodes(ticketList.stream().map(t -> t.getTripSeat().getSeat()).toList())
+                .totalAmount(bookingOrder.getTotalCost())
+                .contactName(bookingOrder.getCustomerName())
+                .contactPhone(bookingOrder.getCustomerPhone())
+                .contactEmail(bookingOrder.getCustomerEmail())
+                .build();
     }
 
     private String getCustomerHoldInfoKey(String customerId){
