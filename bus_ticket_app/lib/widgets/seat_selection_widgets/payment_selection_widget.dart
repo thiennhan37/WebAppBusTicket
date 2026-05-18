@@ -12,17 +12,26 @@ class PaymentSelectionWidget extends StatelessWidget {
     final success = await viewModel.processPayment();
     
     if (success && viewModel.paymentData != null) {
-      final deeplink = viewModel.paymentData!['qrCodeUrl'] ?? viewModel.paymentData!['deeplink'];
-      final payUrl = viewModel.paymentData!['payUrl'];
+      final deeplink = (viewModel.paymentData!['qrCodeUrl'] ?? viewModel.paymentData!['deeplink'])?.toString();
+      final payUrl = viewModel.paymentData!['payUrl']?.toString();
 
-      // Thử mở ứng dụng MoMo bằng qrCodeUrl (deeplink) hoặc payUrl
-      String? urlToOpen = deeplink ?? payUrl;
-      
-      if (urlToOpen != null && urlToOpen.isNotEmpty) {
-        final url = Uri.parse(urlToOpen);
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-          return;
+      // Ưu tiên deeplink mở MoMo app trực tiếp.
+      if (deeplink != null && deeplink.isNotEmpty) {
+        final deepLinkUri = Uri.tryParse(deeplink);
+        if (deepLinkUri != null) {
+          final openedDeepLink = await launchUrl(
+            deepLinkUri,
+            mode: LaunchMode.externalNonBrowserApplication,
+          );
+          if (openedDeepLink) return;
+        }
+      }
+
+      // Fallback về payUrl để mở trình duyệt nếu deeplink không hoạt động.
+      if (payUrl != null && payUrl.isNotEmpty) {
+        final payUri = Uri.tryParse(payUrl);
+        if (payUri != null) {
+          await launchUrl(payUri, mode: LaunchMode.externalApplication);
         }
       }
     }

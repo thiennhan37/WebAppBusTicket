@@ -8,9 +8,37 @@ class TripRepository {
   final TripApiService _tripApiService;
   TripRepository(this._tripApiService);
 
-  Future<List<TripModel>> searchTrip(String startProvince, String endProvince, String date) async {
+  Future<List<TripModel>> searchTrip({
+    required String startProvince,
+    required String endProvince,
+    required String date,
+    int? minPrice,
+    int? maxPrice,
+    String? busCompanyId,
+    String? departureTimeFrom,
+    String? departureTimeTo,
+    int? pickupStopId,
+    int? dropoffStopId,
+    String? busType,
+    double? minRating,
+    String? sortBy,
+  }) async {
     try {
-      final response = await _tripApiService.searchTrip(startProvince, endProvince, date);
+      final response = await _tripApiService.searchTrip(
+        startProvince: startProvince,
+        endProvince: endProvince,
+        date: date,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
+        busCompanyId: busCompanyId,
+        departureTimeFrom: departureTimeFrom,
+        departureTimeTo: departureTimeTo,
+        pickupStopId: pickupStopId,
+        dropoffStopId: dropoffStopId,
+        busType: busType,
+        minRating: minRating,
+        sortBy: sortBy,
+      );
       final data = response.data['result'] ?? response.data['data'] ?? [];
       return (data as List).map<TripModel>((json) => TripModel.fromJson(json)).toList();
     } on DioException catch (e) {

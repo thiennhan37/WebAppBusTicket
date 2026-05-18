@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/bottom_navigation.dart';
+
 class SeatSelectionPage extends StatefulWidget {
   final String tripId;
   final String busCompanyName;
@@ -17,6 +19,8 @@ class SeatSelectionPage extends StatefulWidget {
   final String date;
   final String departureProvinceId;
   final String destinationProvinceId;
+  final String? existingOrderId;
+  final int? totalPrice;
 
   const SeatSelectionPage({
     super.key,
@@ -26,6 +30,8 @@ class SeatSelectionPage extends StatefulWidget {
     required this.date,
     required this.departureProvinceId,
     required this.destinationProvinceId,
+    this.existingOrderId,
+    this.totalPrice,
   });
 
   @override
@@ -39,7 +45,13 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   void initState() {
     super.initState();
     _viewModel = GetIt.I<SeatSelectionViewModel>();
-    _viewModel.fetchBusDiagram(widget.tripId);
+    
+    if (widget.existingOrderId != null && widget.totalPrice != null) {
+      _viewModel.resumeBooking(widget.existingOrderId!, widget.totalPrice!);
+    } else {
+      _viewModel.fetchBusDiagram(widget.tripId);
+    }
+    
     _viewModel.addListener(_onViewModelChanged);
   }
 
@@ -230,7 +242,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const HomePages()),
+                      MaterialPageRoute(builder: (context) => const CustomBottonNav()),
                       (route) => false,
                     );
                   },
@@ -376,7 +388,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   }
 
   Widget _buildBottomBar(SeatSelectionViewModel viewModel) {
-    if (viewModel.selectedSeats.isEmpty && viewModel.currentStep == 1) return const SizedBox();
+    if (viewModel.selectedSeats.isEmpty && viewModel.currentStep == 1 && widget.existingOrderId == null) return const SizedBox();
 
     bool canContinue = false;
     if (viewModel.currentStep == 1 && viewModel.selectedSeats.isNotEmpty) canContinue = true;

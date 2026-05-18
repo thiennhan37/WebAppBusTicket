@@ -77,7 +77,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
   }
 
   void loadData() {
-    String formattedDate = "${widget.startDate.year}-${widget.startDate.month.toString().padLeft(2, '0')}-${widget.startDate.day.toString().padLeft(2, '0')}";
+    String formattedDate = "${widget.startDate.day.toString().padLeft(2, '0')}/${widget.startDate.month.toString().padLeft(2, '0')}/${widget.startDate.year}";
     searchTripViewModel.searchTrip(
       widget.departureId,
       widget.destinationId,
@@ -109,18 +109,10 @@ class _SearchResultPageState extends State<SearchResultPage> {
             Row(
               children: [
                 Text(_formatAppBarDate(), style: const TextStyle(color: Colors.white, fontSize: 12)),
-                const SizedBox(width: 4),
-                const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 16),
               ],
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () {},
-            child: const Text('Thay đổi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-          ),
-        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Container(

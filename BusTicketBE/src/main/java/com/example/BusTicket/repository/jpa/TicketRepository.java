@@ -83,4 +83,23 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
         LIMIT 1
     """)
     Ticket findLatestHoldingTicketByTripSeatId(@Param("tripSeatId") String tripSeatId);
+
+    @Query("""
+        SELECT t FROM Ticket t
+        WHERE t.bookingOrder.id IN :orderIds
+    """)
+    List<Ticket> findAllByBookingOrderIds(@Param("orderIds") List<String> orderIds);
+
+    @Query("""
+    SELECT t FROM Ticket t WHERE t.bookingOrder.id = :bookingOrderId
+    """)
+    List<Ticket> findAllByBookingOrderId(@Param("bookingOrderId") String bookingOrderId);
+
+    @Query("""
+            SELECT ts FROM TripSeat ts
+            WHERE ts.id IN :ids AND ts.trip.id = :tripId AND ts.status IN :statuses
+    \s""")
+    List<TripSeat> getValidTripSeatListByStatuses(@Param("ids") List<String> tripSeatIdList,
+                                                  @Param("tripId") String tripId,
+                                                  @Param("statuses") List<String> statuses);
 }

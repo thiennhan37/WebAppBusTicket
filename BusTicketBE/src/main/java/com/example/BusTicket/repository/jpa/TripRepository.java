@@ -54,8 +54,6 @@ public interface TripRepository extends JpaRepository<Trip, String> {
             """
     )
     List<Trip> getClosedTripForUpdate(@Param("now") LocalDateTime now);
-
-
 }
 
 

@@ -1,20 +1,28 @@
 package com.example.BusTicket.service;
 
+import com.example.BusTicket.dto.response.BusCompanyRatingResponse;
 import com.example.BusTicket.dto.response.CustomerTripSearchRespone;
 import com.example.BusTicket.dto.response.CustomerSearchBusDiagramRespone;
 import com.example.BusTicket.entity.*;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.repository.jpa.*;
+import com.example.BusTicket.specification.TripSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.example.BusTicket.specification.TripSpecification;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 @RequiredArgsConstructor
@@ -26,50 +34,83 @@ public class SearchTripService {
     private final TripRepository tripRepository;
     private final RouteStopRepository routeStopRepository;
     private final TripSeatRepository tripSeatRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final TripRatingService tripRatingService;
+
+    @Value("${booking.holdingSeatPrefixKey}")
+    private String holdingSeatPrefixKey;
 
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
-    public List<CustomerTripSearchRespone> findTrips(String startProvince, String endProvince, LocalDate date) {
-        log.info("Searching trips with startProvince: {}, endProvince: {}, date: {}", 
-            startProvince, endProvince, date);
-
+    public List<CustomerTripSearchRespone> findTrips(
+            String startProvince,
+            String endProvince,
+            LocalDate date,
+            Integer minPrice,
+            Integer maxPrice,
+            String busCompanyId,
+            LocalTime departureTimeFrom,
+            LocalTime departureTimeTo,
+            Long pickupStopId,
+            Long dropoffStopId,
+            String busType,
+            Double minRating,
+            String sortBy) {
         // Validate provinces
         validateProvinces(startProvince, endProvince);
 
         // Query danh sách trips
-        List<Object[]> tripResults = tripSearchRepository.searchTrips(
-            startProvince,
-            endProvince,
-            date
-        );
+        Specification<Trip> spec = Specification.where(TripSpecification.withArrivalProvinceId(startProvince))
+                .and(TripSpecification.withDestinationProvinceId(endProvince))
+                .and(TripSpecification.hasDate(date))
+                .and(TripSpecification.withStatuses(List.of("OPEN", "SCHEDULED")))
+                .and(TripSpecification.hasPriceRange(minPrice == null ? null : minPrice.longValue(), maxPrice == null ? null : maxPrice.longValue()))
+                .and(TripSpecification.withBusCompanyId(busCompanyId))
+                .and(TripSpecification.hasDepartureTimeRange(departureTimeFrom, departureTimeTo))
+                .and(TripSpecification.hasPickupStop(pickupStopId))
+                .and(TripSpecification.hasDropoffStop(dropoffStopId))
+                .and(TripSpecification.withBusTypeName(busType));
 
-        // Map sang CustomerTripSearchRespone
-        return tripResults.stream()
-            .map(result -> buildTripSearchResponse(
-                (String) result[0],  // tripId
-                (LocalDateTime) result[1],  // departureTime
-                (String) result[2],  // routeName
-                (String) result[3],  // busCompanyName
-                ((Number) result[4]).intValue()  // price
-            ))
-            .collect(Collectors.toList());
+        Sort sort = buildSort(sortBy);
+
+        List<Trip> trips = tripRepository.findAll(spec, sort);
+
+        return trips.stream()
+                .map(this::buildTripSearchResponse)
+                .filter(resp -> minRating == null || resp.getRating() >= minRating)
+                .collect(Collectors.toList());
     }
 
+
+    private Sort buildSort(String sortBy) {
+        return switch (normalizeSortBy(sortBy)) {
+            case "price_asc" -> Sort.by(Sort.Direction.ASC, "price");
+            case "price_desc" -> Sort.by(Sort.Direction.DESC, "price");
+            case "departure_desc" -> Sort.by(Sort.Direction.DESC, "departureTime");
+            default -> Sort.by(Sort.Direction.ASC, "departureTime");
+        };
+    }
+
+    private String normalizeSortBy(String sortBy) {
+        if (sortBy == null || sortBy.isBlank()) {
+            return "departure_asc";
+        }
+
+        return switch (sortBy.toLowerCase()) {
+            case "price_asc", "price_desc", "departure_desc" -> sortBy.toLowerCase();
+            default -> "departure_asc";
+        };
+    }
     /**
      * Build CustomerTripSearchRespone bằng cách kết hợp thông tin từ nhiều query
      */
-    private CustomerTripSearchRespone buildTripSearchResponse(
-            String tripId, 
-            LocalDateTime departureTime,
-            String routeName,
-            String busCompanyName,
-            int price) {
-        
+    private CustomerTripSearchRespone buildTripSearchResponse(Trip trip) {
+        String tripId = trip.getId();
+        LocalDateTime departureTime = trip.getDepartureTime();
+        String busCompanyName = trip.getBusCompany() != null ? trip.getBusCompany().getCompanyName() : "";
+        int price = trip.getPrice() != null ? trip.getPrice().intValue() : 0;
         log.info("Building response for trip: {}", tripId);
 
-        // Lấy Trip entity để có thêm thông tin
-        Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
 
         // Query 2: Lấy số ghế available
         int availableSeats = tripSearchRepository.getAvailableSeatsCount(tripId);
@@ -100,17 +141,10 @@ public class SearchTripService {
         }
 
         // Query 5: Lấy rating
-        double rating = 4.5;  // Default rating
-        int reviewCount = 0;
-        
-        if (trip.getBusCompany() != null) {
-            List<Object[]> ratingResults = getRatingAndReviewCount(trip.getBusCompany().getId());
-            if (!ratingResults.isEmpty()) {
-                Object[] ratingData = ratingResults.getFirst();
-                rating = ratingData[0] != null ? ((Number) ratingData[0]).doubleValue() : 4.5;
-                reviewCount = ratingData[1] != null ? ((Number) ratingData[1]).intValue() : 0;
-            }
-        }
+        String companyId = trip.getBusCompany().getId();
+        BusCompanyRatingResponse busCompanyRatingResponse = tripRatingService.getCompanyRating(trip.getBusCompany().getId());  // Default rating
+
+
 
         // Get bus type name
         String busTypeName = trip.getBusType() != null ? trip.getBusType().getName() : "Xe khách";
@@ -126,8 +160,8 @@ public class SearchTripService {
             .availableSeats(availableSeats)
             .busCompanyName(busCompanyName)
             .busType(busTypeName)
-            .rating(rating)
-            .reviewCount(reviewCount)
+            .rating(busCompanyRatingResponse.getAvgStars())
+            .reviewCount(busCompanyRatingResponse.getTotalRatings())
             .build();
     }
 
@@ -170,14 +204,35 @@ public class SearchTripService {
         // Lấy danh sách ghế với trạng thái và giá
         List<TripSeat> tripSeats = tripSeatRepository.findAllByTripId(tripId);
 
+        List<String> availableSeatIds = tripSeats.stream()
+                .filter(seat -> "AVAILABLE".equals(seat.getStatus()))
+                .map(TripSeat::getId)
+                .toList();
+
+        List<String> redisKeys = availableSeatIds.stream()
+                .map(id -> holdingSeatPrefixKey + id)
+                .toList();
+        List<String> redisValues = redisKeys.isEmpty() ? List.of() : redisTemplate.opsForValue().multiGet(redisKeys);
+
+        Map<String, Boolean> heldInRedis = new HashMap<>();
+        for (int i = 0; i < availableSeatIds.size(); i++) {
+            heldInRedis.put(availableSeatIds.get(i), redisValues != null && redisValues.get(i) != null);
+        }
+
         // Map sang SeatInfo
         List<CustomerSearchBusDiagramRespone.SeatInfo> seatInfos = tripSeats.stream()
-            .map(seat -> CustomerSearchBusDiagramRespone.SeatInfo.builder()
-                .seatId(seat.getId())
-                .seatCode(seat.getSeat())
-                .status(seat.getStatus())
-                .price(seat.getPrice())
-                .build())
+            .map(seat -> {
+            String seatStatus = seat.getStatus();
+            if ("AVAILABLE".equals(seatStatus) && Boolean.TRUE.equals(heldInRedis.get(seat.getId()))) {
+                seatStatus = "HELD";
+            }
+            return CustomerSearchBusDiagramRespone.SeatInfo.builder()
+                    .seatId(seat.getId())
+                    .seatCode(seat.getSeat())
+                    .status(seatStatus)
+                    .price(seat.getPrice())
+                    .build();
+        })
             .collect(Collectors.toList());
 
         return CustomerSearchBusDiagramRespone.builder()

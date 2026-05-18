@@ -100,6 +100,8 @@ class SeatSelectionViewModel extends ChangeNotifier {
   bool _isPaymentSuccessful = false;
   bool get isPaymentSuccessful => _isPaymentSuccessful;
 
+  int? _manualTotalPrice;
+
   // --- Timers ---
   Timer? _paymentTimer;
   Timer? _statusCheckTimer;
@@ -138,6 +140,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
     _isTimerExpired = false;
     _paymentData = null;
     _orderCode = null; // Clear orderCode when stopping
+    _manualTotalPrice = null;
     stopStatusCheck();
   }
 
@@ -211,6 +214,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchBusDiagram(String tripId) async {
+    if (tripId.isEmpty) return; // Tránh fetch khi không có tripId
     _isLoading = true;
     _errorMessage = null;
     _lastErrorCode = null;
@@ -221,6 +225,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
     _orderCode = null;
     _paymentData = null;
     _isPaymentSuccessful = false;
+    _manualTotalPrice = null;
     stopPaymentTimer();
     notifyListeners();
 
@@ -233,6 +238,17 @@ class SeatSelectionViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void resumeBooking(String orderId, int totalPrice) {
+    _orderCode = orderId;
+    _manualTotalPrice = totalPrice;
+    _currentStep = 6;
+    _isPaymentSuccessful = false;
+    _paymentData = null;
+    _selectedPaymentMethod = null;
+    startPaymentTimer();
+    notifyListeners();
   }
 
   Future<void> refreshBusDiagram(String tripId) async {
@@ -248,7 +264,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
       for (var seatCode in _selectedSeats) {
         try {
           final seat = newData.seats.firstWhere((s) => s.seatCode == seatCode);
-          if (seat.status == 'AVAILABLE') {
+          if (seat.status.toUpperCase() == 'AVAILABLE') {
             validSeats.add(seatCode);
           }
         } catch (_) {}
@@ -344,7 +360,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
         for (var seatCode in _selectedSeats) {
           try {
             final seat = newData.seats.firstWhere((s) => s.seatCode == seatCode);
-            if (seat.status == 'AVAILABLE') {
+            if (seat.status.toUpperCase() == 'AVAILABLE') {
               stillAvailable.add(seatCode);
             } else {
               takenSeats.add(seatCode);
@@ -429,7 +445,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
     if (!hasSeat) return;
 
     final seat = _busDiagramData!.seats.firstWhere((s) => s.seatCode == seatCode);
-    if (seat.status != 'AVAILABLE') return;
+    if (seat.status.toUpperCase() != 'AVAILABLE') return;
 
     if (_selectedSeats.contains(seatCode)) {
       _selectedSeats.remove(seatCode);
@@ -492,6 +508,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
   }
 
   int get totalPrice {
+    if (_manualTotalPrice != null) return _manualTotalPrice!;
     if (_busDiagramData == null) return 0;
     int total = 0;
     for (var seatCode in _selectedSeats) {

@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/data/models/recent_search_model.dart';
 import 'package:bus_ticket_app/data/services/local/booking_storage.dart';
 import 'package:bus_ticket_app/pages/searh_result_page.dart';
 import 'package:flutter/material.dart';
@@ -21,27 +22,36 @@ class _SearchCardState extends State<SearchCard> {
   DateTime _startDate = DateTime.now();
   DateTime? _endDate;
 
-  final _storage = GetIt.I<BookingStorage>(); // Gọi GetIt ra để dùng chung
+  final _storage = GetIt.I<BookingStorage>();
 
   @override
   void initState() {
     super.initState();
-    _loadSavedLocations(); // Load dữ liệu ngay khi widget vừa render
+    _loadSavedLocations();
+    // Đăng ký lắng nghe sự thay đổi từ storage
+    _storage.addListener(_loadSavedLocations);
   }
 
-  // Hàm đọc từ LocalStorage
+  @override
+  void dispose() {
+    // Hủy lắng nghe khi widget bị hủy
+    _storage.removeListener(_loadSavedLocations);
+    super.dispose();
+  }
+
   void _loadSavedLocations() {
-    setState(() {
-      _departure = _storage.getDeparture();
-      _destination = _storage.getDestination();
-    });
+    if (mounted) {
+      setState(() {
+        _departure = _storage.getDeparture();
+        _destination = _storage.getDestination();
+      });
+    }
   }
 
   String _formatDate(DateTime date) {
     return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString()}";
   }
 
-  // Hàm chọn điểm và LƯU LẠI
   Future<void> _selectLocation(bool isOrigin) async {
     final result = await Navigator.push(
       context,
@@ -51,26 +61,19 @@ class _SearchCardState extends State<SearchCard> {
     );
 
     if (result != null && result is ProvinceModel) {
-      setState(() {
-        if (isOrigin) {
-          _departure = result;
-          _storage.saveDeparture(result);
-        } else {
-          _destination = result;
-          _storage.saveDestination(result);
-        }
-      });
+      if (isOrigin) {
+        await _storage.saveDeparture(result);
+      } else {
+        await _storage.saveDestination(result);
+      }
     }
   }
 
   void _swapLocations() {
-    setState(() {
-      ProvinceModel? tmp = _departure;
-      _departure = _destination;
-      _destination = tmp;
-    });
-    _storage.saveDeparture(_departure);
-    _storage.saveDestination(_destination);
+    final tmpDep = _departure;
+    final tmpDest = _destination;
+    _storage.saveDeparture(tmpDest);
+    _storage.saveDestination(tmpDep);
   }
 
   Future<void> _pickDate() async {
@@ -137,9 +140,9 @@ class _SearchCardState extends State<SearchCard> {
                   Text(
                     value,
                     style: TextStyle(
-                      fontWeight: value.contains("Chọn điểm") ? FontWeight.w500 : FontWeight.bold,
+                      fontWeight: (value == "Chọn điểm đi" || value == "Chọn điểm đến") ? FontWeight.w500 : FontWeight.bold,
                       fontSize: 16,
-                      color: value.contains("Chọn điểm") ? Colors.grey.shade600 : Colors.black,
+                      color: (value == "Chọn điểm đi" || value == "Chọn điểm đến") ? Colors.grey.shade600 : Colors.black,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -181,13 +184,12 @@ class _SearchCardState extends State<SearchCard> {
             children: [
               Column(
                 children: [
-                  // 4. TRUYỀN HÀM onTap VÀ TÊN TỈNH VÀO
                   _buildLocationTile(
                     Icons.circle_outlined,
                     Colors.blue,
                     "Nơi xuất phát",
                     _departure?.name ?? "Chọn điểm đi",
-                        () => _selectLocation(true), // isOrigin = true
+                        () => _selectLocation(true),
                   ),
                   const Divider(indent: 40),
                   _buildLocationTile(
@@ -195,7 +197,7 @@ class _SearchCardState extends State<SearchCard> {
                     Colors.red,
                     "Bạn muốn đi đâu",
                     _destination?.name ?? "Chọn điểm đến",
-                        () => _selectLocation(false), // isOrigin = false
+                        () => _selectLocation(false),
                   ),
                 ],
               ),
@@ -286,8 +288,18 @@ class _SearchCardState extends State<SearchCard> {
                       backgroundColor: Colors.orange,
                     ),
                   );
-                  return; // Dừng lại, không cho sang trang
+                  return;
                 }
+
+                _storage.addRecentSearch(RecentSearchModel(
+                  departureName: _departure!.name,
+                  destinationName: _destination!.name,
+                  departureId: _departure!.id,
+                  destinationId: _destination!.id,
+                  date: _formatDate(_startDate),
+                  isRoundTrip: _isRoundTrip,
+                  endDate: _endDate != null ? _formatDate(_endDate!) : null,
+                ));
 
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -302,8 +314,6 @@ class _SearchCardState extends State<SearchCard> {
                     ),
                   ),
                 );
-
-                print("Đang tìm chuyến từ: ${_departure!.name} đến ${_destination!.name}");
               },
               child: const Text(
                 'Tìm kiếm',
