@@ -30,7 +30,7 @@ void setupServiceLocator() {
         () => TripRepository(getIt<TripApiService>()),
   );
 
-  getIt.registerFactory<SearchTripViewModel>(
+  getIt.registerLazySingleton<SearchTripViewModel>(
         () => SearchTripViewModel(getIt<TripRepository>()),
   );
 

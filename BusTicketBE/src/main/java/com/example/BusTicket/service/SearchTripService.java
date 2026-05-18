@@ -6,6 +6,7 @@ import com.example.BusTicket.entity.*;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.repository.jpa.*;
+import com.example.BusTicket.specification.TripSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,9 +15,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.example.BusTicket.specification.TripSpecification;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 @RequiredArgsConstructor
@@ -35,47 +40,75 @@ public class SearchTripService {
 
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
-    public List<CustomerTripSearchRespone> findTrips(String startProvince, String endProvince, LocalDate date) {
-        log.info("Searching trips with startProvince: {}, endProvince: {}, date: {}", 
-            startProvince, endProvince, date);
-
+    public List<CustomerTripSearchRespone> findTrips(
+            String startProvince,
+            String endProvince,
+            LocalDate date,
+            Integer minPrice,
+            Integer maxPrice,
+            String busCompanyId,
+            LocalTime departureTimeFrom,
+            LocalTime departureTimeTo,
+            Long pickupStopId,
+            Long dropoffStopId,
+            String busType,
+            Double minRating,
+            String sortBy) {
         // Validate provinces
         validateProvinces(startProvince, endProvince);
 
         // Query danh sách trips
-        List<Object[]> tripResults = tripSearchRepository.searchTrips(
-            startProvince,
-            endProvince,
-            date
-        );
+        Specification<Trip> spec = Specification.where(TripSpecification.withArrivalProvinceId(startProvince))
+                .and(TripSpecification.withDestinationProvinceId(endProvince))
+                .and(TripSpecification.hasDate(date))
+                .and(TripSpecification.withStatuses(List.of("OPEN", "SCHEDULED")))
+                .and(TripSpecification.hasPriceRange(minPrice == null ? null : minPrice.longValue(), maxPrice == null ? null : maxPrice.longValue()))
+                .and(TripSpecification.withBusCompanyId(busCompanyId))
+                .and(TripSpecification.hasDepartureTimeRange(departureTimeFrom, departureTimeTo))
+                .and(TripSpecification.hasPickupStop(pickupStopId))
+                .and(TripSpecification.hasDropoffStop(dropoffStopId))
+                .and(TripSpecification.withBusTypeName(busType));
 
-        // Map sang CustomerTripSearchRespone
-        return tripResults.stream()
-            .map(result -> buildTripSearchResponse(
-                (String) result[0],  // tripId
-                (LocalDateTime) result[1],  // departureTime
-                (String) result[2],  // routeName
-                (String) result[3],  // busCompanyName
-                ((Number) result[4]).intValue()  // price
-            ))
-            .collect(Collectors.toList());
+        Sort sort = buildSort(sortBy);
+
+        List<Trip> trips = tripRepository.findAll(spec, sort);
+
+        return trips.stream()
+                .map(this::buildTripSearchResponse)
+                .filter(resp -> minRating == null || resp.getRating() >= minRating)
+                .collect(Collectors.toList());
     }
 
+
+    private Sort buildSort(String sortBy) {
+        return switch (normalizeSortBy(sortBy)) {
+            case "price_asc" -> Sort.by(Sort.Direction.ASC, "price");
+            case "price_desc" -> Sort.by(Sort.Direction.DESC, "price");
+            case "departure_desc" -> Sort.by(Sort.Direction.DESC, "departureTime");
+            default -> Sort.by(Sort.Direction.ASC, "departureTime");
+        };
+    }
+
+    private String normalizeSortBy(String sortBy) {
+        if (sortBy == null || sortBy.isBlank()) {
+            return "departure_asc";
+        }
+
+        return switch (sortBy.toLowerCase()) {
+            case "price_asc", "price_desc", "departure_desc" -> sortBy.toLowerCase();
+            default -> "departure_asc";
+        };
+    }
     /**
      * Build CustomerTripSearchRespone bằng cách kết hợp thông tin từ nhiều query
      */
-    private CustomerTripSearchRespone buildTripSearchResponse(
-            String tripId, 
-            LocalDateTime departureTime,
-            String routeName,
-            String busCompanyName,
-            int price) {
-        
+    private CustomerTripSearchRespone buildTripSearchResponse(Trip trip) {
+        String tripId = trip.getId();
+        LocalDateTime departureTime = trip.getDepartureTime();
+        String busCompanyName = trip.getBusCompany() != null ? trip.getBusCompany().getCompanyName() : "";
+        int price = trip.getPrice() != null ? trip.getPrice().intValue() : 0;
         log.info("Building response for trip: {}", tripId);
 
-        // Lấy Trip entity để có thêm thông tin
-        Trip trip = tripRepository.findById(tripId)
-            .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
 
         // Query 2: Lấy số ghế available
         int availableSeats = tripSearchRepository.getAvailableSeatsCount(tripId);

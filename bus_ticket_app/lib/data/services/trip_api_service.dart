@@ -3,18 +3,45 @@ import 'package:dio/dio.dart';
 
 import '../../core/constants/api_constants.dart';
 
-class TripApiService{
+class TripApiService {
   final ApiClient _apiClient;
   TripApiService(this._apiClient);
-  
-  Future<Response> searchTrip(String startProvince, String endProvince, String date) async{
+
+  Future<Response> searchTrip({
+    required String startProvince,
+    required String endProvince,
+    required String date,
+    int? minPrice,
+    int? maxPrice,
+    String? busCompanyId,
+    String? departureTimeFrom,
+    String? departureTimeTo,
+    int? pickupStopId,
+    int? dropoffStopId,
+    String? busType,
+    double? minRating,
+    String? sortBy,
+  }) async {
+    final queryParams = {
+      'startProvince': startProvince,
+      'endProvince': endProvince,
+      'date': date,
+    };
+
+    if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
+    if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
+    if (busCompanyId != null) queryParams['busCompanyId'] = busCompanyId;
+    if (departureTimeFrom != null) queryParams['departureTimeFrom'] = departureTimeFrom;
+    if (departureTimeTo != null) queryParams['departureTimeTo'] = departureTimeTo;
+    if (pickupStopId != null) queryParams['pickupStopId'] = pickupStopId.toString();
+    if (dropoffStopId != null) queryParams['dropoffStopId'] = dropoffStopId.toString();
+    if (busType != null) queryParams['busType'] = busType;
+    if (minRating != null) queryParams['minRating'] = minRating.toString();
+    if (sortBy != null) queryParams['sortBy'] = sortBy;
+
     return await _apiClient.get(
       ApiConstants.searchTrip,
-      queryParameters: {
-        'startProvince': startProvince,
-        'endProvince': endProvince,
-        'date': date
-      },
+      queryParameters: queryParams,
       requiresToken: false,
     );
   }

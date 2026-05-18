@@ -77,7 +77,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
   }
 
   void loadData() {
-    String formattedDate = "${widget.startDate.year}-${widget.startDate.month.toString().padLeft(2, '0')}-${widget.startDate.day.toString().padLeft(2, '0')}";
+    String formattedDate = "${widget.startDate.day.toString().padLeft(2, '0')}/${widget.startDate.month.toString().padLeft(2, '0')}/${widget.startDate.year}";
     searchTripViewModel.searchTrip(
       widget.departureId,
       widget.destinationId,
