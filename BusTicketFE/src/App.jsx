@@ -14,11 +14,13 @@ import StaffManagement from './pages/StaffManagement/StaffManagement'
 import PaymentSuccess from './components/generalComponent/PaymentSuccess'
 import RedirectPayment from './pages/Payment/RedirectPayment'
 import { Toaster } from 'sonner'
+import AdminHome from './pages/AdminHome/AdminHome'
+import AdminLayout from './layout/AdminLayout'
+import AdminDashboard from './pages/AdminDashBoard/AdminDashBoard'
+import AdminManageCompany from './pages/AdminManageCompany/AdminManageCompany'
+import AdminRegisterCompany from './pages/AdminRegisterCompany/AdminRegisterCompany'
+
 function App() { 
-              {/* <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
-              <p className="text-gray-500">Welcome back! Here's what's happening today.</p>
-            </div> */}
   return (
     <AuthProvider>
       <BrowserRouter>
@@ -29,6 +31,8 @@ function App() {
           <Route path='/payment-success' element={<PaymentSuccess/>}></Route>
           <Route path='/redirect-momo/payment/:paymentId' element={<RedirectPayment/>}></Route>
           <Route path='/nhaxe' element={<HomePage/>}></Route>
+          <Route path='/admin' element={<AdminHome/>}></Route>
+
           <Route element={<ProtectedRoute type="company"/>}>
               <Route element={<CompanyLayout/>}>
                 <Route path="/nhaxe/overview" element={<Overview/>}></Route>
@@ -40,6 +44,17 @@ function App() {
                 <Route path="/nhaxe/rating" element={<Rating/>}></Route>
             </Route>
           </Route>
+
+          <Route element={<ProtectedRoute type="admin" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              {/* <Route path="/admin/users" element={<UsersPage />} /> */}
+              <Route path="/admin/companies" element={<AdminManageCompany />} />
+              <Route path="/admin/register-company" element={<AdminRegisterCompany />} />
+              {/* <Route path="/admin/reports" element={<AdminReportsPage />} /> */}
+            </Route>
+          </Route>
+
           <Route path="*" element={<div>Trang không tồn tại</div>} />
 
         </Routes>

@@ -1,6 +1,6 @@
 import React from 'react';
 import {motion} from 'framer-motion';
-import {Route, Bus, Ticket, Wallet} from 'lucide-react';
+import {Route, Bus, Ticket, Wallet, CheckCircle2, Clock3, AlertCircle} from 'lucide-react';
 import QuickStats from './QuickStats';
 import ReportHeader from './ReportHeader';
 import SalesChannel from './SalesChannel';
@@ -11,35 +11,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import ReportService from '../../Services/ReportService';
 import { useQuery } from '@tanstack/react-query';
 
-const statsData = [
-  { title: 'Nhân viên', value: '24', trend: '+2 nhân viên mới', icon: Route, color: 'text-blue-600', bg: 'bg-blue-100' },
-  { title: 'Chuyến h.động (Hôm nay)', value: '156', trend: 'Hoạt động 98%', icon: Bus, color: 'text-violet-600', bg: 'bg-violet-100' },
-  { title: 'Vé bán ra (Hôm nay)', value: '1,240', trend: '+12% so với hôm qua', icon: Ticket, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-  { title: 'Doanh thu (Hôm nay)', value: '315M', trend: '+5% so với tuần trước', icon: Wallet, color: 'text-amber-600', bg: 'bg-amber-100' },
-];
 
 
 
-const salesData = [
-  { route: 'HN - Sapa', soldCount: 38 },
-  { route: 'HCM - Đà Lạt', soldCount: 32 },
-  { route: 'HN - Hải Phòng', soldCount: 25 },
-  { route: 'Đà Nẵng - Huế', soldCount: 15 },
-];
 
-const upcomingTrips = [
-  { id: 'TR-101', route: 'Hà Nội - Sapa', time: '10:30', status: 'Sắp khởi hành', fill: '38/40', type: 'Limousine 34T' },
-  { id: 'TR-102', route: 'HCM - Đà Lạt', time: '11:00', status: 'Đang đón khách', fill: '32/34', type: 'Giường nằm 40C' },
-  { id: 'TR-103', route: 'Hà Nội - Hải Phòng', time: '11:30', status: 'Lên lịch', fill: '25/45', type: 'Ghế ngồi 45C' },
-  { id: 'TR-104', route: 'Đà Nẵng - Huế', time: '12:00', status: 'Lên lịch', fill: '15/30', type: 'Limousine 9C' },
-];
 
-const recentActivities = [
-  { id: 1, action: 'Bán vé thành công', details: '2 vé - Chuyến HN-Sapa (10:30)', time: '5 phút trước' },
-  { id: 2, action: 'Gửi link thanh toán', details: 'Khách hàng: Nguyễn Văn A', time: '12 phút trước' },
-  { id: 3, action: 'Cập nhật chuyến', details: 'Gán xe 29B-123.45 cho chuyến TR-102', time: '30 phút trước' },
-  { id: 4, action: 'Bán vé qua tổng đài', details: '1 vé - Chuyến HCM-Đà Lạt', time: '45 phút trước' },
-];
+
+
 
 // ==========================================
 // 2. ANIMATION VARIANTS
@@ -58,37 +36,96 @@ const Report = () => {
   const queryClient = useQueryClient();
   const {data: staffReportData, isLoading} = useQuery({
     queryKey: ['report-staffs'],
-    queryFn: () => ReportService.getStaffReport().data.result,  
+    queryFn: async () => {
+      const response = await ReportService.getStaffReport();
+      return response.data.result;  
+    } 
   });
   const {data: revenueReportData, isLoading: revenueIsLoading} = useQuery({
     queryKey: ['report-revenue'],
     queryFn: async () => {
-      const response = await ReportService.getRevenueReport().data.result;
-      return response;
+      const response = await ReportService.getRevenueReport();
+      return response.data.result;
     } 
   });  
+  const revenueData = [
+    { day: 'T2', revenue: revenueReportData?.revenueWeekList?.[0] },
+    { day: 'T3', revenue: revenueReportData?.revenueWeekList?.[1] },
+    { day: 'T4', revenue: revenueReportData?.revenueWeekList?.[2] },
+    { day: 'T5', revenue: revenueReportData?.revenueWeekList?.[3] },
+    { day: 'T6', revenue: revenueReportData?.revenueWeekList?.[4] },
+    { day: 'T7', revenue: revenueReportData?.revenueWeekList?.[5] },
+    { day: 'CN', revenue: revenueReportData?.revenueWeekList?.[6] },
+  ];
 
   const {data: ticketReportData, isLoading: ticketIsLoading} = useQuery({
     queryKey: ['report-ticket'],
-    queryFn: () => ReportService.getTicketReport().data.result,
+    queryFn: async () => {
+      const response = await ReportService.getTicketReport();
+      return response.data.result;
+    } 
   });
+
+  const TicketStatus = [
+    { name: 'Đã thanh toán', value: ticketReportData?.paidTicketCount, color: '#3b82f6' },   // Blue
+    { name: 'Đang xử lí', value: ticketReportData?.holdingTicketCount, color: '#8b5cf6' },  // Violet
+    { name: 'Đã hủy', value: ticketReportData?.cancelledTicketCount, color: '#10b981' },  // Emerald
+    { name: 'Đã hết hạn', value: ticketReportData?.expiredTicketCount, color: '#f59e0b' },    // Amber
+  ]; 
+
+  const channelData = [
+    { label: 'Qua tổng đài', count: ticketReportData?.phoneBookedTicketCount, 
+      percent: Math.round((ticketReportData?.phoneBookedTicketCount * 100) /
+        (ticketReportData?.phoneBookedTicketCount + ticketReportData?.appBookedTicketCount)), 
+      icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' 
+    },
+    { label: 'Qua app', count: ticketReportData?.appBookedTicketCount, 
+      percent: 100 - Math.round((ticketReportData?.phoneBookedTicketCount * 100) /
+        (ticketReportData?.phoneBookedTicketCount + ticketReportData?.appBookedTicketCount)), 
+      icon: Clock3, color: 'text-amber-500', bg: 'bg-amber-50' 
+    },
+  ];
+
+
   const {data: tripReportData, isLoading: tripIsLoading} = useQuery({
     queryKey: ['report-trip'],
-    queryFn: () => ReportService.getTripReport().data.result,
+    queryFn: async () => {
+      const response = await ReportService.getTripReport();
+      return response.data.result;
+    }
   });
+
+  const upcomingTrips = tripReportData?.nextScheduledTripList ? tripReportData?.nextScheduledTripList : [];
+
   const {data: routeReportData, isLoading: routeIsLoading} = useQuery({
     queryKey: ['report-route'],
-    queryFn: () => ReportService.getRouteReport().data.result,
+    queryFn: async () => {
+      const response = await ReportService.getRouteReport();
+      return response.data.result;
+    }
   });  
-  const revenueData = [
-  { day: 'T2', revenue: revenueReportData?.revenueWeekList?.[0] },
-  { day: 'T3', revenue: revenueReportData?.revenueWeekList?.[1] },
-  { day: 'T4', revenue: revenueReportData?.revenueWeekList?.[2] },
-  { day: 'T5', revenue: revenueReportData?.revenueWeekList?.[3] },
-  { day: 'T6', revenue: revenueReportData?.revenueWeekList?.[4] },
-  { day: 'T7', revenue: revenueReportData?.revenueWeekList?.[5] },
-  { day: 'CN', revenue: revenueReportData?.revenueWeekList?.[6] },
-];
+  const routesData = routeReportData?.map((route) => ({
+    route: route.routeName,
+    soldCount: route.ticketCount,
+  }));
+
+  const statsData = [
+    { title: 'Nhân viên (Tháng này)', value: staffReportData?.staffCountCurrentMonth, 
+      trend: ` ${staffReportData?.staffCountCurrentMonth - staffReportData?.staffCountPreviousMonth >= 0 ? `+` : ``}
+        ${staffReportData?.staffCountCurrentMonth - staffReportData?.staffCountPreviousMonth} nhân viên so với tháng trước`, 
+      icon: Route, color: 'text-blue-600', bg: 'bg-blue-100' },
+    
+    { title: 'Vé bán ra (Tháng này)', value: ticketReportData?.ticketCountCurrentMonth, 
+        trend: `${ticketReportData?.ticketCountCurrentMonth - ticketReportData?.ticketCountPreviousMonth >= 0 ? `+` : ``}
+        ${ticketReportData?.ticketCountCurrentMonth - ticketReportData?.ticketCountPreviousMonth} vé so với tháng trước`,
+       icon: Ticket, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+
+    { title: 'Chuyến h.động (Hôm nay)', value: tripReportData?.activeTripCount, trend: '', icon: Bus, color: 'text-violet-600', bg: 'bg-violet-100' },
+    
+    { title: 'Doanh thu (Tháng này)', value: revenueReportData?.revenueCurrentMonth, 
+       trend: ``,
+       icon: Wallet, color: 'text-amber-600', bg: 'bg-amber-100' },
+  ];
   return (
     <motion.div 
       className="min-h-screen bg-slate-50 text-slate-800 p-6 font-sans"
@@ -103,7 +140,7 @@ const Report = () => {
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             
         <RevenueChart revenueData={revenueData} itemVariants={itemVariants}></RevenueChart>
-        <SalesChannel/>
+        <SalesChannel TicketStatus={TicketStatus} channelData={channelData}/>
 
       </motion.div>
 
@@ -111,7 +148,7 @@ const Report = () => {
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         <UpcomingTrips upcomingTrips={upcomingTrips}/>
-        <TicketSales salesData={salesData} itemVariants={itemVariants}></TicketSales>
+        <TicketSales routesData={routesData} itemVariants={itemVariants}></TicketSales>
 
       </motion.div>
     </motion.div>

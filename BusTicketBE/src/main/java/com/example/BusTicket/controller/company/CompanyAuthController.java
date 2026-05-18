@@ -35,12 +35,12 @@ public class CompanyAuthController {
     @PostMapping("nhaxe/auth/login")
     ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) throws JOSEException{
         log.info("in loginController ");
-        AuthenticationResponse authResponse = authenticationService.login(AccountType.COMPANY, request);
+        AuthenticationResponse authResponse = authenticationService.loginCompany(request);
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
                 .httpOnly(true) // ngăn ko cho JS đọc được, ngăn chặn XSS
                 .secure(false) // localhost
-                .path("/vexedat/auth")
+                .path("/vexedat/auth") // RT sẽ được đính kèm nếu FE gửi request dạng path/**
                 .maxAge(refreshTime)
                 .sameSite("Lax")
                 .build();

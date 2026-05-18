@@ -59,7 +59,9 @@ public class BookingOrderService {
 
         for(TripSeat ts : tripSeatList) ts.setStatus(TripSeatEnum.BOOKED.name());
         for(Ticket t : ticketList) t.setStatus(TicketStatusEnum.PAID.name());
-        BookingOrder bookingOrder = ticketList.isEmpty() ? bookingOrderRepository.findById(bookingOrderId).orElse(null) : ticketList.get(0).getBookingOrder();
+        BookingOrder bookingOrder =
+                ticketList.isEmpty() ? bookingOrderRepository.findById(bookingOrderId).orElse(null)
+                        : ticketList.getFirst().getBookingOrder();
         if(bookingOrder != null && bookingOrder.getBookingUser() != null){
             redisTemplate.delete(CUSTOMER_HOLD_INFO_PREFIX + bookingOrder.getBookingUser().getId());
         }

@@ -35,18 +35,17 @@ public class SeatReleaseSchedulerService {
             for (TripSeat tripSeat : heldSeats) {
                 try {
                     var latestTicket = ticketRepository.findLatestHoldingTicketByTripSeatId(tripSeat.getId());
-                    
+
                     // Nếu không tìm thấy ticket hoặc ticket không có booking order, skip ghế này
-                    if (latestTicket == null || latestTicket.getBookingOrder() == null) {
-                        log.warn("No valid ticket found for seat {}, skipping", tripSeat.getId());
-                        continue;
+                    if (latestTicket == null || latestTicket.getBookingOrder() == null ) {
+                         continue;
                     }
-                    
+
                     // Kiểm tra thời gian updated
-                    if (latestTicket.getUpdatedAt() != null) {
+                    if (latestTicket.getUpdatedAt() != null && latestTicket.getBookingOrder().getBookingUser() != null) {
                         long secondsHeld = java.time.temporal.ChronoUnit.SECONDS
                                 .between(latestTicket.getUpdatedAt(), now);
-                        
+
                         if (secondsHeld > holdingSeatTime) {
                             seatReleaseTxService.releaseSeatWithTicket(tripSeat, latestTicket);
                             log.info("Seat {} released successfully after {} seconds", tripSeat.getId(), secondsHeld);
@@ -59,6 +58,8 @@ public class SeatReleaseSchedulerService {
                     // Tiếp tục với ghế tiếp theo
                 }
             }
+
+//            log.info("<<< Seat release scheduler completed");
         } catch (Exception e) {
             log.error("Error in seat release scheduler: ", e);
         }

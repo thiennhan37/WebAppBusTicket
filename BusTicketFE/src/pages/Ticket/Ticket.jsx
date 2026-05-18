@@ -103,13 +103,14 @@ const Ticket = () => {
     queryFn: async () => {
       const params = getParams(); 
       const res = await TripService.getSimpleTripList(params);
-      if(!selectedTripId) setSelectedTripId(res.data.result[0].id);
+      if(!selectedTripId && res.data?.result?.length > 0) setSelectedTripId(res.data.result[0].id);
       return res.data;
-    }, 
+    },  
     placeholderData: keepPreviousData,
     staleTime: 0
   })
-  const simpleTripList = dataSimpleList?.result || null;
+  console.log("dataSimpleList", dataSimpleList);
+  const simpleTripList = dataSimpleList?.result != null ? dataSimpleList.result : null; 
 
   const [selectedTripId, setSelectedTripId] = useState("");
   const [selectedTrip, setSelectedTrip] = useState({});
@@ -231,7 +232,7 @@ const Ticket = () => {
 
         <div className='relative flex-1 flex flex-col min-h-0'> 
           {isLoadingSelectedTrip ? <LoadingOverlay/>  : <></>}  
-            
+
         {simpleTripList === null ? <div className="px-4 py-2 text-gray-500 italic">Vui lòng chọn tuyến đường và thời gian</div>
         : simpleTripList.length === 0 ? <div className="px-4 py-2 text-gray-500 italic">Không có chuyến nào</div>
         : <div className='flex-1 flex flex-col min-h-0'>

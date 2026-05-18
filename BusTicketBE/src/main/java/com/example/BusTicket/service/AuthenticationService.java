@@ -5,21 +5,21 @@ import com.example.BusTicket.dto.JwtObject.JwtInfo;
 import com.example.BusTicket.dto.request.*;
 import com.example.BusTicket.dto.response.*;
 import com.example.BusTicket.dto.general.InfoAccount;
+import com.example.BusTicket.entity.Admin;
 import com.example.BusTicket.entity.CompanyRegister;
 import com.example.BusTicket.entity.CompanyUser;
 import com.example.BusTicket.entity.Customer;
 import com.example.BusTicket.enums.AccountType;
+import com.example.BusTicket.enums.RegisterType;
 import com.example.BusTicket.enums.RoleEnum;
 import com.example.BusTicket.enums.StatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
+import com.example.BusTicket.mapper.AdminMapper;
 import com.example.BusTicket.mapper.CompanyRegisterMapper;
 import com.example.BusTicket.mapper.CompanyUserMapper;
 import com.example.BusTicket.mapper.CustomerMapper;
-import com.example.BusTicket.repository.jpa.BusCompanyRepository;
-import com.example.BusTicket.repository.jpa.CompanyRegisterRepository;
-import com.example.BusTicket.repository.jpa.CompanyUserRepository;
-import com.example.BusTicket.repository.jpa.CustomerRepository;
+import com.example.BusTicket.repository.jpa.*;
 import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +40,13 @@ import java.util.Date;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthenticationService {
+    private final AdminRepository adminRepository;
     private final JwtService jwtService;
     private final CompanyUserRepository companyUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
     private final CompanyUserMapper companyUserMapper;
+    private final AdminMapper adminMapper;
     private final CompanyRegisterRepository companyRegisterRepository;
     private final BusCompanyRepository busCompanyRepository;
     private final CompanyRegisterMapper companyRegisterMapper;
@@ -52,22 +54,18 @@ public class AuthenticationService {
     private final CustomerMapper customerMapper;
     private final MailService mailService;
 
+
     @Value("${jwt.accessTime}")
     private long accessTime;
     @Value("${jwt.refreshTime}")
     private long refreshTime;
 
-    public AuthenticationResponse login(AccountType type, LoginRequest request)
+    public AuthenticationResponse loginCompany(LoginRequest request)
             throws JOSEException
     {
         InfoAccount account = null;
-        if(type == AccountType.COMPANY){
-            account = companyUserRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
-        }
-        else{
-            account = new CompanyUser();
-        }
+        account = companyUserRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
 
         boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), account.getPassword());
         if(!isAuthenticated) throw new MyAppException(ErrorCode.UNAUTHENTICATED);
@@ -84,6 +82,26 @@ public class AuthenticationService {
                 .refreshToken(refreshToken)
                 .user(userResponse)
                 .company(user.getBusCompany())
+                .build();
+    }
+    public AdminLoginResponse loginAdmin(LoginRequest request)
+            throws JOSEException
+    {
+        Admin account = adminRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new MyAppException(ErrorCode.LOGIN_FAILED));
+
+        boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), account.getPassword());
+        if(!isAuthenticated) throw new MyAppException(ErrorCode.LOGIN_FAILED);
+        if(account.getStatus().equals(StatusEnum.BLOCKED.name())){
+            throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+        String accessToken = jwtService.generateToken(account, accessTime);
+        String refreshToken = jwtService.generateToken(account, refreshTime);
+
+        return AdminLoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .user(adminMapper.toAdminResponse(account))
                 .build();
     }
     public void logout(LogoutRequest request, String refreshToken) throws ParseException, JOSEException {
@@ -125,7 +143,9 @@ public class AuthenticationService {
         if(busCompanyRepository.existsByHotline(request.getHotline())) throw new MyAppException(ErrorCode.HOTLINE_EXISTED);
         if(companyRegisterRepository.existsByEmailOrHotline(request.getEmail(), request.getHotline()))
             throw new MyAppException(ErrorCode.INFO_EXISTED);
-        return companyRegisterRepository.save(companyRegisterMapper.toCompanyRegister(request));
+        CompanyRegister companyRegister = companyRegisterMapper.toCompanyRegister(request);
+        companyRegister.setStatus(RegisterType.PENDING.name());
+        return companyRegisterRepository.save(companyRegister);
     }
     public RefreshTokenResponse refreshToken(String refreshToken)
             throws ParseException, JOSEException {

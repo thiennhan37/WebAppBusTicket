@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class StaffReportResp {
     private Long staffCountCurrentMonth;
-    private Long staffCountLastMonth;
+    private Long staffCountPreviousMonth;
 }

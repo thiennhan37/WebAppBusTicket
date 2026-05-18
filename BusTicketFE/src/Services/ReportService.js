@@ -8,7 +8,7 @@ const ReportService = {
     },
     getRevenueReport(){
         return api.get(`/nhaxe/report/revenue`);
-    },
+    },  
     getTicketReport(){
         return api.get(`/nhaxe/report/ticket`);
     },

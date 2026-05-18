@@ -23,7 +23,7 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
         FROM route r
         LEFT JOIN trip t
             ON t.route_id = r.id
-            AND t.status = 'CLOSED'
+            AND t.status != 'CANCELLED'
             AND t.bus_company_id = :busCompanyId
         LEFT JOIN booking_order bo
             ON bo.trip_id = t.id

@@ -144,7 +144,8 @@ public class PaymentService {
                 paymentRepository.save(payment);
             }
             bookingOrderService.paymentSuccessfully(bookingOrderId);
-        }else if(type.equals(AccountType.CUSTOMER.name())){
+        }
+        else if(type.equals(AccountType.CUSTOMER.name())){
             boolean refunded = false;
             long responseTimeMillis = Long.parseLong(payload.get("responseTime").toString());
             LocalDateTime paymentTime = Instant.ofEpochMilli(responseTimeMillis)
