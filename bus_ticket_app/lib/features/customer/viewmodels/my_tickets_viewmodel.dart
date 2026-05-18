@@ -77,4 +77,22 @@ class MyTicketsViewModel extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<Map<String, dynamic>> rateOrder(String orderId, Map<String, dynamic> ratingData) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _repository.rateOrder(orderId, ratingData);
+      _isLoading = false;
+      notifyListeners();
+      return response;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      return {'code': -1, 'message': _errorMessage};
+    }
+  }
 }

@@ -4,6 +4,7 @@ import 'package:bus_ticket_app/data/repositories/location_repository.dart';
 import 'package:bus_ticket_app/data/services/local/booking_storage.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/my_tickets_viewmodel.dart';
 import 'package:bus_ticket_app/pages/order_detail_page.dart';
+import 'package:bus_ticket_app/pages/seat_selection_page.dart';
 import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
@@ -25,7 +26,7 @@ class TicketCardWidget extends StatelessWidget {
       final results = await repository.searchProvinces(name);
       if (results.isNotEmpty) {
         return results.firstWhere(
-          (p) => p.name.toLowerCase() == name.toLowerCase(),
+              (p) => p.name.toLowerCase() == name.toLowerCase(),
           orElse: () => results.first,
         );
       }
@@ -131,9 +132,9 @@ class TicketCardWidget extends StatelessWidget {
     );
   }
 
-  void _showCancelDialog(BuildContext context) {
+  void _showCancelDialog(BuildContext outerContext) {
     showDialog(
-      context: context,
+      context: outerContext,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Xác nhận hủy'),
         content: const Text('Bạn có chắc chắn muốn hủy đơn hàng này không?'),
@@ -144,27 +145,27 @@ class TicketCardWidget extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              final viewModel = context.read<MyTicketsViewModel>();
+              final viewModel = outerContext.read<MyTicketsViewModel>();
               final orderId = order.orderId;
 
               Navigator.pop(dialogContext);
-              
+
               final success = await viewModel.cancelOrder(orderId);
 
-              if (context.mounted) {
+              if (outerContext.mounted) {
                 if (success) {
                   _showStatusDialog(
-                    context, 
-                    isSuccess: true, 
-                    message: 'Hủy đơn hàng thành công',
-                    subMessage: 'Đơn hàng $orderId của bạn đã được hủy bỏ thành công.'
+                      outerContext,
+                      isSuccess: true,
+                      message: 'Hủy đơn hàng thành công',
+                      subMessage: 'Đơn hàng $orderId của bạn đã được hủy bỏ thành công.'
                   );
                 } else {
                   _showStatusDialog(
-                    context, 
-                    isSuccess: false, 
-                    message: 'Hủy đơn thất bại',
-                    subMessage: viewModel.errorMessage ?? 'Đã có lỗi xảy ra, vui lòng thử lại sau.'
+                      outerContext,
+                      isSuccess: false,
+                      message: 'Hủy đơn thất bại',
+                      subMessage: viewModel.errorMessage ?? 'Đã có lỗi xảy ra, vui lòng thử lại sau.'
                   );
                 }
               }
@@ -173,6 +174,157 @@ class TicketCardWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showStatusDialogAfterRating(BuildContext context, Map<String, dynamic> response) {
+    if (response['code'] == 0) {
+      _showStatusDialog(
+        context,
+        isSuccess: true,
+        message: 'Đánh giá thành công',
+        subMessage: 'Cảm ơn bạn đã đóng góp ý kiến giúp VeXeDat ngày càng hoàn thiện hơn!',
+      );
+    } else if (response['code'] == 4015) {
+      _showStatusDialog(
+        context,
+        isSuccess: false,
+        message: 'Thông báo',
+        subMessage: response['message'] ?? 'Chuyến đi này đã được đánh giá rồi.',
+      );
+    } else {
+      _showStatusDialog(
+        context,
+        isSuccess: false,
+        message: 'Đánh giá thất bại',
+        subMessage: response['message'] ?? 'Đã có lỗi xảy ra, vui lòng thử lại sau.',
+      );
+    }
+  }
+
+  void _showRatingDialog(BuildContext outerContext) {
+    int serviceQuality = 5;
+    int punctuality = 5;
+    int safety = 5;
+    int cleanliness = 5;
+
+    final viewModel = outerContext.read<MyTicketsViewModel>();
+
+    showDialog(
+      context: outerContext,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (stateContext, setState) {
+          return AlertDialog(
+            titlePadding: EdgeInsets.zero,
+            title: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xFF1E88E5),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: const Text(
+                'Đánh giá chuyến đi',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildRatingCategory('Chất lượng dịch vụ', serviceQuality, (val) => setState(() => serviceQuality = val)),
+                  _buildRatingCategory('Đúng giờ', punctuality, (val) => setState(() => punctuality = val)),
+                  _buildRatingCategory('An toàn', safety, (val) => setState(() => safety = val)),
+                  _buildRatingCategory('Vệ sinh', cleanliness, (val) => setState(() => cleanliness = val)),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+              ),
+               ElevatedButton(
+                 onPressed: () async {
+                   final response = await viewModel.rateOrder(order.orderId, {
+                     "serviceQuality": serviceQuality,
+                     "punctuality": punctuality,
+                     "safety": safety,
+                     "cleanliness": cleanliness,
+                   });
+
+                   // Use dialogContext to ensure we have a valid context
+                   // dialogContext is from the dialog itself, so it's always valid
+                   if (!dialogContext.mounted) {
+                     debugPrint('Dialog context unmounted');
+                     return;
+                   }
+
+                   // Close the rating dialog
+                   try {
+                     Navigator.pop(dialogContext);
+                   } catch (e) {
+                     debugPrint('Error closing dialog: $e');
+                     return;
+                   }
+
+                   // Get the context for showing status dialog
+                   // Use the parent context of dialogContext to show the status dialog
+                   if (!outerContext.mounted) {
+                     debugPrint('Outer context unmounted, trying to get new context');
+                     // If outerContext is unmounted, try to get context from Navigator
+                     try {
+                       final navContext = Navigator.of(dialogContext).context;
+                       if (navContext.mounted) {
+                        _showStatusDialogAfterRating(navContext, response);
+                       }
+                     } catch (e) {
+                       debugPrint('Could not get valid context: $e');
+                     }
+                     return;
+                   }
+
+                   _showStatusDialogAfterRating(outerContext, response);
+                 },
+                 style: ElevatedButton.styleFrom(
+                   backgroundColor: const Color(0xFF1E88E5),
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                 ),
+                 child: const Text('Gửi đánh giá', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+               ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRatingCategory(String label, int rating, Function(int) onRatingChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        const SizedBox(height: 4),
+        Row(
+          children: List.generate(5, (index) {
+            return GestureDetector(
+              onTap: () => onRatingChanged(index + 1),
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Icon(
+                  index < rating ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                  size: 32,
+                ),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -189,6 +341,7 @@ class TicketCardWidget extends StatelessWidget {
     Color statusColor = Colors.grey;
     bool isPending = false;
     bool showStamp = false;
+    bool isPaid = false;
 
     switch (order.orderStatus) {
       case 'HOLDING':
@@ -199,6 +352,7 @@ class TicketCardWidget extends StatelessWidget {
       case 'PAID':
         statusText = 'Đã thanh toán';
         statusColor = Colors.green;
+        isPaid = true;
         if (isPast) showStamp = true;
         break;
       case 'CANCELLED':
@@ -231,7 +385,6 @@ class TicketCardWidget extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Card đồng bộ với OrderDetailPage
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
@@ -314,52 +467,89 @@ class TicketCardWidget extends StatelessWidget {
               const Divider(height: 1),
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: Row(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          if (isPending) {
-                            _showCancelDialog(context);
-                          } else {
-                            _handleRebooking(context, isReturn: false);
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: isPending ? Colors.red : const Color(0xFF0D47A1)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          backgroundColor: isPending ? Colors.white : const Color(0xFF0D47A1),
-                        ),
-                        child: Text(
-                          isPending ? 'Hủy đơn hàng' : 'Đặt lại',
-                          style: TextStyle(
-                            color: isPending ? Colors.red : Colors.white,
-                            fontWeight: FontWeight.bold,
+                    if (isPaid && isPast) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showRatingDialog(context),
+                          icon: const Icon(Icons.star, size: 18),
+                          label: const Text('Đánh giá chuyến đi', style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber,
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            elevation: 0,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (!isPending) {
-                            _handleRebooking(context, isReturn: true);
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isPending ? const Color(0xFF1E88E5) : const Color(0xFFFFD54F),
-                          foregroundColor: isPending ? Colors.white : Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          elevation: 0,
+                      const SizedBox(height: 8),
+                    ],
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              if (isPending) {
+                                _showCancelDialog(context);
+                              } else {
+                                _handleRebooking(context, isReturn: false);
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: isPending ? Colors.red : const Color(0xFF0D47A1)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              backgroundColor: isPending ? Colors.white : const Color(0xFF0D47A1),
+                            ),
+                            child: Text(
+                              isPending ? 'Hủy đơn hàng' : 'Đặt lại',
+                              style: TextStyle(
+                                color: isPending ? Colors.red : Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
-                        child: Text(
-                          isPending ? 'Thanh toán' : 'Đặt chiều về',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (isPending) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SeatSelectionPage(
+                                      tripId: '',
+                                      busCompanyName: order.busCompanyName,
+                                      departureTime: timeStr,
+                                      date: dateStr,
+                                      departureProvinceId: '',
+                                      destinationProvinceId: '',
+                                      existingOrderId: order.orderId,
+                                      totalPrice: order.totalCost,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                _handleRebooking(context, isReturn: true);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isPending ? const Color(0xFF1E88E5) : const Color(0xFFFFD54F),
+                              foregroundColor: isPending ? Colors.white : Colors.black,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              isPending ? 'Thanh toán' : 'Đặt chiều về',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -369,7 +559,7 @@ class TicketCardWidget extends StatelessWidget {
           if (showStamp)
             Positioned(
               right: 20,
-              bottom: 60,
+              bottom: 120,
               child: Transform.rotate(
                 angle: -math.pi / 12,
                 child: IgnorePointer(

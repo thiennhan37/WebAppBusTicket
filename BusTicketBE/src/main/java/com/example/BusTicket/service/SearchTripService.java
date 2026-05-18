@@ -1,5 +1,6 @@
 package com.example.BusTicket.service;
 
+import com.example.BusTicket.dto.response.BusCompanyRatingResponse;
 import com.example.BusTicket.dto.response.CustomerTripSearchRespone;
 import com.example.BusTicket.dto.response.CustomerSearchBusDiagramRespone;
 import com.example.BusTicket.entity.*;
@@ -34,6 +35,7 @@ public class SearchTripService {
     private final RouteStopRepository routeStopRepository;
     private final TripSeatRepository tripSeatRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final TripRatingService tripRatingService;
 
     @Value("${booking.holdingSeatPrefixKey}")
     private String holdingSeatPrefixKey;
@@ -139,17 +141,10 @@ public class SearchTripService {
         }
 
         // Query 5: Lấy rating
-        double rating = 4.5;  // Default rating
-        int reviewCount = 0;
-        
-        if (trip.getBusCompany() != null) {
-            List<Object[]> ratingResults = getRatingAndReviewCount(trip.getBusCompany().getId());
-            if (!ratingResults.isEmpty()) {
-                Object[] ratingData = ratingResults.getFirst();
-                rating = ratingData[0] != null ? ((Number) ratingData[0]).doubleValue() : 4.5;
-                reviewCount = ratingData[1] != null ? ((Number) ratingData[1]).intValue() : 0;
-            }
-        }
+        String companyId = trip.getBusCompany().getId();
+        BusCompanyRatingResponse busCompanyRatingResponse = tripRatingService.getCompanyRating(trip.getBusCompany().getId());  // Default rating
+
+
 
         // Get bus type name
         String busTypeName = trip.getBusType() != null ? trip.getBusType().getName() : "Xe khách";
@@ -165,8 +160,8 @@ public class SearchTripService {
             .availableSeats(availableSeats)
             .busCompanyName(busCompanyName)
             .busType(busTypeName)
-            .rating(rating)
-            .reviewCount(reviewCount)
+            .rating(busCompanyRatingResponse.getAvgStars())
+            .reviewCount(busCompanyRatingResponse.getTotalRatings())
             .build();
     }
 

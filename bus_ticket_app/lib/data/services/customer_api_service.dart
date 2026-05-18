@@ -26,4 +26,11 @@ class CustomerApiService {
   Future<Response> getOrderDetail(String orderId) async {
     return await _apiClient.get('${ApiConstants.orderDetail}$orderId');
   }
+
+  Future<Response> rateOrder(String orderId, Map<String, dynamic> ratingData) async {
+    return await _apiClient.post(
+      '${ApiConstants.rateOrder}$orderId/rating',
+      data: ratingData,
+    );
+  }
 }

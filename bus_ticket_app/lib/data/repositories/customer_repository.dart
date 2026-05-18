@@ -69,4 +69,18 @@ class CustomerRepository {
       throw Exception('Lỗi không xác định: $e');
     }
   }
+
+  Future<Map<String, dynamic>> rateOrder(String orderId, Map<String, dynamic> ratingData) async {
+    try {
+      final response = await _customerApiService.rateOrder(orderId, ratingData);
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response?.data ?? {'code': -1, 'message': 'Có lỗi xảy ra'};
+      }
+      throw Exception('Lỗi kết nối mạng: ${e.message}');
+    } catch (e) {
+      throw Exception('Lỗi không xác định: $e');
+    }
+  }
 }

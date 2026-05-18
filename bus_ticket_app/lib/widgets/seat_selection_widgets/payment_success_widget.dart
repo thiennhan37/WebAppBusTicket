@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/pages/order_detail_page.dart';
 import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +44,7 @@ class PaymentSuccessWidget extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  _buildTripInfoCard(),
+                  _buildTripInfoCard(context),
                 ],
               ),
             ),
@@ -180,7 +181,7 @@ class PaymentSuccessWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTripInfoCard() {
+  Widget _buildTripInfoCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -198,7 +199,17 @@ class PaymentSuccessWidget extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
-              TextButton(onPressed: () {}, child: const Text('Chi tiết')),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrderDetailPage(orderId: orderId),
+                    ),
+                  );
+                },
+                child: const Text('Chi tiết'),
+              ),
             ],
           ),
           const Divider(),

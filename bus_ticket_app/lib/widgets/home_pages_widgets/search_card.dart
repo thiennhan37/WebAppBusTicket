@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/data/models/recent_search_model.dart';
 import 'package:bus_ticket_app/data/services/local/booking_storage.dart';
 import 'package:bus_ticket_app/pages/searh_result_page.dart';
 import 'package:flutter/material.dart';
@@ -289,6 +290,16 @@ class _SearchCardState extends State<SearchCard> {
                   );
                   return;
                 }
+
+                _storage.addRecentSearch(RecentSearchModel(
+                  departureName: _departure!.name,
+                  destinationName: _destination!.name,
+                  departureId: _departure!.id,
+                  destinationId: _destination!.id,
+                  date: _formatDate(_startDate),
+                  isRoundTrip: _isRoundTrip,
+                  endDate: _endDate != null ? _formatDate(_endDate!) : null,
+                ));
 
                 Navigator.of(context).push(
                   MaterialPageRoute(

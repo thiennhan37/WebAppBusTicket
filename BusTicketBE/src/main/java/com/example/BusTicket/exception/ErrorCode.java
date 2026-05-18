@@ -44,6 +44,7 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCHES(4012, "Mật khẩu không khớp", HttpStatus.BAD_REQUEST),
     NEW_PASSWORD_NOT_MATCHES(4013, "Mật khẩu mới không khớp", HttpStatus.BAD_REQUEST),
     NEW_PASSWORD_DUPLICATE(4014, "Mật khẩu mới không được trùng với mật khẩu cũ", HttpStatus.BAD_REQUEST),
+    RATED_ORDER(4015, "Đơn hàng đã được đánh giá", HttpStatus.BAD_REQUEST),
 
     INVALID_GMAIL(4021, "Không tìm thấy gmail này trong hệ thống", HttpStatus.BAD_REQUEST),
     INVALID_OTP(4022, "Sai OTP hoặc OTP đã hết hạn", HttpStatus.BAD_REQUEST),
