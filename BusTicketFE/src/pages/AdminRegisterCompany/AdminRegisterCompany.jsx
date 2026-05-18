@@ -11,7 +11,7 @@ const AdminRegisterCompany = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const page = Number(searchParams.get('page')) || 1;
-  const statusFilter = searchParams.get('status') || 'PENDING';
+  const statusFilter = searchParams.get('status') || 'All';
   const keyword = searchParams.get('keyword') || '';
   const sortOrder = searchParams.get('sortOrder') || 'desc';
   const reviewerFilter = searchParams.get('reviewer') || '';
@@ -43,23 +43,34 @@ const AdminRegisterCompany = () => {
   };
   const currentItems = data?.content || [];
 
-  const { mutate: changeStatus } = useMutation({
-    mutationFn: async ({ id, newStatus }) => {
-      const response = await AdminService.changeStatusBusCompany(id, newStatus);
+  const { mutate: acceptRegistration } = useMutation({
+    mutationFn: async (id) => {
+      const response = await AdminService.acceptCompanyRegistration(id);
       return response.data.result;
-    },
+    },  
     onSuccess: () => {
-      toast.success("Cập nhật thành công");
+      toast.success("Xác thực đăng kí thành công");
       queryClient.invalidateQueries({ queryKey: ['busCompanyRegistrationPage'] });
     },
     onError: () => {
-      toast.error("Cập nhật thất bại");
+      toast.error("Xác thực đăng kí thất bại");
     } 
   });
 
-  const handleStatusChange = (id, newStatus) => {
-    changeStatus({ id, newStatus });
-  };
+  const { mutate: rejectRegistration } = useMutation({
+    mutationFn: async (id) => {
+      const response = await AdminService.rejectCompanyRegistration(id);
+      return response.data.result;
+    },  
+    onSuccess: () => {
+      toast.success("Từ chối đăng kí thành công");
+      queryClient.invalidateQueries({ queryKey: ['busCompanyRegistrationPage'] });
+    },
+    onError: () => {
+      toast.error("Từ chối đăng kí thất bại");
+    } 
+  });
+
 
   const formatDate = dateString => {
     if (!dateString) return '--';
@@ -234,7 +245,8 @@ const AdminRegisterCompany = () => {
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {operator.reviewedBy || '--'}
+                        {console.log(operator)}
+                        {operator.reviewedBy?.fullName || '--'}
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -247,21 +259,21 @@ const AdminRegisterCompany = () => {
 
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
-                          <button
+                          {/* <button
                             className="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded-md transition-colors"
                             title="Xem chi tiết"
                           >
                             <BookText size={18} />
-                          </button>
+                          </button> */}
                           
                           {operator.status === 'PENDING' && (
                             <>
-                              <button onClick={() => handleStatusChange(operator.id, 'ACCEPTED')}
+                              <button onClick={() => acceptRegistration(operator.id)}
                                 className="text-green-600 hover:text-green-900 bg-green-50 p-2 rounded-md transition-colors"
                                 title="Duyệt">
                                 <CheckCircle size={18} />
                               </button>
-                              <button onClick={() => handleStatusChange(operator.id, 'REJECTED')}
+                              <button onClick={() => rejectRegistration(operator.id)}
                                 className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded-md transition-colors"
                                 title="Từ chối">
                                 <XCircle size={18} />

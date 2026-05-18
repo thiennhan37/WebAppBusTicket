@@ -58,6 +58,8 @@ public class BookingForOrderService {
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
             throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
+        if(trip.getDepartureTime().minusHours(1).isBefore(LocalDateTime.now()))
+            throw new MyAppException(ErrorCode.BOOKING_LATE);
         // check quyền thêm order dành cho nhân viên công ty sỡ hữu chuyến đi này.
         CompanyUser creatingStaff = checkCompanyPermission(jwt.getSubject(), trip);
 
@@ -86,6 +88,8 @@ public class BookingForOrderService {
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
             throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
+        if(trip.getDepartureTime().minusHours(1).isBefore(LocalDateTime.now()))
+            throw new MyAppException(ErrorCode.BOOKING_LATE);
         // check quyền thêm order dành cho nhân viên công ty sỡ hữu chuyến đi này.
         CompanyUser creatingStaff = checkCompanyPermission(jwt.getSubject(), trip);
 

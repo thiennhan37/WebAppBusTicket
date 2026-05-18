@@ -30,6 +30,11 @@ public class AdminController {
     ApiResponse<Admin> createAdmin(@RequestBody Map<String, String> request) throws JOSEException {
         return ApiResponse.success(adminService.createAdmin(request));
     }
+    @GetMapping("/company/{id}")
+    ApiResponse<BusCompany> getCompanyInfo(@PathVariable(value = "id") String busCompanyId){
+        BusCompany result = adminService.getCompanyInfo(busCompanyId);
+        return ApiResponse.success(result);
+    }
     @GetMapping("/company-page")
     ApiResponse<PagedModel<BusCompany>> getCompanyPage(@RequestParam(required = false) String keyword,
                                                     @RequestParam(required = false) String status,
@@ -51,14 +56,14 @@ public class AdminController {
         Page<CompanyRegister> result = adminService.getCompanyRegisterPage(keyword, reviewedName, status, pageable);
         return ApiResponse.success(new PagedModel<>(result));
     }
-    @PostMapping("/company-register/accepted")
-    ApiResponse<Boolean> acceptCompanyRegister(@RequestBody CompanyRegister request){
-        adminService.acceptCompanyRegister(request);
+    @PostMapping("/company-register/accepted/{id}")
+    ApiResponse<Boolean> acceptCompanyRegister(@PathVariable(value = "id") String CompanyRegisterId){
+        adminService.acceptCompanyRegister(CompanyRegisterId);
         return ApiResponse.success(true);
     }
-    @PostMapping("/company-register/rejected")
-    ApiResponse<Boolean> rejectCompanyRegister(@RequestBody CompanyRegister request){
-        adminService.rejectCompanyRegister(request);
+    @PostMapping("/company-register/rejected/{id}")
+    ApiResponse<Boolean> rejectCompanyRegister(@PathVariable(value = "id") String CompanyRegisterId){
+        adminService.rejectCompanyRegister(CompanyRegisterId);
         return ApiResponse.success(true);
     }
 

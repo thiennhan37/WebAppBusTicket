@@ -14,5 +14,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface CompanyRegisterMapper {
     CompanyRegister toCompanyRegister(CompanyRegisterRequest request);
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "id", ignore = true)
     BusCompany toBusCompany(CompanyRegister register);
 }

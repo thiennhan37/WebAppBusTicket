@@ -328,9 +328,9 @@ const Ticket = () => {
       </div>
 
       {/* Khối bên phải: Lịch sử đặt vé */}
-      <div className="w-[300px] bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col">
+      {/* <div className="w-[300px] bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col">
         <HistorySidebar logs={historyLogs} />
-      </div>
+      </div> */}
 
       {/* Modal cập nhật vé */}
       {isUpdateModalOpen && (

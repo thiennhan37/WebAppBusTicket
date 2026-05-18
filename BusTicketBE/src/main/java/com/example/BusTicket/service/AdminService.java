@@ -1,5 +1,6 @@
 package com.example.BusTicket.service;
 
+import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.request.CompanyRegisterRequest;
 import com.example.BusTicket.dto.request.CompanyUpRequest;
 import com.example.BusTicket.entity.Admin;
@@ -15,13 +16,17 @@ import com.example.BusTicket.repository.jpa.BusCompanyRepository;
 import com.example.BusTicket.repository.jpa.CompanyRegisterRepository;
 import com.example.BusTicket.specification.BusCompanySpecification;
 import com.example.BusTicket.specification.CompanyRegisterSpecification;
+import com.example.BusTicket.util.IdUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.IdGenerator;
 
 
 import java.time.LocalDate;
@@ -57,6 +62,11 @@ public class AdminService {
 
     }
 
+    public BusCompany getCompanyInfo(String busCompanyId){
+        BusCompany busCompany = busCompanyRepository.findById(busCompanyId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.COMPANY_NOT_EXISTED));
+        return busCompany;
+    }
     public Page<BusCompany> getCompanyPage(String keyword, String status, Pageable pageable){
         Specification<BusCompany> specification = Specification
                 .where(BusCompanySpecification.containsKeyword(keyword))
@@ -86,19 +96,31 @@ public class AdminService {
         Page<CompanyRegister> companyRegisterPage = companyRegisterRepository.findAll(specification, fixedPageable);
         return companyRegisterPage;
     }
-    public void acceptCompanyRegister(CompanyRegister request){
-        CompanyRegister companyRegister = companyRegisterRepository.findById(request.getId())
+    @Transactional
+    public void acceptCompanyRegister(String CompanyRegisterId){
+        Jwt jwt  = JwtHelper.getJwt();
+        Admin reviewedAdmin = adminRepository.findById(jwt.getSubject())
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        CompanyRegister companyRegister = companyRegisterRepository.findById(CompanyRegisterId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        companyRegister.setReviewedBy(reviewedAdmin);
         companyRegister.setStatus(RegisterType.ACCEPTED.name());
         companyRegister.setUpdatedAt(LocalDateTime.now());
         BusCompany busCompany = companyRegisterMapper.toBusCompany(companyRegister);
+        busCompany.setId(IdUtil.generateID());
+        busCompany.setStatus(StatusEnum.ACTIVE.name());
         busCompany.setCreatedAt(LocalDateTime.now());
         companyRegisterRepository.save(companyRegister);
         busCompanyRepository.save(busCompany);
     }
-    public void rejectCompanyRegister(CompanyRegister request){
-        CompanyRegister companyRegister = companyRegisterRepository.findById(request.getId())
+    @Transactional
+    public void rejectCompanyRegister(String CompanyRegisterId){
+        Jwt jwt  = JwtHelper.getJwt();
+        Admin reviewedAdmin = adminRepository.findById(jwt.getSubject())
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        CompanyRegister companyRegister = companyRegisterRepository.findById(CompanyRegisterId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        companyRegister.setReviewedBy(reviewedAdmin);
         companyRegister.setStatus(RegisterType.REJECTED.name());
         companyRegister.setUpdatedAt(LocalDateTime.now());
         companyRegisterRepository.save(companyRegister);

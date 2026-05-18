@@ -5,10 +5,24 @@ import { useSearchParams } from 'react-router-dom';
 import AdminService from '../../Services/AdminService';
 import Pagination from '../../components/other/Pagination';
 import { toast } from 'sonner';
+import CompanyDetailModal from './CompanyDetailModal';
 
 const AdminManageCompany = () => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  const handleOpenDetailModal = (company) => {
+    setSelectedCompany(company);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setSelectedCompany(null);
+    setIsDetailModalOpen(false);
+  };
 
   const page = Number(searchParams.get('page')) || 1;
   const statusFilter = searchParams.get('status') || 'All';
@@ -198,7 +212,7 @@ const AdminManageCompany = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
                           {/* detail */}
-                          <button className="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded-md transition-colors"
+                          <button onClick={() => handleOpenDetailModal(operator)} className="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded-md transition-colors"
                             title="Xem chi tiết">
                               <BookText size={18} />
                           </button>
@@ -239,6 +253,13 @@ const AdminManageCompany = () => {
             <Pagination page={page} onPageChange={onPageChange} totalPages={totalPage} />
           </div>
         </div>
+
+        {/* Detail Modal */}
+        <CompanyDetailModal 
+          isOpen={isDetailModalOpen} 
+          onClose={handleCloseDetailModal} 
+          busCompany={selectedCompany} 
+        />
       </div>
     </div>
   );
