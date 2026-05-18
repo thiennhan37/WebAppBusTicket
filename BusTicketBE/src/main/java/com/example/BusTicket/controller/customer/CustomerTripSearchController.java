@@ -30,9 +30,33 @@ public class CustomerTripSearchController {
     public ApiResponse<?> searchTrips(
             @RequestParam String startProvince,
             @RequestParam String endProvince,
-            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate date) {
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate date,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(required = false) String busCompanyId,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") java.time.LocalTime departureTimeFrom,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") java.time.LocalTime departureTimeTo,
+            @RequestParam(required = false) Long pickupStopId,
+            @RequestParam(required = false) Long dropoffStopId,
+            @RequestParam(required = false) String busType,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false, defaultValue = "departure_asc") String sortBy) {
 
-        List<CustomerTripSearchRespone> trips = tripService.findTrips(startProvince, endProvince, date);
+        List<CustomerTripSearchRespone> trips = tripService.findTrips(
+                startProvince,
+                endProvince,
+                date,
+                minPrice,
+                maxPrice,
+                busCompanyId,
+                departureTimeFrom,
+                departureTimeTo,
+                pickupStopId,
+                dropoffStopId,
+                busType,
+                minRating,
+                sortBy
+        );
         return ApiResponse.success(trips);
     }
 

@@ -4,6 +4,7 @@ import 'package:bus_ticket_app/data/services/location_api_service.dart';
 import 'package:bus_ticket_app/features/booking/viewmodel/location_viewmodel.dart';
 import 'package:bus_ticket_app/features/booking/viewmodel/search_trip_viewmodel.dart';
 import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmodel.dart';
+import 'package:bus_ticket_app/features/customer/viewmodels/my_tickets_viewmodel.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/profile_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 import 'package:bus_ticket_app/data/repositories/AuthRepository.dart';
@@ -29,7 +30,7 @@ void setupServiceLocator() {
         () => TripRepository(getIt<TripApiService>()),
   );
 
-  getIt.registerFactory<SearchTripViewModel>(
+  getIt.registerLazySingleton<SearchTripViewModel>(
         () => SearchTripViewModel(getIt<TripRepository>()),
   );
 
@@ -67,6 +68,7 @@ void setupServiceLocator() {
         () => CustomerRepository(getIt<CustomerApiService>()),
   );
   getIt.registerLazySingleton<ProfileViewModel>(() => ProfileViewModel(getIt<CustomerRepository>()));
+  getIt.registerFactory<MyTicketsViewModel>(() => MyTicketsViewModel(getIt<CustomerRepository>()));
 
   // 2. Đăng ký Feature Data Sources
   getIt.registerLazySingleton<AuthApiService>(

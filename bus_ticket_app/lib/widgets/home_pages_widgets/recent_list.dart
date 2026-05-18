@@ -1,4 +1,7 @@
+import 'package:bus_ticket_app/data/models/recent_search_model.dart';
+import 'package:bus_ticket_app/data/services/local/booking_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
 class RecentList extends StatefulWidget {
   const RecentList({super.key});
@@ -8,21 +11,41 @@ class RecentList extends StatefulWidget {
 }
 
 class _RecentListState extends State<RecentList> {
-  List<Map<String, String>> _recentSearches = [
-    {"from": "Đắk Lắk", "to": "Hồ Chí Minh", "date": "19/9/2026"},
-    {"from": "Hà Nội", "to": "Đà Nẵng", "date": "20/9/2026"},
-    {"from": "Nha Trang", "to": "Đà Lạt", "date": "21/9/2026"},
-    {"from": "Đà Nẵng", "to": "Hội An", "date": "22/9/2026"},
-    {"from": "Cần Thơ", "to": "Cà Mau", "date": "23/9/2026"},
-  ];
+  final _storage = GetIt.I<BookingStorage>();
+  List<RecentSearchModel> _recentSearches = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentSearches();
+    _storage.addListener(_loadRecentSearches);
+  }
+
+  @override
+  void dispose() {
+    _storage.removeListener(_loadRecentSearches);
+    super.dispose();
+  }
+
+  void _loadRecentSearches() {
+    if (mounted) {
+      setState(() {
+        _recentSearches = _storage.getRecentSearches();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_recentSearches.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -31,10 +54,8 @@ class _RecentListState extends State<RecentList> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               TextButton(
-                onPressed: () {
-                  setState(() {
-                    _recentSearches.clear();
-                  });
+                onPressed: () async {
+                  await _storage.clearRecentSearches();
                 },
                 child: const Text(
                   'Xóa tất cả',
@@ -51,7 +72,7 @@ class _RecentListState extends State<RecentList> {
         ),
         const SizedBox(height: 4),
         SizedBox(
-          height: 100,
+          height: 110,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(left: 16),
@@ -59,9 +80,11 @@ class _RecentListState extends State<RecentList> {
             itemBuilder: (context, index) {
               final item = _recentSearches[index];
               return _buildRecentCard(
-                from: item["from"]!,
-                to: item["to"]!,
-                date: item["date"]!,
+                from: item.departureName,
+                to: item.destinationName,
+                date: item.isRoundTrip && item.endDate != null 
+                    ? "${item.date} - ${item.endDate}" 
+                    : item.date,
               );
             },
           ),
@@ -77,22 +100,26 @@ class _RecentListState extends State<RecentList> {
     required String date,
   }) {
     return Container(
-      width: 220,
+      width: 240,
       padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.only(right: 12, bottom: 4),
+      margin: const EdgeInsets.only(right: 12, bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
         ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.only(top: 4),
             child: Column(
               children: [
                 _buildCircleDot(Colors.blue),
@@ -118,7 +145,7 @@ class _RecentListState extends State<RecentList> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text(
                   to,
                   style: const TextStyle(
@@ -141,9 +168,9 @@ class _RecentListState extends State<RecentList> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Icon(Icons.arrow_forward, size: 20, color: Colors.black87),
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: Icon(Icons.arrow_forward, size: 20, color: Colors.black54),
           ),
         ],
       ),
@@ -153,11 +180,11 @@ class _RecentListState extends State<RecentList> {
   // Hàm vẽ dấu chấm tròn ở giữa
   Widget _buildCircleDot(Color color) {
     return Container(
-      width: 12,
-      height: 12,
+      width: 10,
+      height: 10,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: color, width: 3),
+        border: Border.all(color: color, width: 2),
         color: Colors.white,
       ),
     );
@@ -167,11 +194,11 @@ class _RecentListState extends State<RecentList> {
   Widget _buildDottedLine() {
     return Column(
       children: List.generate(
-        3,
+        2,
         (index) => Container(
           width: 1.5,
           height: 3,
-          margin: const EdgeInsets.symmetric(vertical: 2),
+          margin: const EdgeInsets.symmetric(vertical: 1.5),
           color: Colors.grey.shade400,
         ),
       ),

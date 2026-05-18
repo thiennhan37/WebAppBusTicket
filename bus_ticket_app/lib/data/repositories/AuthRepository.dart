@@ -16,7 +16,9 @@ class AuthRepository {
   Future<OtpResponseModel> sendOtp(String email) async {
     try {
       final request = OtpRequestModel(email: email);
-      final response = await _authApiService.sendOtp(request.toJson());
+      final response = await _authApiService.sendOtp(
+          request.toJson()
+      );
 
       return OtpResponseModel.fromJson(response.data);
     } on DioException catch (e) {

@@ -24,6 +24,7 @@ BusTicketBE/src/main/resources/application.yaml
 BusTicketBE/src/main/resources/application-*.yaml
 !src/main/resources/application-example.yaml
 
+
 # =========================
 # FRONTEND (React)
 # =========================

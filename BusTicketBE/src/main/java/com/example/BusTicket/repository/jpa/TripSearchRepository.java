@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Repository
@@ -28,12 +29,27 @@ public interface TripSearchRepository extends JpaRepository<Trip, String> {
           AND r.destinationProvince.id = :arrivalProvinceId
           AND DATE(t.departureTime) = :departureDate
           AND t.status IN ('SCHEDULED', 'OPEN')
-        ORDER BY t.departureTime ASC
+        AND (:minPrice IS NULL OR t.price >= :minPrice)
+          AND (:maxPrice IS NULL OR t.price <= :maxPrice)
+          AND (:busCompanyId IS NULL OR bc.id = :busCompanyId)
+          AND (:departureTimeFrom IS NULL OR FUNCTION('TIME', t.departureTime) >= :departureTimeFrom)
+          AND (:departureTimeTo IS NULL OR FUNCTION('TIME', t.departureTime) <= :departureTimeTo)
+        ORDER BY
+          CASE WHEN :sortBy = 'price_asc' THEN t.price END ASC,
+          CASE WHEN :sortBy = 'price_desc' THEN t.price END DESC,
+          CASE WHEN :sortBy = 'departure_desc' THEN t.departureTime END DESC,
+          t.departureTime ASC
     """)
     List<Object[]> searchTrips(
         @Param("departureProvinceId") String departureProvinceId,
         @Param("arrivalProvinceId") String arrivalProvinceId,
-        @Param("departureDate") LocalDate departureDate
+        @Param("departureDate") LocalDate departureDate,
+        @Param("minPrice") Integer minPrice,
+        @Param("maxPrice") Integer maxPrice,
+        @Param("busCompanyId") String busCompanyId,
+        @Param("departureTimeFrom") LocalTime departureTimeFrom,
+        @Param("departureTimeTo") LocalTime departureTimeTo,
+        @Param("sortBy") String sortBy
     );
 
     /**

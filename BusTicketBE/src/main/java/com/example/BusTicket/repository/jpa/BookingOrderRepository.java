@@ -16,7 +16,19 @@ import java.util.List;
 
 @Repository
 public interface BookingOrderRepository extends JpaRepository<BookingOrder, String> {
-    
+    @Query("""
+        SELECT DISTINCT bo FROM BookingOrder bo
+        LEFT JOIN FETCH bo.trip t
+        LEFT JOIN FETCH t.route r
+        LEFT JOIN FETCH r.arrivalProvince
+        LEFT JOIN FETCH r.destinationProvince
+        LEFT JOIN FETCH t.busCompany
+        WHERE bo.bookingUser.id = :customerId
+          AND bo.createdAt >= :fromTime
+        ORDER BY bo.createdAt DESC
+    """)
+    List<BookingOrder> findRecentOrdersByCustomerId(@Param("customerId") String customerId,
+                                                    @Param("fromTime") LocalDateTime fromTime);
 }
 
 

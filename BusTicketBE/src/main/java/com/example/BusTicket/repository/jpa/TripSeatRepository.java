@@ -64,6 +64,17 @@ public interface TripSeatRepository extends JpaRepository<TripSeat, String> {
             """)
     int updateStatusByIds(@Param("ids") List<String> ids, @Param("status") String status, @Param("prevStatusList") List<String> prevStatusList);
 
+
     List<TripSeat> findAllByStatus(String status);
+
+    @Query("""
+            SELECT ts FROM TripSeat ts
+            WHERE ts.id IN :ids AND ts.trip.id = :tripId AND ts.status IN :statuses
+    \s""")
+    List<TripSeat> getValidTripSeatListByStatuses(@Param("ids") List<String> tripSeatIdList,
+                                                  @Param("tripId") String tripId,
+                                                  @Param("statuses") List<String> statuses);
+
+
 }
 
