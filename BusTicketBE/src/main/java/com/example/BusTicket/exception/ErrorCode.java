@@ -37,6 +37,7 @@ public enum ErrorCode {
     DURATION_TIME_INVALID(4007, "Thời gian di chuyển không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành phải sớm ít nhất 1 tiếng", HttpStatus.BAD_REQUEST),
     BOOKING_TRIP_INVALID(4008, "Đặt chuyến xe không hợp lệ", HttpStatus.BAD_REQUEST),
+    BOOKING_LATE(4008, "Xe sẽ khởi hành trong 1 giờ tới", HttpStatus.BAD_REQUEST),
     PAYMENT_INVALID(4008, "Không thể thanh toán", HttpStatus.BAD_REQUEST),
     PAYMENT_COMPLETED(4009, "Đơn hàng đã được thanh toán", HttpStatus.BAD_REQUEST),
     CANCEL_MULTI_ORDER(4010, "Chỉ được hủy các vé thuộc 1 đơn hàng", HttpStatus.BAD_REQUEST),
@@ -46,6 +47,7 @@ public enum ErrorCode {
     NEW_PASSWORD_DUPLICATE(4014, "Mật khẩu mới không được trùng với mật khẩu cũ", HttpStatus.BAD_REQUEST),
     LOGIN_FAILED(4015, "Tài khoản hoặc mật khẩu không chính xác", HttpStatus.UNAUTHORIZED),
     RATED_ORDER(4015, "Đơn hàng đã được đánh giá", HttpStatus.BAD_REQUEST),
+    COMPANY_BLOCKED(4016, "Công ty đã bị vô hiệu hóa", HttpStatus.UNAUTHORIZED),
 
     INVALID_GMAIL(4021, "Không tìm thấy gmail này trong hệ thống", HttpStatus.BAD_REQUEST),
     INVALID_OTP(4022, "Sai OTP hoặc OTP đã hết hạn", HttpStatus.BAD_REQUEST),

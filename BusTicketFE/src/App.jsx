@@ -19,6 +19,7 @@ import AdminLayout from './layout/AdminLayout'
 import AdminDashboard from './pages/AdminDashBoard/AdminDashBoard'
 import AdminManageCompany from './pages/AdminManageCompany/AdminManageCompany'
 import AdminRegisterCompany from './pages/AdminRegisterCompany/AdminRegisterCompany'
+import AdminManageAccount from './pages/AdminManageCompany/AdminManageAccount'
 
 function App() { 
   return (
@@ -48,7 +49,7 @@ function App() {
           <Route element={<ProtectedRoute type="admin" />}>
             <Route element={<AdminLayout />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              {/* <Route path="/admin/users" element={<UsersPage />} /> */}
+              <Route path="/admin/users" element={<AdminManageAccount />} />
               <Route path="/admin/companies" element={<AdminManageCompany />} />
               <Route path="/admin/register-company" element={<AdminRegisterCompany />} />
               {/* <Route path="/admin/reports" element={<AdminReportsPage />} /> */}

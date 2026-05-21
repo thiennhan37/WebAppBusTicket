@@ -57,5 +57,10 @@ public class TripController {
     ApiResponse<TripResponse> openTrip(@PathVariable("id") String tripId){
         return ApiResponse.success(tripService.openTrip(tripId));
     }
+    @PutMapping("/trips/cancel/{id}")
+    ApiResponse<Boolean> cancelTrip(@PathVariable("id") String tripId){
+        tripService.cancelTrip(tripId);
+        return ApiResponse.success(true);
+    }
 
 }

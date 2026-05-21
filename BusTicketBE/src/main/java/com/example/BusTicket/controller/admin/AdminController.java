@@ -3,7 +3,10 @@ package com.example.BusTicket.controller.admin;
 
 import com.example.BusTicket.dto.request.CompanyRegisterRequest;
 import com.example.BusTicket.dto.request.CompanyUpRequest;
+import com.example.BusTicket.dto.request.StatusUpRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
+import com.example.BusTicket.dto.response.CompanyUserResponse;
+import com.example.BusTicket.dto.response.CustomerInfoResponse;
 import com.example.BusTicket.entity.Admin;
 import com.example.BusTicket.entity.BusCompany;
 import com.example.BusTicket.entity.CompanyRegister;
@@ -30,6 +33,11 @@ public class AdminController {
     ApiResponse<Admin> createAdmin(@RequestBody Map<String, String> request) throws JOSEException {
         return ApiResponse.success(adminService.createAdmin(request));
     }
+    @GetMapping("/company/{id}")
+    ApiResponse<BusCompany> getCompanyInfo(@PathVariable(value = "id") String busCompanyId){
+        BusCompany result = adminService.getCompanyInfo(busCompanyId);
+        return ApiResponse.success(result);
+    }
     @GetMapping("/company-page")
     ApiResponse<PagedModel<BusCompany>> getCompanyPage(@RequestParam(required = false) String keyword,
                                                     @RequestParam(required = false) String status,
@@ -38,8 +46,18 @@ public class AdminController {
         return ApiResponse.success(new PagedModel<>(result));
     }
     @PutMapping("/company-status/{id}")
-    ApiResponse<Boolean> updateStatus(@PathVariable(value = "id") String busCompanyId, @RequestBody CompanyUpRequest request){
-        adminService.updateStatus(busCompanyId, request);
+    ApiResponse<Boolean> updateCompanyStatus(@PathVariable(value = "id") String busCompanyId, @RequestBody StatusUpRequest request){
+        adminService.updateCompanyStatus(busCompanyId, request);
+        return ApiResponse.success(true);
+    }
+    @PutMapping("/customer-status/{id}")
+    ApiResponse<Boolean> updateCustomerStatus(@PathVariable(value = "id") String customerId, @RequestBody StatusUpRequest request){
+        adminService.updateCustomerStatus(customerId, request);
+        return ApiResponse.success(true);
+    }
+    @PutMapping("/staff-status/{id}")
+    ApiResponse<Boolean> updateStaffStatus(@PathVariable(value = "id") String customerId, @RequestBody StatusUpRequest request){
+        adminService.updateStaffStatus(customerId, request);
         return ApiResponse.success(true);
     }
 
@@ -51,15 +69,29 @@ public class AdminController {
         Page<CompanyRegister> result = adminService.getCompanyRegisterPage(keyword, reviewedName, status, pageable);
         return ApiResponse.success(new PagedModel<>(result));
     }
-    @PostMapping("/company-register/accepted")
-    ApiResponse<Boolean> acceptCompanyRegister(@RequestBody CompanyRegister request){
-        adminService.acceptCompanyRegister(request);
+    @PostMapping("/company-register/accepted/{id}")
+    ApiResponse<Boolean> acceptCompanyRegister(@PathVariable(value = "id") String CompanyRegisterId){
+        adminService.acceptCompanyRegister(CompanyRegisterId);
         return ApiResponse.success(true);
     }
-    @PostMapping("/company-register/rejected")
-    ApiResponse<Boolean> rejectCompanyRegister(@RequestBody CompanyRegister request){
-        adminService.rejectCompanyRegister(request);
+    @PostMapping("/company-register/rejected/{id}")
+    ApiResponse<Boolean> rejectCompanyRegister(@PathVariable(value = "id") String CompanyRegisterId){
+        adminService.rejectCompanyRegister(CompanyRegisterId);
         return ApiResponse.success(true);
+    }
+    @GetMapping("/staff-page")
+    ApiResponse<PagedModel<CompanyUserResponse>> getCompanyUserPage(@RequestParam(required = false) String keyword,
+                                                                    @RequestParam(required = false) String status,
+                                                                    Pageable pageable){
+        Page<CompanyUserResponse> result = adminService.getCompanyUserPage(keyword, status, pageable);
+        return ApiResponse.success(new PagedModel<>(result));
+    }
+    @GetMapping("/customer-page")
+    ApiResponse<PagedModel<CustomerInfoResponse>> getCustomerPage(@RequestParam(required = false) String keyword,
+                                                                     @RequestParam(required = false) String status,
+                                                                     Pageable pageable){
+        Page<CustomerInfoResponse> result = adminService.getCustomerPage(keyword, status, pageable);
+        return ApiResponse.success(new PagedModel<>(result));
     }
 
 

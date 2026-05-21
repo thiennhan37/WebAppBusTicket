@@ -20,8 +20,13 @@ const StaffService = {
         return api.post("/nhaxe/member", newStaff);
     }, 
     updateStaff(updatedStaff){
+        
         const staff = {...updatedStaff, gender: toEng(updatedStaff.gender)};
+        console.log("   staff   ", staff);
         return api.put(`/nhaxe/member/${staff.id}`, staff)
+    }, 
+    getMe(){
+        return api.get("/nhaxe/get-me")
     }
 }
 export default StaffService

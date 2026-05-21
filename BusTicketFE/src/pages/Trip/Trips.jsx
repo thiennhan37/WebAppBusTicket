@@ -63,6 +63,8 @@ const Trips = () =>{
 
   const [reportUpdate, setReportUpdate] = useState("") 
   const [showConfirmOpen, setShowConfirmOpen] = useState(false);
+  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
+  
   const hideReportUpdate = () => {
     setReportUpdate("");
   }
@@ -85,6 +87,25 @@ const Trips = () =>{
     setSelectedTrip({...rest, busType: {id:"", name:busTypeName, diagram:""}});
     setShowConfirmOpen(true);
   }
+
+  const { mutate:mutateCancel } = useMutation({
+    mutationFn: async(tripId) =>{
+        return await TripService.cancelTrip(tripId);
+    },  
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tripList'] });
+      setReportUpdate('success')
+    },
+    onError: (error) => {
+      setReportUpdate("error:" + error.response.data.message);
+    }
+  });
+  const handleCancelTrip = (trip) => {
+    const {busType: busTypeName, ...rest} = trip;
+    setSelectedTrip({...rest, busType: {id:"", name:busTypeName, diagram:""}});
+    setShowConfirmCancel(true);
+  }
+  
 
 
 
@@ -110,9 +131,17 @@ const Trips = () =>{
           title={`Mở chuyến đi ${selectedTrip.id}`}
           message={`Bạn có chắc chắn muốn mở chuyến đi này?`}
         />
+        <ConfirmModal 
+          view={"absolute"}
+          isOpen={showConfirmCancel}
+          onClose={() => setShowConfirmCancel(false)}
+          onConfirm={() => mutateCancel(selectedTrip.id)}
+          title={`Hủy chuyến đi ${selectedTrip.id}`}
+          message={`Bạn có chắc chắn muốn hủy chuyến đi này?`}
+        />
       {reportUpdate.startsWith("error") && <StatusModal type="error"  message={reportUpdate.split(":")[1]}
           onClose={hideReportUpdate}></StatusModal>}
-      {reportUpdate === "success" && <StatusModal type="success" message={"Lưu chuyến đi thành công"} 
+      {reportUpdate === "success" && <StatusModal type="success" message={"Cập nhật chuyến đi thành công"} 
         onClose={hideReportUpdate}></StatusModal>}
 
       <TripHeader
@@ -223,8 +252,8 @@ const Trips = () =>{
                             rounded-lg transition-colors"
                             title="Hủy chuyến đi"
                           >
-                            <CircleX size={22} />
-                          </button>
+                            <CircleX size={22} onClick={() => handleCancelTrip(trip)}/>
+                          </button> 
                         </div>
                         : <></>
                       }

@@ -66,10 +66,11 @@ api.interceptors.response.use(
 		const originalRequest = config;
 		// console.log(response);
 		if (response?.status === 401 && !originalRequest._retry) {
-			originalRequest._retry = true;
+			console.log("Refresh token...")
+			originalRequest._retry = true; 
 			if (!isRefreshing) {
 				isRefreshing = true;
-
+				
 				try {
 				// 1. Gọi API lấy token mới (thường dùng Refresh Token lưu trong Cookie hoặc LocalStorage)
 					const res = await publicApi.post("/auth/refresh-token", {})
@@ -87,13 +88,13 @@ api.interceptors.response.use(
 					// Nếu refresh token cũng hết hạn -> Logout luôn
 					isRefreshing = false;
 					let homeLink;
-					const role = localStorage.getItem("user").role;
+					const user = JSON.parse(localStorage.getItem("user"));
+					const role = user.role;
 					if(role === "CUSTOMER") homeLink = "/customer";
 					else if(role === "ADMIN") homeLink = "/admin";
 					else homeLink = "/nhaxe";
 					window.location.href = homeLink;
 					localStorage.clear();
-					console.log(error);
 					onFailed(refreshError);
 					return Promise.reject(refreshError);
 				}

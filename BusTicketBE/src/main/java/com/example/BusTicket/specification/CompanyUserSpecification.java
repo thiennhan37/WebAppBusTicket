@@ -26,9 +26,12 @@ public class CompanyUserSpecification {
         return (root, query, criteriaBuilder) -> {
             if(keyword == null || keyword.isBlank()) return criteriaBuilder.conjunction();
             String pattern = "%" + keyword.toLowerCase() + "%";
-            return criteriaBuilder.and(
+            return criteriaBuilder.or(
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("fullName")), pattern),
-                        criteriaBuilder.like(root.get("id"), pattern)
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("id")), pattern),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("phone")), pattern),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("busCompany").get("companyName")), pattern)
                     );
         };
     }

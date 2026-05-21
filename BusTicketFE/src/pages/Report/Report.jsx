@@ -67,10 +67,10 @@ const Report = () => {
   });
 
   const TicketStatus = [
-    { name: 'Đã thanh toán', value: ticketReportData?.paidTicketCount, color: '#3b82f6' },   // Blue
-    { name: 'Đang xử lí', value: ticketReportData?.holdingTicketCount, color: '#8b5cf6' },  // Violet
-    { name: 'Đã hủy', value: ticketReportData?.cancelledTicketCount, color: '#10b981' },  // Emerald
-    { name: 'Đã hết hạn', value: ticketReportData?.expiredTicketCount, color: '#f59e0b' },    // Amber
+    { name: 'Đã thanh toán', value: ticketReportData?.paidTicketCount, color: '#20e651ff' },   // Blue
+    { name: 'Đang xử lí', value: ticketReportData?.holdingTicketCount, color: '#f59e0b' },  // Violet
+    { name: 'Đã hủy', value: ticketReportData?.cancelledTicketCount, color: '#ef2d2dff' },  // Emerald
+    { name: 'Đã hết hạn', value: ticketReportData?.expiredTicketCount,  color: '#8b5cf6'},    // Amber
   ]; 
 
   const channelData = [

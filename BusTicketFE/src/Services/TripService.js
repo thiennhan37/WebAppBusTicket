@@ -45,6 +45,9 @@ const TripService = {
     }, 
     openTrip(tripId){
         return api.put(`/nhaxe/trips/open/${tripId}`);
+    },
+    cancelTrip(tripId){
+        return api.put(`/nhaxe/trips/cancel/${tripId}`);
     }
 }
 

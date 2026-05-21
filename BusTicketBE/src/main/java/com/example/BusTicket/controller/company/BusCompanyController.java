@@ -3,14 +3,19 @@ package com.example.BusTicket.controller.company;
 
 import com.example.BusTicket.dto.request.CompanyUpRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
+import com.example.BusTicket.dto.response.CompanyRatingResponse;
+import com.example.BusTicket.dto.response.DetailRatingResponse;
 import com.example.BusTicket.entity.BusCompany;
 import com.example.BusTicket.service.BusCompanyService;
 import com.example.BusTicket.service.CompanyUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/nhaxe")
@@ -28,6 +33,15 @@ public class BusCompanyController {
                                              @ModelAttribute CompanyUpRequest request){
         return ApiResponse.success(busCompanyService.updateBusCompany(busCompanyId, request));
     }
-
+    @GetMapping("/rating")
+    ApiResponse<CompanyRatingResponse> getCompanyRating(){
+        return ApiResponse.success(busCompanyService.getCompanyRatingResponse());
+    }
+    @GetMapping("/rating-page")
+    public ApiResponse<PagedModel<DetailRatingResponse>> getDetailRatings(@RequestParam(required = false) Integer avgStars,
+                                                                              Pageable pageable) {
+        Page<DetailRatingResponse> responsePage = busCompanyService.getDetailRatings(avgStars, pageable);
+        return ApiResponse.success(new PagedModel<>(responsePage));
+    }
 
 }
