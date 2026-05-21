@@ -80,9 +80,10 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
         onMutate: () => {
             setReportRegister("pending");
         },
-        onError: () => {
+        onError: (error) => {
             hideReportRegister();
-            handleErrorRegister('Thông tin đăng ký không hợp lệ hoặc đã tồn tại');
+            handleErrorRegister(error?.response?.data?.message 
+                                || 'Thông tin đăng ký không hợp lệ hoặc đã tồn tại');
         }, 
         onSuccess: () => {
             setEmail("");
@@ -242,7 +243,8 @@ const FormRegister = ({setShowModal, setAuthMode}) => {
             </div>
 
           {/* {reportRegister === "pending" && <LoadingOverlay ></LoadingOverlay>} */}
-          {reportRegister === "success" && <StatusModal type="success" message={"Đăng ký thành công"} 
+          {reportRegister === "success" && <StatusModal type="success" 
+            message={"Đăng ký thành công. Vui lòng chờ quản trị viên duyệt tài khoản!"} 
             onClose={() => {hideReportRegister(); setShowModal(false)}}></StatusModal>}
         </div>
     )

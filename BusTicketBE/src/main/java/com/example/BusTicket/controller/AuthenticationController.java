@@ -3,6 +3,7 @@ package com.example.BusTicket.controller;
 import com.example.BusTicket.dto.request.ChangePasswordRequest;
 import com.example.BusTicket.dto.request.LogoutRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
+import com.example.BusTicket.dto.response.CompanyUserResponse;
 import com.example.BusTicket.dto.response.RefreshTokenResponse;
 import com.example.BusTicket.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
@@ -18,7 +19,7 @@ import java.text.ParseException;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     @PostMapping("auth/refresh-token")
-    ApiResponse<RefreshTokenResponse> refreshToken(@CookieValue(name = "refreshToken", required = false) String refreshToken)
+    ApiResponse<RefreshTokenResponse> refreshToken(@CookieValue(name = "refreshToken") String refreshToken)
             throws JOSEException, ParseException {
         log.info("in refreshToken controller");
         RefreshTokenResponse response = authenticationService.refreshToken(refreshToken);
@@ -35,4 +36,5 @@ public class AuthenticationController {
         authenticationService.changePassword(request);
         return ApiResponse.success(true);
     }
+
 }

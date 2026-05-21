@@ -11,6 +11,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface CompanyUserMapper {
     @Mapping(target = "busCompanyId", source = "busCompany.id")
+    @Mapping(target = "busCompanyName", source = "busCompany.companyName")
     CompanyUserResponse toCompanyUserResponse(CompanyUser companyUser);
     List<CompanyUserResponse> toCompanyUserResponseList(List<CompanyUser> companyUserList);
     @Mapping(target = "busCompany", ignore = true)

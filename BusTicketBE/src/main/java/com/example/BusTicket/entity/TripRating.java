@@ -24,6 +24,7 @@ public class TripRating {
     private Integer cleanliness;
     private Double averageStars;
     private LocalDateTime createdAt;
+    private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_order_id", referencedColumnName = "id", nullable = false)

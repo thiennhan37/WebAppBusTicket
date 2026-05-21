@@ -1,15 +1,12 @@
 package com.example.BusTicket.controller.report;
 
 import com.example.BusTicket.dto.response.ApiResponse;
-import com.example.BusTicket.dto.response.RefreshTokenResponse;
-import com.example.BusTicket.dto.response.report.*;
+import com.example.BusTicket.dto.response.companyReport.*;
 import com.example.BusTicket.service.CompanyReportService;
-import com.nimbusds.jose.JOSEException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.ParseException;
 import java.util.List;
 
 @Slf4j

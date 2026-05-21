@@ -15,7 +15,6 @@ import StatusModal from '../../components/other/StatusModal';
 import ConfirmModal from '../../components/other/ConfirmModal';
 
 const Ticket = () => {
-  console.log("reload ticket")
   const queryClient = useQueryClient();
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -109,7 +108,6 @@ const Ticket = () => {
     placeholderData: keepPreviousData,
     staleTime: 0
   })
-  console.log("dataSimpleList", dataSimpleList);
   const simpleTripList = dataSimpleList?.result != null ? dataSimpleList.result : null; 
 
   const [selectedTripId, setSelectedTripId] = useState("");
@@ -255,6 +253,7 @@ const Ticket = () => {
                   <span className='text-green-500 font-bold'> 
                     {` ${selectedTrip?.busType?.totalSeats - selectedTrip?.bookedSeats - selectedTrip?.heldSeats}`} 
                     </span>
+                    {` | ${selectedTrip?.status} `} 
                 </p>
               </div>
               <div className={`flex flex-col gap-1 items-end ${!isOpenTrip ? 'opacity-60' : ''}`}>

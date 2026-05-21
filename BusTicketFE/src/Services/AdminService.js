@@ -35,6 +35,24 @@ const AdminService = {
     }, 
     rejectCompanyRegistration(companyRegisterId){
         return api.post(`/admin/company-register/rejected/${companyRegisterId}`); 
+    },
+    getAccountPage({filterParams, type}){
+        const params = {...filterParams, 
+            page: filterParams.page - 1};
+        if(params.status === "All" || !params.status) params.status = null; 
+        if (params.sortOrder === "All" || !params.sortOrder) {
+            params.sort = `createdAt,desc`;
+        } else {
+            params.sort = `createdAt,${params.sortOrder}`;
+        }
+        delete params.sortOrder;
+        console.log("params",  params);
+        // type: 'CUSTOMER' or 'STAFF' 
+        return api.get(`/admin/${type.toLowerCase()}-page`, {params:params});
+    },
+
+    changeStatusAccount(id, type, newStatus){
+        return api.put(`/admin/${type.toLowerCase()}-status/${id}`, { status: newStatus });
     }  
 }
 

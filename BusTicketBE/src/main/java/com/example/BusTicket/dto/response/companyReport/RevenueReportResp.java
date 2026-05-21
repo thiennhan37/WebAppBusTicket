@@ -1,10 +1,9 @@
-package com.example.BusTicket.dto.response.report;
+package com.example.BusTicket.dto.response.companyReport;
 
 import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
-import lombok.Data;
 
 @Data
 @Builder

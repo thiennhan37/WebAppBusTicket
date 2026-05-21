@@ -20,6 +20,9 @@ const AuthenticateService = {
     },
     loginAdmin({email, password}){
         return publicApi.post("/admin/auth/login", {email, password});
+    },
+    updateProfile(payload){
+        return api.put("/auth/update-profile", payload);
     }
 }
 

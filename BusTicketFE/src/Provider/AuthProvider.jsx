@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AuthContext from "../context/AuthContext";
-
+import StaffService from "../Services/StaffService";
 const AuthProvider = ({children}) => {
     // can xem xet độ dư thừa
     const [user, setUser] = useState(null);
@@ -20,7 +20,17 @@ const AuthProvider = ({children}) => {
         }
         setLoading(false);
     }, [])
-
+    const refreshUser = async () => {
+        try{
+            const response = await StaffService.getMe();
+            if(response?.data?.result){
+                localStorage.setItem("user", JSON.stringify(response.data.result));
+                setUser(response.data.result);
+            }
+        }catch(err){
+            console.log(err);
+        }
+    }   
     const login = (data) => {
         localStorage.clear();
         localStorage.setItem("accessToken", data.accessToken);
@@ -41,7 +51,7 @@ const AuthProvider = ({children}) => {
         setUser(null);
         setCompany(null);
     }
-    return <AuthContext.Provider value={{user, login, logout, loading, company, loginAdmin}}> 
+    return <AuthContext.Provider value={{user, login, logout, loading, company, loginAdmin, refreshUser}}> 
         {!loading && children}
     </AuthContext.Provider>
 }

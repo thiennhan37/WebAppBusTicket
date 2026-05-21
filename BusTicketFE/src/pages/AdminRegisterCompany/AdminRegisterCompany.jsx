@@ -5,10 +5,14 @@ import { useSearchParams } from 'react-router-dom';
 import AdminService from '../../Services/AdminService';
 import Pagination from '../../components/other/Pagination';
 import { toast } from 'sonner';
+import ConfirmModal from '../../components/other/ConfirmModal';
+import { useState } from 'react';
 
 const AdminRegisterCompany = () => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmData, setConfirmData] = useState({ id: null, actionType: null });
 
   const page = Number(searchParams.get('page')) || 1;
   const statusFilter = searchParams.get('status') || 'All';
@@ -71,6 +75,19 @@ const AdminRegisterCompany = () => {
     } 
   });
 
+  const handleActionClick = (id, actionType) => {
+    setConfirmData({ id, actionType });
+    setShowConfirm(true);
+  };
+
+  const handleConfirmAction = () => {
+    if (confirmData.actionType === 'accept') {
+      acceptRegistration(confirmData.id);
+    } else if (confirmData.actionType === 'reject') {
+      rejectRegistration(confirmData.id);
+    }
+    setShowConfirm(false);
+  };
 
   const formatDate = dateString => {
     if (!dateString) return '--';
@@ -245,7 +262,6 @@ const AdminRegisterCompany = () => {
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {console.log(operator)}
                         {operator.reviewedBy?.fullName || '--'}
                       </td>
 
@@ -268,12 +284,12 @@ const AdminRegisterCompany = () => {
                           
                           {operator.status === 'PENDING' && (
                             <>
-                              <button onClick={() => acceptRegistration(operator.id)}
+                              <button onClick={() => handleActionClick(operator.id, 'accept')}
                                 className="text-green-600 hover:text-green-900 bg-green-50 p-2 rounded-md transition-colors"
                                 title="Duyệt">
                                 <CheckCircle size={18} />
                               </button>
-                              <button onClick={() => rejectRegistration(operator.id)}
+                              <button onClick={() => handleActionClick(operator.id, 'reject')}
                                 className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded-md transition-colors"
                                 title="Từ chối">
                                 <XCircle size={18} />
@@ -302,6 +318,14 @@ const AdminRegisterCompany = () => {
             <Pagination page={page} onPageChange={onPageChange} totalPages={totalPage} />
           </div>
         </div>
+        <ConfirmModal 
+          view={"absolute"}
+          isOpen={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          onConfirm={handleConfirmAction}
+          title="Xác nhận thao tác"
+          message={`Bạn có chắc chắn muốn ${confirmData.actionType === "accept" ? "duyệt" : "từ chối"} đăng ký của nhà xe này?`}
+        />
       </div>
     </div>
   );

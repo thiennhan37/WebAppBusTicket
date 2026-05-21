@@ -29,6 +29,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.data.redis.core.ValueOperations;
+
+import java.time.LocalDateTime;
 import java.util.Random;
 
 
@@ -53,7 +55,7 @@ public class AuthenticationService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final MailService mailService;
-
+    private final SendMailService sendMailService;
 
     @Value("${jwt.accessTime}")
     private long accessTime;
@@ -72,10 +74,13 @@ public class AuthenticationService {
         if(account.getStatus().equals(StatusEnum.BLOCKED.name())){
             throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
         }
-
+        CompanyUser user = (CompanyUser) account;
+        if(user.getBusCompany().getStatus().equals(StatusEnum.BLOCKED.name()))
+            throw new MyAppException(ErrorCode.COMPANY_BLOCKED);
         String accessToken = jwtService.generateToken(account, accessTime);
         String refreshToken = jwtService.generateToken(account, refreshTime);
-        CompanyUser user = (CompanyUser) account;
+
+
         CompanyUserResponse userResponse = companyUserMapper.toCompanyUserResponse(user);
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
@@ -104,12 +109,14 @@ public class AuthenticationService {
                 .user(adminMapper.toAdminResponse(account))
                 .build();
     }
+
     public void logout(LogoutRequest request, String refreshToken) throws ParseException, JOSEException {
         String accessToken = request.getAccessToken();
 
         saveInvalidToken(accessToken);
         saveInvalidToken(refreshToken);
     }
+
     public void changePassword(ChangePasswordRequest request){
         Jwt jwt = JwtHelper.getJwt();
         String userId = jwt.getSubject();
@@ -138,15 +145,21 @@ public class AuthenticationService {
             throw new RuntimeException("Chưa tạo admin");
         }
     }
+
     public CompanyRegister registerCompany(CompanyRegisterRequest request){
         if(busCompanyRepository.existsByEmail(request.getEmail())) throw new MyAppException(ErrorCode.EMAIL_EXISTED);
         if(busCompanyRepository.existsByHotline(request.getHotline())) throw new MyAppException(ErrorCode.HOTLINE_EXISTED);
-        if(companyRegisterRepository.existsByEmailOrHotline(request.getEmail(), request.getHotline()))
+        if(companyRegisterRepository.checkExistsInfo(request.getEmail(), request.getHotline()) != null)
             throw new MyAppException(ErrorCode.INFO_EXISTED);
         CompanyRegister companyRegister = companyRegisterMapper.toCompanyRegister(request);
         companyRegister.setStatus(RegisterType.PENDING.name());
+        companyRegister.setUpdatedAt(LocalDateTime.now());
+        sendMailService.sendPendingRegistrationEmail(request.getEmail(), request.getCompanyName());
         return companyRegisterRepository.save(companyRegister);
     }
+
+
+
     public RefreshTokenResponse refreshToken(String refreshToken)
             throws ParseException, JOSEException {
 
@@ -160,7 +173,8 @@ public class AuthenticationService {
             user = customerRepository.findById(jwtInfo.getSubject())
                     .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
         } else{
-            user = new CompanyUser();
+            user = adminRepository.findById(jwtInfo.getSubject())
+                    .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));
         }
 
         saveInvalidToken(refreshToken);

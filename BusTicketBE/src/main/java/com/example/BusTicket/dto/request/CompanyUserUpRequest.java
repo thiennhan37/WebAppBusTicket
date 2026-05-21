@@ -1,11 +1,7 @@
 package com.example.BusTicket.dto.request;
 
-import com.example.BusTicket.validatior.BirthConstraint;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDate;
 
@@ -13,16 +9,16 @@ import java.time.LocalDate;
 
 public class CompanyUserUpRequest {
 
+    @NotNull(message =  "CompanyUserId must be not null")
     private String id;
+    @NotNull(message =  "BusCompanyId must be not null")
+    private String busCompanyId;
     private String phone;
-    @NotNull(message = "fullName must be not null")
     private String fullName;
-
-    @BirthConstraint(min = 18, message = "birthday is invalid")
     private LocalDate dob;
     private String gender;
     private String status;
-    @NotNull(message = "BusCompanyId must be not null")
-    private String busCompanyId;
+
+
 
 }

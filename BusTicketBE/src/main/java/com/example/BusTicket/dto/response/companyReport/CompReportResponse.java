@@ -1,4 +1,4 @@
-package com.example.BusTicket.dto.response.report;
+package com.example.BusTicket.dto.response.companyReport;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

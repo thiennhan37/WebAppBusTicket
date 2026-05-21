@@ -1,11 +1,13 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
+import com.example.BusTicket.dto.general.InfoAccount;
 import com.example.BusTicket.dto.request.CompanyUserCrRequest;
 import com.example.BusTicket.dto.request.CompanyUserUpRequest;
 import com.example.BusTicket.dto.response.CompanyUserResponse;
 import com.example.BusTicket.entity.BusCompany;
 import com.example.BusTicket.entity.CompanyUser;
+import com.example.BusTicket.enums.RoleEnum;
 import com.example.BusTicket.enums.StatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
@@ -75,7 +77,7 @@ public class CompanyUserService {
 
         CompanyUser companyUser = companyUserMapper.toCompanyUser(request);
         companyUser.setId(IdUtil.generateID());
-        String password = UUID.randomUUID().toString().substring(0, 8);
+        String password = request.getPassword() != null ? request.getPassword() : UUID.randomUUID().toString().substring(0, 8);
         companyUser.setPassword(passwordEncoder.encode(password));
         companyUser.setBusCompany(busCompany);
         companyUser.setStatus(StatusEnum.ACTIVE.name());
@@ -96,7 +98,7 @@ public class CompanyUserService {
 
         CompanyUser staff = companyUserRepository.findById(request.getId())
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
-        if(staff.getRole().equals("MANAGER")) throw new MyAppException(ErrorCode.ACCESS_DENIED);
+        if(staff.getRole().equals("MANAGER") && !staff.getId().equals(id)) throw new MyAppException(ErrorCode.ACCESS_DENIED);
         String fullName = request.getFullName();
         if(fullName != null && !fullName.isBlank()) staff.setFullName(fullName);
         String phone = request.getPhone();
@@ -112,5 +114,12 @@ public class CompanyUserService {
         companyUserRepository.save(staff);
         return companyUserMapper.toCompanyUserResponse(staff);
     }
-
+    public CompanyUserResponse getMe(){
+        Jwt jwt = JwtHelper.getJwt();
+        String role = jwt.getClaimAsString("ROLE");
+        String id = jwt.getSubject();
+        CompanyUser companyUser = companyUserRepository.findById(id)
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        return companyUserMapper.toCompanyUserResponse(companyUser);
+    }
 }

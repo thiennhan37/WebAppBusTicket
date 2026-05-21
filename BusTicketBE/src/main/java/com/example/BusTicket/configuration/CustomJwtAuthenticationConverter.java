@@ -1,6 +1,7 @@
 package com.example.BusTicket.configuration;
 
 import com.example.BusTicket.dto.general.InfoAccount;
+import com.example.BusTicket.entity.CompanyUser;
 import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.enums.RoleEnum;
 import com.example.BusTicket.enums.StatusEnum;
@@ -18,6 +19,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,6 +32,7 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
     private final CustomerRepository customerRepository;
 
     @Override
+    @Transactional
     public AbstractAuthenticationToken  convert(Jwt jwt) {
         String accountId = jwt.getSubject();
         String role = jwt.getClaimAsString("role");
@@ -41,7 +44,12 @@ public class CustomJwtAuthenticationConverter implements Converter<Jwt, Abstract
             account = adminRepository.findById(accountId).orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
         }
         else{
-            account = companyUserRepository.findById(accountId).orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+            CompanyUser companyUser = companyUserRepository.findByIdWithCompany(accountId)
+                    .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+
+            account = companyUser;
+            if(companyUser.getBusCompany().getStatus().equals(StatusEnum.BLOCKED.name()))
+                throw new MyAppException(ErrorCode.COMPANY_BLOCKED);
         }
 
         // check account locked
