@@ -23,6 +23,7 @@ public class CustomerTripSearchController {
 
     private final SearchTripService tripService;
     private final ProvinceService provinceService;
+    private final SearchTripService searchTripService;
 
 
     // Endpoint: GET /api/trips/search?startProvince=Hà Nội&endProvince=Sapa&date=20/05/2026
@@ -34,10 +35,13 @@ public class CustomerTripSearchController {
             @RequestParam(required = false) Integer minPrice,
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false) String busCompanyId,
+            @RequestParam(required = false) List<String> busCompanyIds,
             @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") java.time.LocalTime departureTimeFrom,
             @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") java.time.LocalTime departureTimeTo,
             @RequestParam(required = false) Long pickupStopId,
+            @RequestParam(required = false) List<Long> pickupStopIds,
             @RequestParam(required = false) Long dropoffStopId,
+            @RequestParam(required = false) List<Long> dropoffStopIds,
             @RequestParam(required = false) String busType,
             @RequestParam(required = false) Double minRating,
             @RequestParam(required = false, defaultValue = "departure_asc") String sortBy) {
@@ -49,10 +53,13 @@ public class CustomerTripSearchController {
                 minPrice,
                 maxPrice,
                 busCompanyId,
+                busCompanyIds,
                 departureTimeFrom,
                 departureTimeTo,
                 pickupStopId,
+                pickupStopIds,
                 dropoffStopId,
+                dropoffStopIds,
                 busType,
                 minRating,
                 sortBy
@@ -73,5 +80,12 @@ public class CustomerTripSearchController {
             @RequestParam String tripId){
         CustomerSearchBusDiagramRespone diagram = tripService.getBusDiagram(tripId);
         return ApiResponse.success(diagram);
+    }
+
+    @GetMapping("get-companies-info")
+    public ApiResponse<?> getCompaniesInfo(
+            @RequestParam String provinceID
+    ){
+        return  ApiResponse.success(searchTripService.getCompaniesInfo(provinceID));
     }
 }

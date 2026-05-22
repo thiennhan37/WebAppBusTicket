@@ -38,4 +38,14 @@ public class ProvinceService {
         return stop;
     }
 
+    public List<Stop> searchPickupStopsByProvinceId(String provinceId, String keyword){
+        String normalizedKeyword = keyword == null ? "" : keyword;
+        return stopRepository.findByProvinceIdAndNameContainingIgnoreCase(provinceId, normalizedKeyword);
+    }
+
+    public List<Stop> searchDropoffStopsByProvinceId(String provinceId, String keyword){
+        String normalizedKeyword = keyword == null ? "" : keyword;
+        return stopRepository.findByProvinceIdAndNameContainingIgnoreCase(provinceId, normalizedKeyword);
+    }
+
 }

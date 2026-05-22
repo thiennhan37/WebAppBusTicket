@@ -44,5 +44,14 @@ public interface BusCompanyRepository extends JpaRepository<BusCompany, String> 
     List<RevenueByDate> getRevenueWeekList(@Param("busCompanyId") String busCompanyId,
                                            @Param("startWeek") LocalDateTime startWeek, @Param("endWeek") LocalDateTime endWeek);
 
-
+    List<BusCompany> findByStatus(String status);
+    @Query("""
+        SELECT DISTINCT bc
+        FROM BusCompany bc
+        JOIN Trip t ON t.busCompany.id = bc.id
+        JOIN Route r ON t.route.id = r.id
+        WHERE bc.status = 'ACTIVE'
+          AND (r.arrivalProvince.id = :provinceId OR r.destinationProvince.id = :provinceId)
+    """)
+    List<BusCompany> findActiveCompaniesByProvinceId(@Param("provinceId") String provinceId);
 }

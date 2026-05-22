@@ -36,4 +36,7 @@ public class TripRating {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bus_company_id", referencedColumnName = "id", nullable = false)
     private BusCompany busCompany;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 }

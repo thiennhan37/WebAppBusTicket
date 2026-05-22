@@ -29,7 +29,7 @@ public interface TripSearchRepository extends JpaRepository<Trip, String> {
           AND r.destinationProvince.id = :arrivalProvinceId
           AND DATE(t.departureTime) = :departureDate
           AND t.status IN ('SCHEDULED', 'OPEN')
-        AND (:minPrice IS NULL OR t.price >= :minPrice)
+          AND (:minPrice IS NULL OR t.price >= :minPrice)
           AND (:maxPrice IS NULL OR t.price <= :maxPrice)
           AND (:busCompanyId IS NULL OR bc.id = :busCompanyId)
           AND (:departureTimeFrom IS NULL OR FUNCTION('TIME', t.departureTime) >= :departureTimeFrom)
@@ -41,15 +41,15 @@ public interface TripSearchRepository extends JpaRepository<Trip, String> {
           t.departureTime ASC
     """)
     List<Object[]> searchTrips(
-        @Param("departureProvinceId") String departureProvinceId,
-        @Param("arrivalProvinceId") String arrivalProvinceId,
-        @Param("departureDate") LocalDate departureDate,
-        @Param("minPrice") Integer minPrice,
-        @Param("maxPrice") Integer maxPrice,
-        @Param("busCompanyId") String busCompanyId,
-        @Param("departureTimeFrom") LocalTime departureTimeFrom,
-        @Param("departureTimeTo") LocalTime departureTimeTo,
-        @Param("sortBy") String sortBy
+            @Param("departureProvinceId") String departureProvinceId,
+            @Param("arrivalProvinceId") String arrivalProvinceId,
+            @Param("departureDate") LocalDate departureDate,
+            @Param("minPrice") Integer minPrice,
+            @Param("maxPrice") Integer maxPrice,
+            @Param("busCompanyId") String busCompanyId,
+            @Param("departureTimeFrom") LocalTime departureTimeFrom,
+            @Param("departureTimeTo") LocalTime departureTimeTo,
+            @Param("sortBy") String sortBy
     );
 
     /**

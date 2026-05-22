@@ -42,6 +42,7 @@ public class BookingOrderService {
     private final RouteStopRepository routeStopRepository;
     private final TicketMapper ticketMapper;
     private final RedisTemplate<String, String> redisTemplate;
+    private final SendMailService sendMailService;
 
     @Value("${booking.customerHoldingSeatPrefixKey}")
     private String CUSTOMER_HOLD_INFO_PREFIX;
@@ -68,6 +69,9 @@ public class BookingOrderService {
 
         tripSeatRepository.saveAll(tripSeatList);
         ticketRepository.saveAll(ticketList);
+        if (bookingOrder != null && !ticketList.isEmpty()) {
+            sendMailService.sendCustomerPaymentSuccessEmail(bookingOrder, ticketList);
+        }
     }
     @Transactional
     public TicketResponse updateTicketByCompany(UpdateTicketRequest request, String tripId){

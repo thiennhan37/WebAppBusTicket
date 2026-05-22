@@ -58,6 +58,12 @@ class _SearchResultPageState extends State<SearchResultPage> {
     return "$startWeekday, $startDayStr";
   }
 
+  String _getMaxPrice() {
+    if (searchTripViewModel.trips.isEmpty) return '--';
+    int maxPrice = searchTripViewModel.trips.fold(0, (max, trip) => trip.price > max ? trip.price : max);
+    return '${(maxPrice / 1000).toInt()}K';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -125,7 +131,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
                   children: [
                     const Icon(Icons.directions_bus, color: Colors.blue, size: 24),
                     const SizedBox(height: 4),
-                    const Text('169K', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text(_getMaxPrice(), style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 4),
                     Container(height: 3, width: 60, color: Colors.blue),
                   ],

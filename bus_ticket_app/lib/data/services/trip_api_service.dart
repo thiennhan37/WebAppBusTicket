@@ -13,31 +13,39 @@ class TripApiService {
     required String date,
     int? minPrice,
     int? maxPrice,
-    String? busCompanyId,
+    List<String>? busCompanyIds,
     String? departureTimeFrom,
     String? departureTimeTo,
-    int? pickupStopId,
-    int? dropoffStopId,
+    List<int>? pickupStopIds,
+    List<int>? dropoffStopIds,
     String? busType,
     double? minRating,
     String? sortBy,
   }) async {
-    final queryParams = {
+    final queryParams = <String, dynamic>{
       'startProvince': startProvince,
       'endProvince': endProvince,
       'date': date,
     };
 
-    if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
-    if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
-    if (busCompanyId != null) queryParams['busCompanyId'] = busCompanyId;
+    if (minPrice != null) queryParams['minPrice'] = minPrice;
+    if (maxPrice != null) queryParams['maxPrice'] = maxPrice;
     if (departureTimeFrom != null) queryParams['departureTimeFrom'] = departureTimeFrom;
     if (departureTimeTo != null) queryParams['departureTimeTo'] = departureTimeTo;
-    if (pickupStopId != null) queryParams['pickupStopId'] = pickupStopId.toString();
-    if (dropoffStopId != null) queryParams['dropoffStopId'] = dropoffStopId.toString();
     if (busType != null) queryParams['busType'] = busType;
-    if (minRating != null) queryParams['minRating'] = minRating.toString();
+    if (minRating != null) queryParams['minRating'] = minRating;
     if (sortBy != null) queryParams['sortBy'] = sortBy;
+
+    // Chuyển sang chuỗi phân cách dấu phẩy để Backend (Spring Boot) map vào List dễ dàng hơn
+    if (busCompanyIds != null && busCompanyIds.isNotEmpty) {
+      queryParams['busCompanyIds'] = busCompanyIds.join(',');
+    }
+    if (pickupStopIds != null && pickupStopIds.isNotEmpty) {
+      queryParams['pickupStopIds'] = pickupStopIds.join(',');
+    }
+    if (dropoffStopIds != null && dropoffStopIds.isNotEmpty) {
+      queryParams['dropoffStopIds'] = dropoffStopIds.join(',');
+    }
 
     return await _apiClient.get(
       ApiConstants.searchTrip,
@@ -57,6 +65,28 @@ class TripApiService {
   Future<Response> getStops(String provinceId) async {
     return await _apiClient.get(
       ApiConstants.getStop,
+      queryParameters: {'provinceID': provinceId},
+      requiresToken: false,
+    );
+  }
+
+  Future<Response> getPickupStops(String provinceId) async {
+    return await _apiClient.get(
+      ApiConstants.getPickupStops(provinceId),
+      requiresToken: false,
+    );
+  }
+
+  Future<Response> getDropoffStops(String provinceId) async {
+    return await _apiClient.get(
+      ApiConstants.getDropoffStops(provinceId),
+      requiresToken: false,
+    );
+  }
+
+  Future<Response> getCompaniesInfo(String provinceId) async {
+    return await _apiClient.get(
+      '${ApiConstants.baseUrl}/trips/get-companies-info',
       queryParameters: {'provinceID': provinceId},
       requiresToken: false,
     );

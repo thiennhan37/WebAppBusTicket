@@ -1,3 +1,5 @@
+import 'package:bus_ticket_app/data/models/bus_company_model.dart';
+import 'package:bus_ticket_app/data/models/stop_model.dart';
 import 'package:bus_ticket_app/data/models/trip_model.dart';
 import 'package:bus_ticket_app/data/repositories/trip_repository.dart';
 import 'package:flutter/cupertino.dart';
@@ -22,11 +24,11 @@ class SearchTripViewModel extends ChangeNotifier {
 
   int? minPrice;
   int? maxPrice;
-  String? busCompanyId;
+  List<String> busCompanyIds = [];
   String? departureTimeFrom;
   String? departureTimeTo;
-  int? pickupStopId;
-  int? dropoffStopId;
+  List<int> pickupStopIds = [];
+  List<int> dropoffStopIds = [];
   String? busType;
   double? minRating;
   String _sortBy = 'departure_asc';
@@ -37,10 +39,28 @@ class SearchTripViewModel extends ChangeNotifier {
     applyFilters();
   }
 
+  String? get startProvinceId => _startProvince;
+  String? get endProvinceId => _endProvince;
+
   void setBaseParams(String startProvince, String endProvince, String date) {
     _startProvince = startProvince;
     _endProvince = endProvince;
     _date = date;
+  }
+
+  Future<List<StopModel>> getPickupStops() async {
+    if (_startProvince == null) return [];
+    return await _tripRepository.getPickupStops(_startProvince!);
+  }
+
+  Future<List<StopModel>> getDropoffStops() async {
+    if (_endProvince == null) return [];
+    return await _tripRepository.getDropoffStops(_endProvince!);
+  }
+
+  Future<List<BusCompanyModel>> getBusCompanies() async {
+    if (_startProvince == null) return [];
+    return await _tripRepository.getBusCompanies(_startProvince!);
   }
 
   Future<void> searchTrip(String startProvince, String endProvince, String date) async {
@@ -48,14 +68,14 @@ class SearchTripViewModel extends ChangeNotifier {
     _endProvince = endProvince;
     _date = date;
 
-    // QUAN TRỌNG: Xóa toàn bộ bộ lọc cũ khi thực hiện tìm kiếm mới từ trang chủ
+    // Reset filters
     minPrice = null;
     maxPrice = null;
-    busCompanyId = null;
+    busCompanyIds = [];
     departureTimeFrom = null;
     departureTimeTo = null;
-    pickupStopId = null;
-    dropoffStopId = null;
+    pickupStopIds = [];
+    dropoffStopIds = [];
     busType = null;
     minRating = null;
     _sortBy = 'departure_asc';
@@ -71,11 +91,11 @@ class SearchTripViewModel extends ChangeNotifier {
   void clearFilters() {
     minPrice = null;
     maxPrice = null;
-    busCompanyId = null;
+    busCompanyIds = [];
     departureTimeFrom = null;
     departureTimeTo = null;
-    pickupStopId = null;
-    dropoffStopId = null;
+    pickupStopIds = [];
+    dropoffStopIds = [];
     busType = null;
     minRating = null;
     _sortBy = 'departure_asc';
@@ -88,20 +108,17 @@ class SearchTripViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Debug log để kiểm tra tham số (có thể xóa sau)
-      print("Fetching trips with: date=$_date, departureTimeTo=$departureTimeTo");
-
       _trips = await _tripRepository.searchTrip(
         startProvince: _startProvince!,
         endProvince: _endProvince!,
         date: _date!,
         minPrice: minPrice,
         maxPrice: maxPrice,
-        busCompanyId: busCompanyId,
+        busCompanyIds: busCompanyIds.isEmpty ? null : busCompanyIds,
         departureTimeFrom: departureTimeFrom,
         departureTimeTo: departureTimeTo,
-        pickupStopId: pickupStopId,
-        dropoffStopId: dropoffStopId,
+        pickupStopIds: pickupStopIds.isEmpty ? null : pickupStopIds,
+        dropoffStopIds: dropoffStopIds.isEmpty ? null : dropoffStopIds,
         busType: busType,
         minRating: minRating,
         sortBy: _sortBy,
