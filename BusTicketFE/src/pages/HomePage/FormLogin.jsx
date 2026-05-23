@@ -42,8 +42,8 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
             if(statusCode === 401) message = "Email hoặc mật khẩu không chính xác";
             else if(statusCode === 403) message = "Tài khoản của bạn đã bị khóa";
             else if(statusCode === 500) message = "Đã có lỗi xảy ra, vui lòng thử lại sau";
-
-            setErrorLogin(message);
+            
+            setErrorLogin(error.response?.data?.message || "Đã có lỗi xảy ra, vui lòng thử lại sau");
         } 
     });
     // const handleLogin = async (e) =>{

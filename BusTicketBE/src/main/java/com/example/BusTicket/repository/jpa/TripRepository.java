@@ -1,5 +1,6 @@
 package com.example.BusTicket.repository.jpa;
 
+import com.example.BusTicket.entity.Ticket;
 import com.example.BusTicket.entity.Trip;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,6 +55,20 @@ public interface TripRepository extends JpaRepository<Trip, String> {
             """
     )
     List<Trip> getClosedTripForUpdate(@Param("now") LocalDateTime now);
+
+    @Query("""
+            SELECT tk FROM Ticket tk
+            JOIN TripSeat ts ON tk.tripSeat = ts
+            JOIN trip t ON ts.trip = t AND t.id = :tripId
+            JOIN FETCH BookingOrder bo ON tk.bookingOrder = bo
+            WHERE tk.updatedAt = (
+              SELECT MAX(t2.updatedAt)
+              FROM Ticket t2
+              WHERE t2.tripSeat = tk.tripSeat
+            )
+            """
+    )
+    List<Ticket> getTicketForCancelTrip(@Param("tripId") String tripId);
 }
 
 

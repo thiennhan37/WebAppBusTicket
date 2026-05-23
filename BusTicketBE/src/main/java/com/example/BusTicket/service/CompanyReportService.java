@@ -2,12 +2,10 @@ package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.response.TripResponse;
-import com.example.BusTicket.dto.response.report.*;
+import com.example.BusTicket.dto.response.companyReport.*;
 import com.example.BusTicket.entity.BusCompany;
-import com.example.BusTicket.entity.BusType;
 import com.example.BusTicket.entity.CompanyUser;
 import com.example.BusTicket.enums.TicketStatusEnum;
-import com.example.BusTicket.enums.TripStatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.TripMapper;
@@ -21,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -149,8 +146,10 @@ public class CompanyReportService {
                 start, end, statusList);
         // lỗi
         Object[] tempObject = (Object[]) ticketIssuerCountCurrentMonth[0];
-        Long appBookedTicketCount = tempObject == null ? 0L : Long.parseLong(tempObject[0].toString());
-        Long phoneBookedTicketCount = tempObject == null ? 0L : Long.parseLong(tempObject[1].toString());
+        Long appBookedTicketCount = (tempObject == null || tempObject[0] == null)
+                ? 0L : Long.parseLong(tempObject[0].toString());
+        Long phoneBookedTicketCount = (tempObject == null || tempObject[1] == null)
+                ? 0L : Long.parseLong(tempObject[1].toString());
         
         return TicketReportResp.builder()
             .ticketCountCurrentMonth(ticketCountCurrentMonth)

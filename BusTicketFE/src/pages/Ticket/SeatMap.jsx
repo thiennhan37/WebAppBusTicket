@@ -28,8 +28,8 @@ const SeatMap = ({ busType, seatMap, onSeatClick, mode = "normal", selectedSeats
   });
   return (
     <div className="bg-white-50 min-h-screen">
-      <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
           {processedFloors.map((floor, floorIndex) => (
             <div key={floorIndex} className="bg-white p-2 rounded-xl shadow-sm border border-gray-300">
               <div className="text-center font-bold text-gray-600 mb-6 pb-2 border-b uppercase tracking-wider">
@@ -37,7 +37,7 @@ const SeatMap = ({ busType, seatMap, onSeatClick, mode = "normal", selectedSeats
               </div>
 
               <div 
-                className="grid gap-1"
+                className="grid gap-2"
                 style={{ 
                   // Sử dụng column từ busType truyền vào
                   gridTemplateColumns: `repeat(${busType.diagram.column}, minmax(0, 1fr))` 
@@ -74,7 +74,7 @@ const SeatMap = ({ busType, seatMap, onSeatClick, mode = "normal", selectedSeats
                       <div
                         key={seat.id}
                         onClick={() => onSeatClick && onSeatClick(seat)} 
-                        className={`relative h-[120px] rounded-lg border-2 p-1 transition-all duration-200 ${cursorClass} ${bgClass}`}
+                        className={`relative h-[150px] rounded-lg border-2 p-1 transition-all duration-200 ${cursorClass} ${bgClass}`}
                       >
                         <div className="flex items-center gap-1">
                           <span className={`font-semibold text-black`}>{seat.seatName}</span>

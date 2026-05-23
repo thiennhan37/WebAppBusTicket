@@ -2,12 +2,12 @@ package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.general.BusDiagram;
+import com.example.BusTicket.dto.request.CancelTicketRequest;
 import com.example.BusTicket.dto.request.TripCrRequest;
 import com.example.BusTicket.dto.request.TripUpRequest;
 import com.example.BusTicket.dto.response.*;
 import com.example.BusTicket.entity.*;
-import com.example.BusTicket.enums.TripSeatEnum;
-import com.example.BusTicket.enums.TripStatusEnum;
+import com.example.BusTicket.enums.*;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.TicketMapper;
@@ -19,6 +19,7 @@ import com.example.BusTicket.util.IdUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -50,6 +51,9 @@ public class TripService {
     private final TripMapper tripMapper;
     private final TripSeatMapper tripSeatMapper;
     private final RedisTemplate<String, String> redisTemplate;
+    private final CancelForOrderService cancelForOrderService;
+    private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
 
 
     @Value("${booking.holdingSeatPrefixKey}")
@@ -94,6 +98,10 @@ public class TripService {
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
         BusCompany busCompany = companyUser.getBusCompany();
         Trip trip = tripRepository.findById(tripId).orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        if(trip.getDepartureTime().isBefore(LocalDateTime.now())){
+            trip.setStatus(TripStatusEnum.CLOSED.name());
+            tripRepository.save(trip);
+        }
         if( !busCompany.getId().equals(trip.getBusCompany().getId()))
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
 
@@ -189,6 +197,8 @@ public class TripService {
         }
 
     }
+
+    @Transactional
     public TripResponse openTrip(String tripId){
         Jwt jwt = JwtHelper.getJwt();
         CompanyUser companyUser = companyUserRepository.findById(jwt.getSubject())
@@ -226,6 +236,7 @@ public class TripService {
         return tripMapper.toTripResponse(tripRepository.save(trip));
     }
 
+    @Transactional
     public void cancelTrip(String tripId){
         Jwt jwt = JwtHelper.getJwt();
         CompanyUser companyUser = companyUserRepository.findById(jwt.getSubject())
@@ -236,10 +247,42 @@ public class TripService {
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
         if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
             throw new MyAppException(ErrorCode.CANCEL_TRIP_INVALID);
-        trip.setStatus(TripStatusEnum.CANCELLED.name());
+
 
         // hủy các ticket
+        List<Ticket> ticketList = tripRepository.getTicketForCancelTrip(tripId);
+        Map<String, List<Ticket>> bookingTicketMap = new HashMap<>();
+        for(Ticket ticket : ticketList){
+            if(ticket.getStatus().equals(TicketStatusEnum.PAID.name())){
+                BookingOrder bookingOrder = ticket.getBookingOrder();
+                bookingTicketMap
+                        .computeIfAbsent(bookingOrder.getId(), k -> new ArrayList<>())
+                        .add(ticket);
+            }
+        }
+        for(String bookingOrderId : bookingTicketMap.keySet()){
+            List<Ticket> tempTicketList = bookingTicketMap.get(bookingOrderId);
+            refundTicketForCancelTrip(bookingOrderId, tempTicketList);
+        }
+        trip.setStatus(TripStatusEnum.CANCELLED.name());
+        for(Ticket ticket : ticketList){
+            ticket.setStatus(TicketStatusEnum.CANCELLED.name());
+        }
+        ticketRepository.saveAll(ticketList);
+        tripRepository.save(trip);
+    }
+    public void refundTicketForCancelTrip(String bookingOrderId, List<Ticket> ticketList){
+        Payment payment = paymentRepository.findByBookingOrderIdAndType(bookingOrderId, MomoEnum.PAYMENT.name());
+        if(payment == null) throw new MyAppException(ErrorCode.NOT_EXISTED);
+        // nếu đã thanh toán thì refund
+        if(payment.getStatus().equals(PaymentEnum.SUCCESSFUL.name())){
+            Long amount = ticketList.stream().mapToLong(Ticket::getPrice).sum();
+            Long parentTransId = payment.getTransId();
+            String description = "Hoàn trả tiền vé hủy cho đơn hàng #" + bookingOrderId;
 
+            boolean refundResult = paymentService.refundPayment(parentTransId, bookingOrderId, amount, description);
+            if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
+        }
     }
 
     public Page<TripResponse> getAllTrips(String status, String keyword, LocalDate date, String busType, Pageable pageable){

@@ -1,6 +1,9 @@
 package com.example.BusTicket.repository.jpa;
 
 import com.example.BusTicket.entity.CompanyUser;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -23,5 +26,13 @@ public interface CompanyUserRepository extends JpaRepository<CompanyUser, String
     Long countBeforeMonth(@Param("busCompanyId") String busCompanyId,
                                @Param("end") LocalDateTime end);
     Long countByBusCompanyId(String busCompanyId);
+    Page<CompanyUser> findAll(Specification specification, Pageable pageable);
 
+    @Query("""
+    SELECT cu
+    FROM CompanyUser cu
+    JOIN FETCH cu.busCompany
+    WHERE cu.id = :id
+""")
+    Optional<CompanyUser> findByIdWithCompany(String id);
 }

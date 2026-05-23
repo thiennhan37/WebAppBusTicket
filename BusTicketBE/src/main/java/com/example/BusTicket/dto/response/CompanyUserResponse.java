@@ -20,4 +20,5 @@ public class CompanyUserResponse {
     private LocalDate dob;
     private String gender, role, status;
     private LocalDateTime createdAt;
+    private String busCompanyName;
 }

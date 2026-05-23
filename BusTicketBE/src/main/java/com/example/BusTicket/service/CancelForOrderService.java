@@ -88,7 +88,8 @@ public class CancelForOrderService {
             if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
         }
 
-        // chưa lưu lịch sử
+        // chưa lưu lịch sửa
+
         return true;
     }
 

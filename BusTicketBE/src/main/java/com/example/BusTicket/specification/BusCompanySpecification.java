@@ -2,6 +2,7 @@ package com.example.BusTicket.specification;
 
 import com.example.BusTicket.entity.BusCompany;
 import com.example.BusTicket.entity.CompanyUser;
+import com.example.BusTicket.entity.TripRating;
 import org.springframework.data.jpa.domain.Specification;
 
 public class BusCompanySpecification {
@@ -18,4 +19,10 @@ public class BusCompanySpecification {
             return criteriaBuilder.like(criteriaBuilder.lower(root.get("companyName")), pattern);
         };
     }
+//    public static Specification<TripRating> hasAvgStars(Integer avgStars){
+//        return (root, query, criteriaBuilder) -> {
+//            if(avgStars == null) return criteriaBuilder.conjunction();
+//            return criteriaBuilder.equal(criteriaBuilder.floor(root.get("averageStars")), avgStars);
+//        };
+//    }
 }

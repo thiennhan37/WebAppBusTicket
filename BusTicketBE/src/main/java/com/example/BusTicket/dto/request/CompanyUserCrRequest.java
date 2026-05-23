@@ -1,18 +1,16 @@
 package com.example.BusTicket.dto.request;
 
-import com.example.BusTicket.entity.BusCompany;
-import com.example.BusTicket.validatior.BirthConstraint;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-@Getter
+@Builder
+@Data
+@AllArgsConstructor @NoArgsConstructor
 public class CompanyUserCrRequest {
 
     @NotNull(message = "Email must be not null")
@@ -23,7 +21,6 @@ public class CompanyUserCrRequest {
     @NotNull(message = "fullName must be not null")
     private String fullName;
 
-    @BirthConstraint(min = 18, message = "birthday is invalid")
     private LocalDate dob;
     private String gender;
     @NotNull(message = "Role must be not null")

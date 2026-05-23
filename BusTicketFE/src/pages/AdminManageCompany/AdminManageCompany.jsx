@@ -5,10 +5,27 @@ import { useSearchParams } from 'react-router-dom';
 import AdminService from '../../Services/AdminService';
 import Pagination from '../../components/other/Pagination';
 import { toast } from 'sonner';
+import CompanyDetailModal from './CompanyDetailModal';
+import ConfirmModal from '../../components/other/ConfirmModal';
 
 const AdminManageCompany = () => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmData, setConfirmData] = useState({ id: null, newStatus: null });
+
+  const handleOpenDetailModal = (company) => {
+    setSelectedCompany(company);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setSelectedCompany(null);
+    setIsDetailModalOpen(false);
+  };
 
   const page = Number(searchParams.get('page')) || 1;
   const statusFilter = searchParams.get('status') || 'All';
@@ -29,7 +46,6 @@ const AdminManageCompany = () => {
   const { data } = useQuery({
     queryKey: ['busCompanyPage', page, keyword, statusFilter, sortOrder],
     queryFn: async () => {
-        if(page) console.log(page)
       const response = await AdminService.getBusCompanyPage({ filterParams: params });
       return response.data.result;
     },
@@ -57,8 +73,14 @@ const AdminManageCompany = () => {
     } 
   });
 
-  const handleStatusChange = (id, newStatus) => {
-    changeStatus({ id, newStatus });
+  const handleStatusChangeClick = (id, newStatus) => {
+    setConfirmData({ id, newStatus });
+    setShowConfirm(true);
+  };
+
+  const handleConfirmStatusChange = () => {
+    changeStatus(confirmData);
+    setShowConfirm(false);
   };
 
   const formatDate = dateString => {
@@ -198,14 +220,14 @@ const AdminManageCompany = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
                           {/* detail */}
-                          <button className="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded-md transition-colors"
+                          <button onClick={() => handleOpenDetailModal(operator)} className="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded-md transition-colors"
                             title="Xem chi tiết">
                               <BookText size={18} />
                           </button>
 
                           {/* lock */}
                           {operator.status === 'ACTIVE' && (
-                            <button onClick={() => handleStatusChange(operator.id,'BLOCKED')}
+                            <button onClick={() => handleStatusChangeClick(operator.id,'BLOCKED')}
                               className="text-red-600 hover:text-red-900 bg-gray-100 p-2 rounded-md transition-colors"
                               title="Khóa tài khoản">
                               <LockKeyhole size={18} />
@@ -214,7 +236,7 @@ const AdminManageCompany = () => {
 
                           {/* unlock */}
                           {operator.status === 'BLOCKED' && (
-                            <button onClick={() => handleStatusChange(operator.id,'ACTIVE')}
+                            <button onClick={() => handleStatusChangeClick(operator.id,'ACTIVE')}
                               className="text-green-600 hover:text-green-900 bg-blue-50 p-2 rounded-md transition-colors"
                               title="Mở khóa">
                               <UnlockKeyhole size={18} />
@@ -239,6 +261,21 @@ const AdminManageCompany = () => {
             <Pagination page={page} onPageChange={onPageChange} totalPages={totalPage} />
           </div>
         </div>
+
+        {/* Detail Modal */}
+        <CompanyDetailModal 
+          isOpen={isDetailModalOpen} 
+          onClose={handleCloseDetailModal} 
+          busCompany={selectedCompany} 
+        />
+        <ConfirmModal 
+          view={"absolute"}
+          isOpen={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          onConfirm={handleConfirmStatusChange}
+          title="Xác nhận thay đổi trạng thái"
+          message={`Bạn có chắc chắn muốn ${confirmData.newStatus === "BLOCKED" ? "khóa" : "mở khóa"} nhà xe này?`}
+        />
       </div>
     </div>
   );

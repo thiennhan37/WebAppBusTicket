@@ -95,6 +95,92 @@ public class SendMailService {
         );
     }
 
+    public void sendPendingRegistrationEmail(String companyEmail, String companyName) {
+        if (companyName == null || companyName.isBlank()) {
+            companyName = "Nhà xe";
+        }
+
+        String htmlBody = """
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2>Đăng ký nhà xe thành công</h2>
+
+            <p>Xin chào <b>%s</b>,</p>
+
+            <p>
+                Chúng tôi đã tiếp nhận thông tin đăng ký đối tác nhà xe của bạn.
+            </p>
+
+            <p>
+                Hồ sơ hiện đang trong quá trình xét duyệt.
+                Chúng tôi sẽ phản hồi trong thời gian sớm nhất.
+            </p>
+
+            <p>Cảm ơn bạn đã đồng hành cùng hệ thống VEXEDAT.</p>
+        </body>
+        </html>
+        """.formatted(companyName);
+
+        mailService.sendHtmlMail(
+                companyEmail,
+                "Thông báo tiếp nhận đăng ký nhà xe",
+                htmlBody,
+                null,
+                null
+        );
+    }
+
+    public void sendCompanyAccountCreatedEmail(String companyEmail, String companyName, String username, String password) {
+        if (companyName == null || companyName.isBlank()) companyName = "Nhà xe";
+
+        String htmlBody = """
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2>Tài khoản nhà xe đã được tạo thành công</h2>
+            <p>Xin chào <b>%s</b>,</p>
+            <p>Hồ sơ đăng ký của bạn đã được xét duyệt thành công.</p>
+            <p>Thông tin đăng nhập:</p>
+
+            <div style="
+                background-color:#f4f4f4;
+                padding:12px;
+                border-radius:8px;
+                width:fit-content;
+            ">
+                <p><b>Tài khoản:</b> %s</p>
+                <p><b>Mật khẩu tạm thời:</b> %s</p>
+            </div>
+
+            <p>Vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên để đảm bảo an toàn.</p>
+            <p>Chúc nhà xe hoạt động hiệu quả cùng nền tảng VEXEDAT.</p>
+        </body>
+        </html>
+        """.formatted(companyName, username, password);
+
+        mailService.sendHtmlMail(companyEmail, "Tạo tài khoản nhà xe thành công", htmlBody, null, null);
+    }
+
+    public void sendRegistrationRejectedEmail(String companyEmail, String companyName) {
+        if (companyName == null || companyName.isBlank()) companyName = "Nhà xe";
+
+        String htmlBody = """
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2>Thông báo kết quả đăng ký nhà xe</h2>
+            <p>Xin chào <b>%s</b>,</p>
+            <p>Rất tiếc, hồ sơ đăng ký nhà xe của bạn hiện chưa được phê duyệt.</p>
+
+            <p>Nếu cần hỗ trợ hoặc muốn biết thêm thông tin,
+                vui lòng liên hệ tổng đài để được giải đáp. </p>
+
+            <p>Xin cảm ơn bạn đã quan tâm đến hệ thống VEXEDAT.</p>
+        </body>
+        </html>
+        """.formatted(companyName);
+
+        mailService.sendHtmlMail(companyEmail, "Thông báo đăng ký nhà xe không thành công", htmlBody, null, null);
+    }
+
     public void sendCustomerPaymentSuccessEmail(BookingOrder bookingOrder, List<Ticket> tickets) {
         if (bookingOrder == null || bookingOrder.getCustomerEmail() == null || bookingOrder.getCustomerEmail().isBlank()) {
             return;

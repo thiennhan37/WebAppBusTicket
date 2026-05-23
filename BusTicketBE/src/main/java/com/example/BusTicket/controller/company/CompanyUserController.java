@@ -51,4 +51,8 @@ public class CompanyUserController {
     {
         return ApiResponse.success(companyUserService.updateCompanyUser(request));
     }
+    @GetMapping("/get-me")
+    ApiResponse<CompanyUserResponse> getMe(){
+        return ApiResponse.success(companyUserService.getMe());
+    }
 }

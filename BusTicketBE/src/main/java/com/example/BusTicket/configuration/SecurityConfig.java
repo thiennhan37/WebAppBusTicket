@@ -37,9 +37,11 @@ public class SecurityConfig {
     };
     private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**", "/api/**", "/admin/create"};
     private final String[] ADMIN_ENDPOINTS = {"/users", "/admin/company-page", "/admin/company-register-page",
-        "/admin/company-status"};
+        "/admin/company-status", "/admin/company-register", "/admin/staff-page", "/admin/customer-page",
+    "/admin/company-status", "/admin/customer-status", "/admin/staff-status",
+    "/admin-report/revenue", "/admin-report/ticket", "/admin-report/customer"};
     private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open",
-        "/nhaxe/report"};
+            "/nhaxe/trips/cancel", "/nhaxe/companyReport", "/nhaxe/rating", "/nhaxe/rating-page"};
     private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes", "/nhaxe/bus-company"};
     private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
             "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order", "/auth/change-password"};
@@ -75,6 +77,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, COMPANY_UPDATE_ENDPOINTS)
                             .hasAnyRole(RoleEnum.MANAGER.name(), RoleEnum.STAFF.name())
                         .requestMatchers(HttpMethod.PUT, ADMIN_ENDPOINTS).hasRole(RoleEnum.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, ADMIN_ENDPOINTS).hasRole(RoleEnum.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, ADMIN_ENDPOINTS).hasRole(RoleEnum.ADMIN.name())
                         .anyRequest().authenticated()
                         //Tất cả API khác → bắt buộc có JWT
         );

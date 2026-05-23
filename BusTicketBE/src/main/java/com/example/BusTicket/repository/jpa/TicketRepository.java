@@ -59,6 +59,15 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
         @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
+        SELECT count(t.id)
+        FROM Ticket t
+        WHERE t.updatedAt >= :start
+            AND t.updatedAt < :end
+            AND t.status IN :statuses
+   """)
+    Long countSystemTicketsByStatusesInPeriod(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end, @Param("statuses") List<String> statuses);
+
+    @Query("""
         SELECT\s
         SUM(CASE WHEN t.bookingOrder.creatingStaff IS NULL THEN 1 ELSE 0 END),
         SUM(CASE WHEN t.bookingOrder.creatingStaff IS NOT NULL THEN 1 ELSE 0 END)

@@ -11,9 +11,11 @@ import com.example.BusTicket.dto.response.PaymentResponse;
 import com.example.BusTicket.dto.response.PaymentUrlResponse;
 import com.example.BusTicket.entity.BookingOrder;
 import com.example.BusTicket.entity.Payment;
+import com.example.BusTicket.entity.Trip;
 import com.example.BusTicket.enums.AccountType;
 import com.example.BusTicket.enums.MomoEnum;
 import com.example.BusTicket.enums.PaymentEnum;
+import com.example.BusTicket.enums.TripStatusEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.PaymentMapper;
@@ -73,10 +75,12 @@ public class PaymentService {
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         // chặn khi customer yêu cầu thanh toán cho 1 payment đã thành công
         if(payment.getStatus().equals(PaymentEnum.SUCCESSFUL.name())) throw new MyAppException(ErrorCode.PAYMENT_COMPLETED);
-
+        Trip trip = payment.getBookingOrder().getTrip();
+        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
+            throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
         String payUrl = redisTemplate.opsForValue().get(paymentPrefixKey + paymentId);
         if(payUrl == null){
-            // nếu đã bị xóa tỏng redis -> query lại momo lấy link thanh toán
+            // nếu đã bị xóa trong redis -> query lại momo lấy link thanh toán
             String bookingOrderId = payment.getBookingOrder().getId();
             MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder()
                     .bookingOrderId(bookingOrderId)
