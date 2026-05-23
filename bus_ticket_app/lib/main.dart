@@ -1,5 +1,6 @@
 import 'package:bus_ticket_app/core/storage/storage_service.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
+import 'package:bus_ticket_app/features/customer/viewmodels/favorite_viewmodel.dart';
 import 'package:bus_ticket_app/pages/splash_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -20,7 +21,10 @@ void main() async {
     providers: [
       ChangeNotifierProvider<AuthViewModel>(
         create: (_) => getIt<AuthViewModel>(),
-      )
+      ),
+      ChangeNotifierProvider<FavoriteViewModel>(
+        create: (_) => getIt<FavoriteViewModel>(),
+      ),
     ],
     child: const MyApp(),
   ));

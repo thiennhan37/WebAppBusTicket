@@ -5,10 +5,7 @@ import com.example.BusTicket.dto.general.BusDiagram;
 import com.example.BusTicket.dto.request.CancelTicketRequest;
 import com.example.BusTicket.dto.request.TripCrRequest;
 import com.example.BusTicket.dto.request.TripUpRequest;
-import com.example.BusTicket.dto.response.TicketResponse;
-import com.example.BusTicket.dto.response.TripResponse;
-import com.example.BusTicket.dto.response.TripSeatResponse;
-import com.example.BusTicket.dto.response.TripSimpleResponse;
+import com.example.BusTicket.dto.response.*;
 import com.example.BusTicket.entity.*;
 import com.example.BusTicket.enums.*;
 import com.example.BusTicket.exception.ErrorCode;
@@ -61,6 +58,8 @@ public class TripService {
 
     @Value("${booking.holdingSeatPrefixKey}")
     private String holdingSeatPrefixKey;
+
+
 
     @Transactional
     public TripResponse createTrip(TripCrRequest request){

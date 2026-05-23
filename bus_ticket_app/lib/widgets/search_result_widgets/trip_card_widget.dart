@@ -1,4 +1,6 @@
+import 'package:bus_ticket_app/features/customer/viewmodels/favorite_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../data/models/trip_model.dart';
 
 class TripCard extends StatelessWidget {
@@ -134,7 +136,27 @@ class TripCard extends StatelessWidget {
                 ),
               ),
 
-              const Icon(Icons.favorite_border, color: Colors.grey),
+              Consumer<FavoriteViewModel>(
+                builder: (context, favoriteVM, child) {
+                  final isFav = favoriteVM.isFavorite(trip.id);
+                  return IconButton(
+                    icon: Icon(
+                      isFav ? Icons.favorite : Icons.favorite_border,
+                      color: isFav ? Colors.red : Colors.grey,
+                    ),
+                    onPressed: () {
+                      favoriteVM.toggleFavorite(trip);
+                      ScaffoldMessenger.of(context).clearSnackBars();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(!isFav ? 'Đã thêm vào yêu thích' : 'Đã bỏ yêu thích'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ],
           ),
 

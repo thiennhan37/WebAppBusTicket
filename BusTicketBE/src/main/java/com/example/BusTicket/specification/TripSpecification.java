@@ -124,6 +124,13 @@ public class TripSpecification {
         };
     }
 
+    public static Specification<Trip> withBusCompanyIds(Collection<String> busCompanyIds) {
+        return (root, query, cb) -> {
+            if (busCompanyIds == null || busCompanyIds.isEmpty()) return cb.conjunction();
+            return root.get("busCompany").get("id").in(busCompanyIds);
+        };
+    }
+
     public static Specification<Trip> withBusTypeName(String busTypeName) {
         return (root, query, cb) -> {
             if (busTypeName == null || busTypeName.isBlank()) return cb.conjunction();
@@ -149,6 +156,36 @@ public class TripSpecification {
         return (root, query, cb) -> {
             if (statuses == null || statuses.isEmpty()) return cb.conjunction();
             return root.get("status").in(statuses);
+        };
+    }
+
+    public static Specification<Trip> hasAnyPickupStops(Collection<Long> pickupStopIds) {
+        return (root, query, cb) -> {
+            if (pickupStopIds == null || pickupStopIds.isEmpty()) return cb.conjunction();
+            var sq = query.subquery(Long.class);
+            var rs = sq.from(RouteStop.class);
+            sq.select(rs.get("id"));
+            sq.where(
+                    cb.equal(rs.get("route").get("id"), root.get("route").get("id")),
+                    cb.equal(rs.get("type"), "UP"),
+                    rs.get("stop").get("id").in(pickupStopIds)
+            );
+            return cb.exists(sq);
+        };
+    }
+
+    public static Specification<Trip> hasAnyDropoffStops(Collection<Long> dropoffStopIds) {
+        return (root, query, cb) -> {
+            if (dropoffStopIds == null || dropoffStopIds.isEmpty()) return cb.conjunction();
+            var sq = query.subquery(Long.class);
+            var rs = sq.from(RouteStop.class);
+            sq.select(rs.get("id"));
+            sq.where(
+                    cb.equal(rs.get("route").get("id"), root.get("route").get("id")),
+                    cb.equal(rs.get("type"), "DOWN"),
+                    rs.get("stop").get("id").in(dropoffStopIds)
+            );
+            return cb.exists(sq);
         };
     }
 }

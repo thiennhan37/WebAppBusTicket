@@ -1,8 +1,10 @@
 package com.example.BusTicket.service;
 
+import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.response.BusCompanyRatingResponse;
 import com.example.BusTicket.dto.response.CustomerTripSearchRespone;
 import com.example.BusTicket.dto.response.CustomerSearchBusDiagramRespone;
+import com.example.BusTicket.dto.response.SearchCompaniesResponse;
 import com.example.BusTicket.entity.*;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
@@ -12,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -36,6 +39,8 @@ public class SearchTripService {
     private final TripSeatRepository tripSeatRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final TripRatingService tripRatingService;
+    private final BusCompanyRepository busCompanyRepository;
+    private final CustomerRepository customerRepository;
 
     @Value("${booking.holdingSeatPrefixKey}")
     private String holdingSeatPrefixKey;
@@ -49,15 +54,33 @@ public class SearchTripService {
             Integer minPrice,
             Integer maxPrice,
             String busCompanyId,
+            List<String> busCompanyIds,
             LocalTime departureTimeFrom,
             LocalTime departureTimeTo,
             Long pickupStopId,
+            List<Long> pickupStopIds,
             Long dropoffStopId,
+            List<Long> dropoffStopIds,
             String busType,
             Double minRating,
             String sortBy) {
         // Validate provinces
         validateProvinces(startProvince, endProvince);
+
+        List<String> effectiveBusCompanyIds = normalizeStringList(busCompanyIds);
+        if ((effectiveBusCompanyIds == null || effectiveBusCompanyIds.isEmpty()) && busCompanyId != null && !busCompanyId.isBlank()) {
+            effectiveBusCompanyIds = List.of(busCompanyId);
+        }
+
+        List<Long> effectivePickupStopIds = normalizeLongList(pickupStopIds);
+        if ((effectivePickupStopIds == null || effectivePickupStopIds.isEmpty()) && pickupStopId != null) {
+            effectivePickupStopIds = List.of(pickupStopId);
+        }
+
+        List<Long> effectiveDropoffStopIds = normalizeLongList(dropoffStopIds);
+        if ((effectiveDropoffStopIds == null || effectiveDropoffStopIds.isEmpty()) && dropoffStopId != null) {
+            effectiveDropoffStopIds = List.of(dropoffStopId);
+        }
 
         // Query danh sách trips
         Specification<Trip> spec = Specification.where(TripSpecification.withArrivalProvinceId(startProvince))
@@ -65,10 +88,10 @@ public class SearchTripService {
                 .and(TripSpecification.hasDate(date))
                 .and(TripSpecification.withStatuses(List.of("OPEN", "SCHEDULED")))
                 .and(TripSpecification.hasPriceRange(minPrice == null ? null : minPrice.longValue(), maxPrice == null ? null : maxPrice.longValue()))
-                .and(TripSpecification.withBusCompanyId(busCompanyId))
+                .and(TripSpecification.withBusCompanyIds(effectiveBusCompanyIds))
                 .and(TripSpecification.hasDepartureTimeRange(departureTimeFrom, departureTimeTo))
-                .and(TripSpecification.hasPickupStop(pickupStopId))
-                .and(TripSpecification.hasDropoffStop(dropoffStopId))
+                .and(TripSpecification.hasAnyPickupStops(effectivePickupStopIds))
+                .and(TripSpecification.hasAnyDropoffStops(effectiveDropoffStopIds))
                 .and(TripSpecification.withBusTypeName(busType));
 
         Sort sort = buildSort(sortBy);
@@ -81,6 +104,16 @@ public class SearchTripService {
                 .collect(Collectors.toList());
     }
 
+
+    private List<String> normalizeStringList(List<String> values) {
+        if (values == null) return null;
+        return values.stream().filter(Objects::nonNull).map(String::trim).filter(v -> !v.isEmpty()).distinct().toList();
+    }
+
+    private List<Long> normalizeLongList(List<Long> values) {
+        if (values == null) return null;
+        return values.stream().filter(Objects::nonNull).distinct().toList();
+    }
 
     private Sort buildSort(String sortBy) {
         return switch (normalizeSortBy(sortBy)) {
@@ -101,6 +134,29 @@ public class SearchTripService {
             default -> "departure_asc";
         };
     }
+
+
+    public List<SearchCompaniesResponse> getCompaniesInfo(String provinceID){
+        List<BusCompany> companies;
+        if(provinceID == null || provinceID.isBlank()){
+            companies = busCompanyRepository.findByStatus("ACTIVE");
+        }else{
+            provinceRepository.findById(provinceID)
+                    .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+            companies = busCompanyRepository.findActiveCompaniesByProvinceId(provinceID);
+        }
+        return companies.stream().map(
+                company -> {
+                    BusCompanyRatingResponse rating = tripRatingService.getCompanyRating(company.getId());
+                    return SearchCompaniesResponse.builder()
+                            .busCompanyId(company.getId())
+                            .busCompanyName(company.getCompanyName())
+                            .rating(rating.getAvgStars())
+                            .build();
+                }
+        ).collect(Collectors.toList());
+    }
+
     /**
      * Build CustomerTripSearchRespone bằng cách kết hợp thông tin từ nhiều query
      */

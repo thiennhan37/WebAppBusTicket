@@ -117,9 +117,13 @@ class SeatSelectionViewModel extends ChangeNotifier {
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  void startPaymentTimer() {
+  void startPaymentTimer({int? initialSeconds}) {
     _paymentTimer?.cancel();
-    _remainingSeconds = 600;
+    if (initialSeconds != null) {
+      _remainingSeconds = initialSeconds;
+    } else {
+      _remainingSeconds = 600;
+    }
     _isTimerExpired = false;
     _paymentTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
@@ -139,18 +143,16 @@ class SeatSelectionViewModel extends ChangeNotifier {
     _remainingSeconds = 600;
     _isTimerExpired = false;
     _paymentData = null;
-    _orderCode = null; // Clear orderCode when stopping
+    _orderCode = null;
     _manualTotalPrice = null;
     stopStatusCheck();
   }
 
   void startStatusCheck() {
     _statusCheckTimer?.cancel();
-    // Only start polling if Momo is selected and orderCode exists
     if (_selectedPaymentMethod != 'momo' || _orderCode == null) return;
 
     _statusCheckTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
-      // Logic: Only poll if in payment step, Momo is selected, and not already successful
       if (_currentStep == 6 && _selectedPaymentMethod == 'momo' && _orderCode != null && !_isPaymentSuccessful) {
         print('Checking payment status for OrderId: $_orderCode');
         final isPaid = await _tripRepository.checkPaymentStatus(_orderCode!);
@@ -175,12 +177,10 @@ class SeatSelectionViewModel extends ChangeNotifier {
   void selectPaymentMethod(String method) {
     _selectedPaymentMethod = method;
     if (method == 'momo') {
-      // If we already have payment data, start checking immediately
       if (_paymentData != null) {
         startStatusCheck();
       }
     } else {
-      // If switched to other method, stop checking Momo status
       stopStatusCheck();
     }
     notifyListeners();
@@ -214,7 +214,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchBusDiagram(String tripId) async {
-    if (tripId.isEmpty) return; // Tránh fetch khi không có tripId
+    if (tripId.isEmpty) return;
     _isLoading = true;
     _errorMessage = null;
     _lastErrorCode = null;
@@ -240,14 +240,15 @@ class SeatSelectionViewModel extends ChangeNotifier {
     }
   }
 
-  void resumeBooking(String orderId, int totalPrice) {
+  void resumeBooking(String orderId, int totalPrice, {int? remainingSeconds}) {
     _orderCode = orderId;
     _manualTotalPrice = totalPrice;
     _currentStep = 6;
     _isPaymentSuccessful = false;
     _paymentData = null;
     _selectedPaymentMethod = null;
-    startPaymentTimer();
+    // Bắt đầu timer với số giây còn lại (nếu có), nếu không có thì mặc định 600s
+    startPaymentTimer(initialSeconds: remainingSeconds ?? 600);
     notifyListeners();
   }
 

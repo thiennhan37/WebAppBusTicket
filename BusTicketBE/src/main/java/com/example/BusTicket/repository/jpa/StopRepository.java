@@ -18,4 +18,5 @@ public interface StopRepository extends JpaRepository<Stop, Long> {
             WHERE st.id IN :stopIdList AND st.province.id = :provinceId
             """)
     int countStopBelongToProvince(List<Long> stopIdList, String provinceId);
+    List<Stop> findByProvinceIdAndNameContainingIgnoreCase(String provinceId, String keyword);
 }

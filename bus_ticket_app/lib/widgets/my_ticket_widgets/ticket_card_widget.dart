@@ -207,6 +207,7 @@ class TicketCardWidget extends StatelessWidget {
     int punctuality = 5;
     int safety = 5;
     int cleanliness = 5;
+    final TextEditingController descriptionController = TextEditingController();
 
     final viewModel = outerContext.read<MyTicketsViewModel>();
 
@@ -238,6 +239,20 @@ class TicketCardWidget extends StatelessWidget {
                   _buildRatingCategory('Đúng giờ', punctuality, (val) => setState(() => punctuality = val)),
                   _buildRatingCategory('An toàn', safety, (val) => setState(() => safety = val)),
                   _buildRatingCategory('Vệ sinh', cleanliness, (val) => setState(() => cleanliness = val)),
+                  const Text('Nhận xét khác', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: descriptionController,
+                    maxLines: 3,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Nhập đánh giá của bạn về chuyến đi...',
+                      hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -253,6 +268,7 @@ class TicketCardWidget extends StatelessWidget {
                      "punctuality": punctuality,
                      "safety": safety,
                      "cleanliness": cleanliness,
+                     "description": descriptionController.text,
                    });
 
                    // Use dialogContext to ensure we have a valid context

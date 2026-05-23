@@ -28,6 +28,19 @@ public class ProvinceController {
                                          @RequestParam(required = false) String keyword){
         return ApiResponse.success(provinceService.findAllStops(province, keyword));
     }
+
+    @GetMapping("/provinces/{provinceId}/pickup-stops")
+    ApiResponse<List<Stop>> searchPickupStopsByProvinceId(@PathVariable String provinceId,
+                                                          @RequestParam(required = false) String keyword){
+        return ApiResponse.success(provinceService.searchPickupStopsByProvinceId(provinceId, keyword));
+    }
+
+    @GetMapping("/provinces/{provinceId}/dropoff-stops")
+    ApiResponse<List<Stop>> searchDropoffStopsByProvinceId(@PathVariable String provinceId,
+                                                           @RequestParam(required = false) String keyword){
+        return ApiResponse.success(provinceService.searchDropoffStopsByProvinceId(provinceId, keyword));
+    }
+
     //    @GetMapping("/route")
 //    ApiResponse<PagedModel<Route>> getAllCompanyUser(@RequestParam(required = false) String status,
 //                                                     @RequestParam(required = false) String role,

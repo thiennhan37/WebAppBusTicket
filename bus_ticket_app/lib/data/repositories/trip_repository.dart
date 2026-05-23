@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/data/models/bus_company_model.dart';
 import 'package:bus_ticket_app/data/models/bus_diagram_model.dart';
 import 'package:bus_ticket_app/data/models/stop_model.dart';
 import 'package:bus_ticket_app/data/models/trip_model.dart';
@@ -14,11 +15,11 @@ class TripRepository {
     required String date,
     int? minPrice,
     int? maxPrice,
-    String? busCompanyId,
+    List<String>? busCompanyIds,
     String? departureTimeFrom,
     String? departureTimeTo,
-    int? pickupStopId,
-    int? dropoffStopId,
+    List<int>? pickupStopIds,
+    List<int>? dropoffStopIds,
     String? busType,
     double? minRating,
     String? sortBy,
@@ -30,11 +31,11 @@ class TripRepository {
         date: date,
         minPrice: minPrice,
         maxPrice: maxPrice,
-        busCompanyId: busCompanyId,
+        busCompanyIds: busCompanyIds,
         departureTimeFrom: departureTimeFrom,
         departureTimeTo: departureTimeTo,
-        pickupStopId: pickupStopId,
-        dropoffStopId: dropoffStopId,
+        pickupStopIds: pickupStopIds,
+        dropoffStopIds: dropoffStopIds,
         busType: busType,
         minRating: minRating,
         sortBy: sortBy,
@@ -43,7 +44,7 @@ class TripRepository {
       return (data as List).map<TripModel>((json) => TripModel.fromJson(json)).toList();
     } on DioException catch (e) {
       if (e.response != null) {
-        final errorMessage = e.response?.data['message'] ?? 'Có lỗi xảy ra khi lấy danh sách tỉnh thành';
+        final errorMessage = e.response?.data['message'] ?? 'Có lỗi xảy ra khi lấy danh sách chuyến xe';
         throw Exception(errorMessage);
       }
       throw Exception('Lỗi kết nối mạng: ${e.message}');
@@ -87,6 +88,45 @@ class TripRepository {
       throw Exception('Lỗi kết nối mạng: ${e.message}');
     } catch (e) {
       throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  Future<List<StopModel>> getPickupStops(String provinceId) async {
+    try {
+      final response = await _tripApiService.getPickupStops(provinceId);
+      final data = response.data['result'] as List?;
+      if (data != null) {
+        return data.map((json) => StopModel.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Lỗi lấy điểm đón: $e');
+    }
+  }
+
+  Future<List<StopModel>> getDropoffStops(String provinceId) async {
+    try {
+      final response = await _tripApiService.getDropoffStops(provinceId);
+      final data = response.data['result'] as List?;
+      if (data != null) {
+        return data.map((json) => StopModel.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Lỗi lấy điểm trả: $e');
+    }
+  }
+
+  Future<List<BusCompanyModel>> getBusCompanies(String provinceId) async {
+    try {
+      final response = await _tripApiService.getCompaniesInfo(provinceId);
+      final data = response.data['result'] as List?;
+      if (data != null) {
+        return data.map((json) => BusCompanyModel.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      throw Exception('Lỗi lấy danh sách nhà xe: $e');
     }
   }
 

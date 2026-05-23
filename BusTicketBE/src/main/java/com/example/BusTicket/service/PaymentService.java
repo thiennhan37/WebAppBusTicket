@@ -151,25 +151,31 @@ public class PaymentService {
         }
         else if(type.equals(AccountType.CUSTOMER.name())){
             boolean refunded = false;
+            String customerId = payment.getBookingOrder().getBookingUser() != null
+                    ? payment.getBookingOrder().getBookingUser().getId()
+                    : null;
+            String customerHoldInfo = customerId == null
+                    ? null
+                    : redisTemplate.opsForValue().get(customerHoldingSeatPrefixKey + customerId);
             long responseTimeMillis = Long.parseLong(payload.get("responseTime").toString());
             LocalDateTime paymentTime = Instant.ofEpochMilli(responseTimeMillis)
                     .atZone(ZoneId.systemDefault()).toLocalDateTime();
             LocalDateTime expiredTime = payment.getBookingOrder().getCreatedAt().plusSeconds(holdingSeatTime);
-            if (paymentTime.isAfter(expiredTime)) {
+            boolean missingOrderCodeInRedis = customerHoldInfo == null || !customerHoldInfo.contains(bookingOrderId);
+            if (paymentTime.isAfter(expiredTime) || missingOrderCodeInRedis) {
                 log.info("Payment received after holding time expired. Refunding payment for booking order: {}", bookingOrderId);
                 Long amount = Long.valueOf(payload.get("amount").toString());
                 Long parentTransId = Long.valueOf(payload.get("transId").toString());
-                String description = "Hoàn tiền cho thanh toán quá hạn hóa đơn #" + bookingOrderId;
+                String description = missingOrderCodeInRedis
+                        ? "Hoàn tiền do không tìm thấy mã đơn hàng trong redis #" + bookingOrderId
+                        : "Hoàn tiền cho thanh toán quá hạn hóa đơn #" + bookingOrderId;
                 boolean refundResult = refundPayment(parentTransId, bookingOrderId, amount, description);
                 if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
                 refunded = true;
             } else {
-                log.info("Payment received within holding time. Processing payment for booking order: {}", bookingOrderId);
                 int updateRow = paymentRepository.updateToSuccess(paymentId);
                 if(updateRow != 1){
-                    log.info("Payment update failed for paymentId: {}", paymentId);
                     if (PaymentEnum.SUCCESSFUL.name().equals(payment.getStatus())) {
-                        log.info("Duplicate IPN for already successful payment, skipping refund");
                         refunded = false;
                     } else {
                         log.info("Refunding payment due to update failure");

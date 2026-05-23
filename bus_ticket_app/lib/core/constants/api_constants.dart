@@ -20,6 +20,9 @@ class ApiConstants {
   static const String orderDetail = '$baseUrl/customer/order/detail/';
   static const String unholdSeats = '$baseUrl/customer/orders/unhold-seats/';
   static const String rateOrder = '$baseUrl/customer/orders/';
+  static const String getCompaniesInfo = '$baseUrl/trips/get-companies-info';
+  static String getPickupStops(String provinceId) => '$baseUrl/provinces/$provinceId/pickup-stops';
+  static String getDropoffStops(String provinceId) => '$baseUrl/provinces/$provinceId/dropoff-stops';
 
   // HTTP Headers
   static const Map<String, String> headers = {

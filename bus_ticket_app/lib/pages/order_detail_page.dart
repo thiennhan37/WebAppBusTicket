@@ -1,10 +1,12 @@
 import 'package:bus_ticket_app/data/models/order_detail_model.dart';
+import 'package:bus_ticket_app/data/models/trip_model.dart';
 import 'package:bus_ticket_app/data/repositories/customer_repository.dart';
+import 'package:bus_ticket_app/features/customer/viewmodels/favorite_viewmodel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
+import 'package:provider/provider.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final String orderId;
@@ -180,7 +182,42 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                             Text(order.busType, style: const TextStyle(color: Colors.grey, fontSize: 13)),
                           ],
                         ),
-                        const Icon(Icons.favorite_border, color: Colors.grey),
+                        Consumer<FavoriteViewModel>(
+                          builder: (context, favoriteVM, child) {
+                            final bool isFav = favoriteVM.isFavorite(order.bookingOrderId);
+                            return IconButton(
+                              icon: Icon(
+                                isFav ? Icons.favorite : Icons.favorite_border,
+                                color: isFav ? Colors.red : Colors.grey,
+                              ),
+                              onPressed: () {
+                                final trip = TripModel(
+                                  id: order.bookingOrderId,
+                                  departureTime: DateFormat('HH:mm').format(DateTime.parse(order.departureTime)),
+                                  arrivalTime: '--:--',
+                                  duration: '',
+                                  departureStation: order.pickupStop,
+                                  arrivalStation: order.dropoffStop,
+                                  price: order.totalAmount ~/ (order.seatCount > 0 ? order.seatCount : 1),
+                                  availableSeats: 0,
+                                  busCompanyName: order.busCompanyName,
+                                  busType: order.busType,
+                                  rating: 4.5,
+                                  reviewCount: 100,
+                                );
+                                favoriteVM.toggleFavorite(trip);
+                                
+                                ScaffoldMessenger.of(context).clearSnackBars();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(!isFav ? 'Đã thêm vào yêu thích' : 'Đã bỏ yêu thích'),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),

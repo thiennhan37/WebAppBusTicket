@@ -63,6 +63,7 @@ public class TripRatingService {
                 .cleanliness(request.getCleanliness())
                 .averageStars(avgScore)
                 .createdAt(LocalDateTime.now())
+                .description(request.getDescription())
                 .bookingOrder(bookingOrder)
                 .customer(customer)
                 .busCompany(bookingOrder.getTrip().getBusCompany())
