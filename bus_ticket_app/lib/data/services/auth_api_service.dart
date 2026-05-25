@@ -8,6 +8,22 @@ class AuthApiService {
 
   AuthApiService(this._apiClient);
 
+  Future<Response> googleMobileLogin(Map<String, dynamic> data) async {
+    return await _apiClient.post(
+      ApiConstants.googleMobileLogin,
+      data: data,
+      options: Options(extra: {'requiresToken': false}),
+    );
+  }
+
+  Future<Response> googleMobileRegister(Map<String, dynamic> data) async {
+    return await _apiClient.post(
+      ApiConstants.googleMobileRegister,
+      data: data,
+      options: Options(extra: {'requiresToken': false}),
+    );
+  }
+
   Future<Response> sendOtp(Map<String, dynamic> data) async {
     return await _apiClient.post(
       ApiConstants.sendOtp,

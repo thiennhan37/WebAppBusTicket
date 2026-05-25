@@ -28,7 +28,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
-import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClient;
+
+import java.util.Map;
 
 import java.time.LocalDateTime;
 import java.util.Random;
@@ -61,6 +65,15 @@ public class AuthenticationService {
     private long accessTime;
     @Value("${jwt.refreshTime}")
     private long refreshTime;
+
+    @Value("${google.oauth.client-id:}")
+    private String googleClientId;
+    @Value("${google.oauth.client-secret:}")
+    private String googleClientSecret;
+    @Value("${google.oauth.redirect-uri:http://localhost:8080/auth/google/callback}")
+    private String googleRedirectUri;
+    @Value("${google.oauth.mobile-client-ids:}")
+    private String googleMobileClientIds;
 
     public AuthenticationResponse loginCompany(LoginRequest request)
             throws JOSEException
@@ -244,6 +257,189 @@ public class AuthenticationService {
         if (customer.getStatus().equals(StatusEnum.BLOCKED.name())) {
             throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
         }
+
+        String accessToken = jwtService.generateToken(customer, accessTime);
+        String refreshToken = jwtService.generateToken(customer, refreshTime);
+        CustomerInfoResponse customerInfo = customerMapper.toCustomerInfoResponse(customer);
+
+        return CustomerAuthenticationResponse.builder()
+                .customerInfo(customerInfo)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    public String buildGoogleLoginUrl() {
+        if (googleClientId == null || googleClientId.isBlank()) {
+            throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        }
+        return "https://accounts.google.com/o/oauth2/v2/auth" +
+                "?client_id=" + googleClientId +
+                "&redirect_uri=" + googleRedirectUri +
+                "&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent";
+    }
+
+    public CustomerAuthenticationResponse loginCustomerWithGoogle(String code) throws JOSEException {
+        if (googleClientId == null || googleClientId.isBlank() || googleClientSecret == null || googleClientSecret.isBlank()) {
+            throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        }
+
+        RestClient restClient = RestClient.builder().build();
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("code", code);
+        form.add("client_id", googleClientId);
+        form.add("client_secret", googleClientSecret);
+        form.add("redirect_uri", googleRedirectUri);
+        form.add("grant_type", "authorization_code");
+
+        Map tokenResponse = restClient.post()
+                .uri("https://oauth2.googleapis.com/token")
+                .body(form)
+                .retrieve()
+                .body(Map.class);
+
+        String accessTokenGoogle = tokenResponse == null ? null : (String) tokenResponse.get("access_token");
+        if (accessTokenGoogle == null) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        Map userInfo = restClient.get()
+                .uri("https://www.googleapis.com/oauth2/v3/userinfo")
+                .header("Authorization", "Bearer " + accessTokenGoogle)
+                .retrieve()
+                .body(Map.class);
+
+        String email = userInfo == null ? null : (String) userInfo.get("email");
+        if (email == null || email.isBlank()) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        Customer customer = customerRepository.findByEmail(email).orElseGet(() -> customerRepository.save(Customer.builder()
+                .id(com.example.BusTicket.util.IdUtil.generateID())
+                .email(email)
+                .fullName((String) userInfo.get("name"))
+                .status(StatusEnum.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .role("CUSTOMER")
+                .build()));
+
+        if (customer.getStatus().equals(StatusEnum.BLOCKED.name())) {
+            throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
+        String accessToken = jwtService.generateToken(customer, accessTime);
+        String refreshToken = jwtService.generateToken(customer, refreshTime);
+        CustomerInfoResponse customerInfo = customerMapper.toCustomerInfoResponse(customer);
+
+        return CustomerAuthenticationResponse.builder()
+                .customerInfo(customerInfo)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+
+    public CustomerAuthenticationResponse loginCustomerWithGoogleIdToken(String idToken) throws JOSEException {
+        if (idToken == null || idToken.isBlank()) {
+            throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        }
+
+        RestClient restClient = RestClient.builder().build();
+        Map tokenInfo = restClient.get()
+                .uri("https://oauth2.googleapis.com/tokeninfo?id_token={idToken}", idToken)
+                .retrieve()
+                .body(Map.class);
+
+        if (tokenInfo == null) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        String email = (String) tokenInfo.get("email");
+        String emailVerified = (String) tokenInfo.get("email_verified");
+        String audience = (String) tokenInfo.get("aud");
+        String name = (String) tokenInfo.get("name");
+
+        if (email == null || email.isBlank() || !"true".equalsIgnoreCase(emailVerified)) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if (googleMobileClientIds == null || googleMobileClientIds.isBlank()) {
+            throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        }
+
+        boolean audienceAllowed = java.util.Arrays.stream(googleMobileClientIds.split(","))
+                .map(String::trim)
+                .anyMatch(clientId -> clientId.equals(audience));
+        if (!audienceAllowed) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        Customer customer = customerRepository.findByEmail(email).orElseThrow(
+                () -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED)
+        );
+
+        if (customer.getStatus().equals(StatusEnum.BLOCKED.name())) {
+            throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
+        String accessToken = jwtService.generateToken(customer, accessTime);
+        String refreshToken = jwtService.generateToken(customer, refreshTime);
+        CustomerInfoResponse customerInfo = customerMapper.toCustomerInfoResponse(customer);
+
+        return CustomerAuthenticationResponse.builder()
+                .customerInfo(customerInfo)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    public CustomerAuthenticationResponse registerCustomerWithGoogleIdToken(String idToken) throws JOSEException {
+        if (idToken == null || idToken.isBlank()) {
+            throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        }
+
+        RestClient restClient = RestClient.builder().build();
+        Map tokenInfo = restClient.get()
+                .uri("https://oauth2.googleapis.com/tokeninfo?id_token={idToken}", idToken)
+                .retrieve()
+                .body(Map.class);
+
+        if (tokenInfo == null) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        String email = (String) tokenInfo.get("email");
+        String emailVerified = (String) tokenInfo.get("email_verified");
+        String audience = (String) tokenInfo.get("aud");
+        String name = (String) tokenInfo.get("name");
+
+        if (email == null || email.isBlank() || !"true".equalsIgnoreCase(emailVerified)) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if (googleMobileClientIds == null || googleMobileClientIds.isBlank()) {
+            throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        }
+
+        boolean audienceAllowed = java.util.Arrays.stream(googleMobileClientIds.split(","))
+                .map(String::trim)
+                .anyMatch(clientId -> clientId.equals(audience));
+        if (!audienceAllowed) {
+            throw new MyAppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if (customerRepository.existsByEmail(email)) {
+            throw new MyAppException(ErrorCode.EMAIL_EXISTED);
+        }
+
+        Customer customer = customerRepository.save(Customer.builder()
+                .id(com.example.BusTicket.util.IdUtil.generateID())
+                .email(email)
+                .fullName(name)
+                .status(StatusEnum.ACTIVE)
+                .createdAt(LocalDateTime.now())
+                .role("CUSTOMER")
+                .build());
 
         String accessToken = jwtService.generateToken(customer, accessTime);
         String refreshToken = jwtService.generateToken(customer, refreshTime);

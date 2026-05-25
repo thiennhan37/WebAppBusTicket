@@ -1,16 +1,19 @@
 import 'package:bus_ticket_app/features/customer/viewmodels/favorite_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../data/models/favorite_search_model.dart';
 import '../../data/models/trip_model.dart';
 
 class TripCard extends StatelessWidget {
   final TripModel trip;
   final VoidCallback onBookPressed; // Hàm xử lý khi nhấn "Chọn chỗ"
+  final FavoriteSearchModel favoriteInfo;
 
   const TripCard({
     super.key,
     required this.trip,
     required this.onBookPressed,
+    required this.favoriteInfo
   });
   // Hàm phụ trợ để format giá tiền (VD: 250000 -> 250.000đ)
   String _formatPrice(int price) {
@@ -138,14 +141,14 @@ class TripCard extends StatelessWidget {
 
               Consumer<FavoriteViewModel>(
                 builder: (context, favoriteVM, child) {
-                  final isFav = favoriteVM.isFavorite(trip.id);
+                  final isFav = favoriteVM.isFavorite(favoriteInfo);
                   return IconButton(
                     icon: Icon(
                       isFav ? Icons.favorite : Icons.favorite_border,
                       color: isFav ? Colors.red : Colors.grey,
                     ),
                     onPressed: () {
-                      favoriteVM.toggleFavorite(trip);
+                      favoriteVM.toggleFavorite(favoriteInfo);
                       ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

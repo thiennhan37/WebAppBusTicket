@@ -9,10 +9,15 @@ part of 'order_detail_model.dart';
 OrderDetailModel _$OrderDetailModelFromJson(Map<String, dynamic> json) =>
     OrderDetailModel(
       bookingOrderId: json['bookingOrderId'] as String,
+      pickupProvinceId: json['pickupProvinceId'] as String,
       pickupProvince: json['pickupProvince'] as String,
+      dropoffProvinceId: json['dropoffProvinceId'] as String,
       dropoffProvince: json['dropoffProvince'] as String,
+      pickupStopId: (json['pickupStopId'] as num).toInt(),
       pickupStop: json['pickupStop'] as String,
+      dropoffStopId: (json['dropoffStopId'] as num).toInt(),
       dropoffStop: json['dropoffStop'] as String,
+      busCompanyId: json['busCompanyId'] as String,
       busCompanyName: json['busCompanyName'] as String,
       departureTime: json['departureTime'] as String,
       busType: json['busType'] as String,
@@ -28,10 +33,15 @@ OrderDetailModel _$OrderDetailModelFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$OrderDetailModelToJson(OrderDetailModel instance) =>
     <String, dynamic>{
       'bookingOrderId': instance.bookingOrderId,
+      'pickupProvinceId': instance.pickupProvinceId,
       'pickupProvince': instance.pickupProvince,
+      'dropoffProvinceId': instance.dropoffProvinceId,
       'dropoffProvince': instance.dropoffProvince,
+      'pickupStopId': instance.pickupStopId,
       'pickupStop': instance.pickupStop,
+      'dropoffStopId': instance.dropoffStopId,
       'dropoffStop': instance.dropoffStop,
+      'busCompanyId': instance.busCompanyId,
       'busCompanyName': instance.busCompanyName,
       'departureTime': instance.departureTime,
       'busType': instance.busType,

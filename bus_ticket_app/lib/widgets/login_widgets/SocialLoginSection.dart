@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+
+import '../../features/auth/viewmodels/auth_view_model.dart';
+import '../bottom_navigation.dart';
 
 class SocialLoginSection extends StatelessWidget {
   final bool isLogin;
@@ -33,8 +37,27 @@ class SocialLoginSection extends StatelessWidget {
           width: double.infinity,
           height: 50,
           child: OutlinedButton(
-            onPressed: () {
-              // TODO: Xử lí đăng nhập Google
+            onPressed: () async {
+              final authVM = context.read<AuthViewModel>();
+              
+              // Gọi login hoặc register tùy vào trạng thái isLogin
+              final success = isLogin 
+                  ? await authVM.loginWithGoogle() 
+                  : await authVM.registerWithGoogle();
+
+              if (!context.mounted) return;
+
+              if (success) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CustomBottonNav()),
+                      (route) => false,
+                );
+              } else if (authVM.errorMessage != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(authVM.errorMessage!)),
+                );
+              }
             },
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Colors.grey.shade300),

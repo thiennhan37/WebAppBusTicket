@@ -5,6 +5,8 @@ import 'package:bus_ticket_app/widgets/search_result_widgets/trip_card_widget.da
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
+import '../data/models/favorite_search_model.dart';
+
 class SearchResultPage extends StatefulWidget {
   final String departureName;
   final String destinationName;
@@ -201,6 +203,17 @@ class _SearchResultPageState extends State<SearchResultPage> {
                       ),
                     );
                   },
+                  favoriteInfo: FavoriteSearchModel(
+                    departureProvinceId: widget.departureId,
+                    departureProvinceName: widget.departureName,
+                    destinationProvinceId: widget.destinationId,
+                    destinationProvinceName: widget.destinationName,
+                    pickupStopId: searchTripViewModel.pickupStopIds.isNotEmpty ? searchTripViewModel.pickupStopIds.first : null,
+                    pickupStopName: null,
+                    busCompanyId: searchTripViewModel.busCompanyIds.isNotEmpty ? searchTripViewModel.busCompanyIds.first : '',
+                    busCompanyName: trip.busCompanyName,
+                    departureTime: trip.departureTime,
+                  ),
                 );
               },
             ),

@@ -1,10 +1,6 @@
 package com.example.BusTicket.controller.customer;
 
-import com.example.BusTicket.dto.request.CustomerRegisterRequest;
-import com.example.BusTicket.dto.request.EmailLoginRequest;
-import com.example.BusTicket.dto.request.LogoutRequest;
-import com.example.BusTicket.dto.request.OtpVerifyRequest;
-import com.example.BusTicket.dto.request.UpdateCustomerProfileRequest;
+import com.example.BusTicket.dto.request.*;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.CustomerAuthenticationResponse;
 import com.example.BusTicket.dto.response.CustomerInfoResponse;
@@ -25,7 +21,7 @@ import java.text.ParseException;
 public class CustomerAuthController {
     private final AuthenticationService authenticationService;
     private final CustomerAuthService customerAuthService;
-    
+
     @PostMapping("auth/send-otp")
     ApiResponse<Void> sendOtp(@RequestBody EmailLoginRequest request) {
         log.info("in sendOtp controller");
@@ -67,6 +63,30 @@ public class CustomerAuthController {
         String customerId = authentication != null ? authentication.getName() : null;
         log.info("Updating profile for customer: {}", customerId);
         CustomerInfoResponse response = customerAuthService.updateCustomerProfile(customerId, request);
+        return ApiResponse.success(response);
+    }
+
+    @GetMapping("auth/google/login")
+    public ApiResponse<String> googleLoginUrl() {
+        return ApiResponse.success(authenticationService.buildGoogleLoginUrl());
+    }
+
+    @GetMapping("auth/google/callback")
+    public ApiResponse<CustomerAuthenticationResponse> googleCallback(@RequestParam("code") String code) throws JOSEException {
+        CustomerAuthenticationResponse response = authenticationService.loginCustomerWithGoogle(code);
+        return ApiResponse.success(response);
+    }
+
+
+    @PostMapping("auth/google/mobile")
+    public ApiResponse<CustomerAuthenticationResponse> googleMobileLogin(@RequestBody GoogleMobileLoginRequest request) throws JOSEException {
+        CustomerAuthenticationResponse response = authenticationService.loginCustomerWithGoogleIdToken(request.getIdToken());
+        return ApiResponse.success(response);
+    }
+
+    @PostMapping("auth/google/mobile/register")
+    public ApiResponse<CustomerAuthenticationResponse> googleMobileRegister(@RequestBody GoogleMobileLoginRequest request) throws JOSEException {
+        CustomerAuthenticationResponse response = authenticationService.registerCustomerWithGoogleIdToken(request.getIdToken());
         return ApiResponse.success(response);
     }
 }

@@ -23,6 +23,8 @@ class ApiConstants {
   static const String getCompaniesInfo = '$baseUrl/trips/get-companies-info';
   static String getPickupStops(String provinceId) => '$baseUrl/provinces/$provinceId/pickup-stops';
   static String getDropoffStops(String provinceId) => '$baseUrl/provinces/$provinceId/dropoff-stops';
+  static const String googleMobileLogin = '$baseUrl/auth/google/mobile';
+  static const String googleMobileRegister = '$baseUrl/auth/google/mobile/register';
 
   // HTTP Headers
   static const Map<String, String> headers = {

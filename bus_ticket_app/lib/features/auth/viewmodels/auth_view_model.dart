@@ -4,6 +4,9 @@ import 'package:bus_ticket_app/data/services/local/auth_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:bus_ticket_app/data/repositories/AuthRepository.dart';
 import 'package:get_it/get_it.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+import '../../../core/constants/google_auth_constants.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
@@ -100,6 +103,116 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> loginWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: GoogleAuthConstants.hasServerClientId
+            ? GoogleAuthConstants.serverClientId
+            : null,
+      );
+      await googleSignIn.signOut();
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        _errorMessage = GoogleAuthConstants.hasServerClientId
+            ? 'Không lấy được Google ID token.'
+            : 'Không lấy được Google ID token. Thiếu GOOGLE_SERVER_CLIENT_ID (Web client id).';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final response = await _authRepository.googleMobileLogin(idToken);
+      if (response.isSuccess && response.result != null) {
+        final storage = GetIt.I<AuthStorage>();
+        await storage.saveTokens(response.accessToken!, response.refreshToken!);
+        if (response.customerInfo != null) {
+          await storage.saveUserInfo(response.customerInfo!.toJson());
+        }
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _errorMessage = response.message ?? 'Đăng nhập Google thất bại';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Lỗi đăng nhập Google: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> registerWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: GoogleAuthConstants.hasServerClientId
+            ? GoogleAuthConstants.serverClientId
+            : null,
+      );
+      await googleSignIn.signOut();
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final auth = await account.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        _errorMessage = GoogleAuthConstants.hasServerClientId
+            ? 'Không lấy được Google ID token.'
+            : 'Không lấy được Google ID token. Thiếu GOOGLE_SERVER_CLIENT_ID (Web client id).';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final response = await _authRepository.googleMobileRegister(idToken);
+      if (response.isSuccess && response.result != null) {
+        final storage = GetIt.I<AuthStorage>();
+        await storage.saveTokens(response.accessToken!, response.refreshToken!);
+        if (response.customerInfo != null) {
+          await storage.saveUserInfo(response.customerInfo!.toJson());
+        }
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+
+      _errorMessage = response.message ?? 'Đăng ký Google thất bại';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _errorMessage = 'Lỗi đăng ký Google: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     final storage = GetIt.I<AuthStorage>();
 
@@ -121,7 +234,7 @@ class AuthViewModel extends ChangeNotifier {
       await storage.clearAll();
     }
   }
-  
+
   Future<bool> sendRegistrationOtp(
       CustomerRegisterRequestModel registerData) async {
     _isLoading = true;

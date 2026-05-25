@@ -70,7 +70,7 @@ void setupServiceLocator() {
   );
   getIt.registerLazySingleton<ProfileViewModel>(() => ProfileViewModel(getIt<CustomerRepository>()));
   getIt.registerFactory<MyTicketsViewModel>(() => MyTicketsViewModel(getIt<CustomerRepository>()));
-  getIt.registerLazySingleton<FavoriteViewModel>(() => FavoriteViewModel());
+  getIt.registerLazySingleton<FavoriteViewModel>(() => FavoriteViewModel(getIt<TripRepository>()));
 
   // 2. Đăng ký Feature Data Sources
   getIt.registerLazySingleton<AuthApiService>(

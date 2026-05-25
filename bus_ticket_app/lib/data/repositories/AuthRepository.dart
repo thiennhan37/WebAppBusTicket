@@ -48,6 +48,42 @@ class AuthRepository {
     }
   }
 
+  // Google Login
+  Future<AuthResponseModel> googleMobileLogin(String idToken) async {
+    try {
+      final response = await _authApiService.googleMobileLogin({
+        "idToken": idToken,
+      });
+
+      return AuthResponseModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return AuthResponseModel.fromJson(e.response!.data);
+      }
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Google Register
+  Future<AuthResponseModel> googleMobileRegister(String idToken) async {
+    try {
+      final response = await _authApiService.googleMobileRegister({
+        "idToken": idToken,
+      });
+
+      return AuthResponseModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return AuthResponseModel.fromJson(e.response!.data);
+      }
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Logout
   Future<void> logout({required String accessToken, required String refreshToken}) async {
     try {

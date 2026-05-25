@@ -14,6 +14,13 @@ class _FavoritePagesState extends State<FavoritePages> {
   DateTime _selectedDate = DateTime.now();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FavoriteViewModel>().loadFavoriteTripsByDate(_selectedDate);
+    });
+  }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -40,6 +47,20 @@ class _FavoritePagesState extends State<FavoritePages> {
                   return _buildEmptyState();
                 }
 
+                if (favoriteVM.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (favoriteVM.errorMessage != null) {
+                  return Center(child: Text(favoriteVM.errorMessage!));
+                }
+
+                if (favoriteVM.favoriteTrips.isEmpty) {
+                  return const Center(
+                    child: Text('Không có chuyến xe nào phù hợp trong ngày này'),
+                  );
+                }
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -57,9 +78,9 @@ class _FavoritePagesState extends State<FavoritePages> {
                     Expanded(
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: favoriteVM.favorites.length,
+                        itemCount: favoriteVM.favoriteTrips.length,
                         itemBuilder: (context, index) {
-                          final trip = favoriteVM.favorites[index];
+                          final trip = favoriteVM.favoriteTrips[index];
                           return _buildFavoriteTripCard(trip);
                         },
                       ),
@@ -91,6 +112,7 @@ class _FavoritePagesState extends State<FavoritePages> {
               setState(() {
                 _selectedDate = date;
               });
+              context.read<FavoriteViewModel>().loadFavoriteTripsByDate(_selectedDate);
             },
             child: Container(
               width: 100,
@@ -145,8 +167,9 @@ class _FavoritePagesState extends State<FavoritePages> {
   }
 
   String _formatFullDate(DateTime date) {
-    final dayLabel = _getDayLabel(
-        DateTime.now().difference(date).inDays.abs(), date);
+    final now = DateTime.now();
+    final diff = DateTime(date.year, date.month, date.day).difference(DateTime(now.year, now.month, now.day)).inDays;
+    final dayLabel = _getDayLabel(diff, date);
     return '$dayLabel, ${DateFormat('dd/MM/yyyy').format(date)}';
   }
 
@@ -191,11 +214,11 @@ class _FavoritePagesState extends State<FavoritePages> {
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
-                    const Text('8h 45p', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text(trip.duration, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                     const SizedBox(height: 4),
-                    const Text(
-                      '18:00',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+                    Text(
+                      trip.arrivalTime,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -224,6 +247,8 @@ class _FavoritePagesState extends State<FavoritePages> {
                       Text(
                         trip.arrivalStation,
                         style: const TextStyle(fontSize: 13, color: Colors.grey),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -241,9 +266,9 @@ class _FavoritePagesState extends State<FavoritePages> {
                         '${NumberFormat('#,###', 'vi_VN').format(trip.price)}đ',
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                      const Text(
-                        '32 chỗ trống',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      Text(
+                        '${trip.availableSeats} chỗ trống',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ]
                   ],
@@ -259,7 +284,7 @@ class _FavoritePagesState extends State<FavoritePages> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    'https://picsum.photos/seed/bus/100/100',
+                    'https://picsum.photos/seed/${trip.id}/100/100',
                     width: 50,
                     height: 50,
                     fit: BoxFit.cover,
@@ -288,19 +313,22 @@ class _FavoritePagesState extends State<FavoritePages> {
                 ),
                 Consumer<FavoriteViewModel>(
                   builder: (context, favoriteVM, child) {
-                    final isFav = favoriteVM.isFavorite(trip.id);
+                    final isFav = favoriteVM.isTripFavorite(trip.id);
                     return IconButton(
                       icon: Icon(
                         isFav ? Icons.favorite : Icons.favorite_border,
                         color: isFav ? Colors.red : Colors.grey,
                       ),
                       onPressed: () {
-                        favoriteVM.toggleFavorite(trip);
+                        if (isFav) {
+                          favoriteVM.removeFavoriteByTripId(trip.id);
+                        }
+                        
                         ScaffoldMessenger.of(context).clearSnackBars();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(!isFav ? 'Đã thêm vào yêu thích' : 'Đã bỏ yêu thích'),
-                            duration: const Duration(seconds: 1),
+                          const SnackBar(
+                            content: Text('Đã bỏ yêu thích'),
+                            duration: Duration(seconds: 1),
                           ),
                         );
                       },
