@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../global_varible.dart';
+import 'package:provider/provider.dart';
+
+import '../features/notification/viewmodels/notification_view_model.dart';
 import '../widgets/notification_widgets/NotifacationItem.dart';
 
 class NotificationPages extends StatelessWidget {
@@ -13,7 +15,7 @@ class NotificationPages extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         centerTitle: false,
-        title: Text(
+        title: const Text(
           'Thông báo',
           style: TextStyle(
             color: Colors.white,
@@ -22,48 +24,62 @@ class NotificationPages extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () {},
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Đánh dấu đã đọc',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+          Consumer<NotificationViewModel>(
+            builder: (context, viewModel, _) => TextButton(
+              onPressed: viewModel.notifications.isEmpty ? null : viewModel.markAllAsRead,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Đánh dấu đã đọc',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: viewModel.notifications.isEmpty ? Colors.white70 : Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2.0),
-                Container(height: 2, width: 100, color: Colors.white),
-              ],
+                  const SizedBox(height: 2.0),
+                  Container(height: 2, width: 100, color: Colors.white),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),
         ],
       ),
-      body: _buildNotificationList(),
+      body: Consumer<NotificationViewModel>(
+        builder: (context, viewModel, _) => _buildNotificationList(viewModel),
+      ),
     );
   }
 
-  Widget _buildNotificationList() {
+  Widget _buildNotificationList(NotificationViewModel viewModel) {
+    final notifications = viewModel.notifications;
+    if (notifications.isEmpty) {
+      return const Center(
+        child: Text(
+          'Chưa có thông báo',
+          style: TextStyle(color: Colors.black54, fontSize: 15),
+        ),
+      );
+    }
+
     return ListView.builder(
-      itemCount: mockNotifications.length,
+      itemCount: notifications.length,
       itemBuilder: (context, index) {
-        final notification = mockNotifications[index];
+        final notification = notifications[index];
         return Column(
           children: [
             NotificationItem(
-              icon: notification['icon'],
-              iconColor: notification['iconColor'],
-              iconBackgroundColor: notification['iconBackgroundColor'],
-              title: notification['title'],
-              content: notification['content'],
-              time: notification['time'],
+              icon: notification.icon,
+              iconColor: notification.iconColor,
+              iconBackgroundColor: notification.iconBackgroundColor,
+              title: notification.title,
+              content: notification.message,
+              time: notification.displayTime,
+              read: notification.read,
             ),
-            // Vẽ đường phân cách (trừ phần tử cuối cùng để giao diện sạch hơn)
-            if (index < notification.length) _buildDivider(),
+            if (index < notifications.length - 1) _buildDivider(),
           ],
         );
       },

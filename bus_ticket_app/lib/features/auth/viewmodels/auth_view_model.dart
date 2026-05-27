@@ -2,6 +2,7 @@ import 'package:bus_ticket_app/core/network/api_client.dart';
 import 'package:bus_ticket_app/data/models/customer_info_model.dart';
 import 'package:bus_ticket_app/data/models/customer_register_request_model.dart';
 import 'package:bus_ticket_app/data/services/local/auth_storage.dart';
+import 'package:bus_ticket_app/features/notification/viewmodels/notification_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:bus_ticket_app/data/repositories/AuthRepository.dart';
 import 'package:get_it/get_it.dart';
@@ -68,6 +69,7 @@ class AuthViewModel extends ChangeNotifier {
         final storage = GetIt.I<AuthStorage>();
         await storage.saveTokens(response.accessToken!, response.refreshToken!);
         if (response.customerInfo != null) await storage.saveUserInfo(response.customerInfo!.toJson());
+        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
         _isLoading = false;
         notifyListeners();
         return true;
@@ -119,6 +121,7 @@ class AuthViewModel extends ChangeNotifier {
         if (response.customerInfo != null) {
           await storage.saveUserInfo(response.customerInfo!.toJson());
         }
+        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
         _isLoading = false;
         notifyListeners();
         return true;
@@ -193,6 +196,7 @@ class AuthViewModel extends ChangeNotifier {
         if (response.customerInfo != null) {
           await storage.saveUserInfo(response.customerInfo!.toJson());
         }
+        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
         _isLoading = false;
         notifyListeners();
         return true;
@@ -221,6 +225,7 @@ class AuthViewModel extends ChangeNotifier {
     } catch (e) {
       print('Lỗi quá trình đăng xuất: $e');
     } finally {
+      GetIt.I<NotificationViewModel>().disconnect();
       await storage.clearAll();
     }
   }
@@ -266,6 +271,7 @@ class AuthViewModel extends ChangeNotifier {
         final storage = GetIt.I<AuthStorage>();
         await storage.saveTokens(response.accessToken!, response.refreshToken!);
         if (response.customerInfo != null) await storage.saveUserInfo(response.customerInfo!.toJson());
+        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
         _isLoading = false;
         notifyListeners();
         return true;
@@ -287,7 +293,11 @@ class AuthViewModel extends ChangeNotifier {
     try {
       final refreshToken = await GetIt.I<AuthStorage>().getRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) return false;
-      return await _apiClient.refreshToken();
+      final success = await _apiClient.refreshToken();
+      if (success) {
+        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
+      }
+      return success;
     } catch (e) {
       return false;
     }
