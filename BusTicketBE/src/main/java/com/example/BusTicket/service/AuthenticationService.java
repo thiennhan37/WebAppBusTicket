@@ -393,7 +393,7 @@ public class AuthenticationService {
                 .build();
     }
 
-    public CustomerAuthenticationResponse registerCustomerWithGoogleIdToken(String idToken) throws JOSEException {
+    public CustomerAuthenticationResponse registerCustomerWithGoogleIdToken(String idToken, UpdateCustomerProfileRequest profile) throws JOSEException {
         if (idToken == null || idToken.isBlank()) {
             throw new MyAppException(ErrorCode.INVALID_PARAMETER);
         }
@@ -432,14 +432,24 @@ public class AuthenticationService {
             throw new MyAppException(ErrorCode.EMAIL_EXISTED);
         }
 
-        Customer customer = customerRepository.save(Customer.builder()
+        String fullName = (profile != null && profile.getFullName() != null && !profile.getFullName().isBlank())
+                ? profile.getFullName() : name;
+
+        Customer.CustomerBuilder customerBuilder = Customer.builder()
                 .id(com.example.BusTicket.util.IdUtil.generateID())
                 .email(email)
-                .fullName(name)
+                .fullName(fullName)
                 .status(StatusEnum.ACTIVE)
                 .createdAt(LocalDateTime.now())
-                .role("CUSTOMER")
-                .build());
+                .role("CUSTOMER");
+
+        if (profile != null) {
+            customerBuilder.phone(profile.getPhone());
+            customerBuilder.dob(profile.getDob());
+            customerBuilder.gender(profile.getGender());
+        }
+
+        Customer customer = customerRepository.save(customerBuilder.build());
 
         String accessToken = jwtService.generateToken(customer, accessTime);
         String refreshToken = jwtService.generateToken(customer, refreshTime);

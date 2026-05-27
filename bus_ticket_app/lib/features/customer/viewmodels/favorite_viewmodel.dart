@@ -76,6 +76,10 @@ class FavoriteViewModel extends ChangeNotifier {
     }
   }
 
+  FavoriteSearchModel? getFavoriteForTrip(String tripId) {
+    return _tripToFavorite[tripId];
+  }
+
   bool isFavorite(FavoriteSearchModel favorite) {
     return _favorites.any((item) =>
         item.departureProvinceId == favorite.departureProvinceId &&
@@ -120,9 +124,30 @@ class FavoriteViewModel extends ChangeNotifier {
           sortBy: 'departure_asc',
         );
         
-        for (var trip in result) {
-          allTrips.add(trip);
-          _tripToFavorite[trip.id] = favorite;
+        if (result.isEmpty) {
+          // Add a placeholder trip if no matches found for this favorite on the selected date
+          final placeholderId = 'fav_${favorite.departureProvinceId}_${favorite.destinationProvinceId}_${favorite.busCompanyId}_${favorite.departureTime.replaceAll(':', '')}';
+          final placeholderTrip = TripModel(
+            id: placeholderId,
+            departureTime: favorite.departureTime,
+            arrivalTime: '--:--',
+            duration: '--',
+            departureStation: favorite.pickupStopName ?? favorite.departureProvinceName,
+            arrivalStation: favorite.dropoffStopName ?? favorite.destinationProvinceName,
+            price: 0,
+            availableSeats: 0,
+            busCompanyName: favorite.busCompanyName,
+            busType: 'Chưa có lịch chạy',
+            rating: 5.0,
+            reviewCount: 0,
+          );
+          allTrips.add(placeholderTrip);
+          _tripToFavorite[placeholderId] = favorite;
+        } else {
+          for (var trip in result) {
+            allTrips.add(trip);
+            _tripToFavorite[trip.id] = favorite;
+          }
         }
       }
       

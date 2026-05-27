@@ -85,8 +85,8 @@ public class CustomerAuthController {
     }
 
     @PostMapping("auth/google/mobile/register")
-    public ApiResponse<CustomerAuthenticationResponse> googleMobileRegister(@RequestBody GoogleMobileLoginRequest request) throws JOSEException {
-        CustomerAuthenticationResponse response = authenticationService.registerCustomerWithGoogleIdToken(request.getIdToken());
+    public ApiResponse<CustomerAuthenticationResponse> googleMobileRegister(@RequestBody GoogleRegisterRequest request) throws JOSEException {
+        CustomerAuthenticationResponse response = authenticationService.registerCustomerWithGoogleIdToken(request.getIdToken(), request.getProfile());
         return ApiResponse.success(response);
     }
 }

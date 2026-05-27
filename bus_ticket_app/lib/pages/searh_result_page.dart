@@ -15,6 +15,9 @@ class SearchResultPage extends StatefulWidget {
   final DateTime startDate;
   final DateTime? endDate;
   final bool isRoundTrip;
+  final List<int>? pickupStopIds;
+  final List<int>? dropoffStopIds;
+  final List<String>? busCompanyIds;
 
   const SearchResultPage({
     super.key,
@@ -25,6 +28,9 @@ class SearchResultPage extends StatefulWidget {
     required this.startDate,
     this.endDate,
     this.isRoundTrip = false,
+    this.pickupStopIds,
+    this.dropoffStopIds,
+    this.busCompanyIds,
   });
 
   @override
@@ -86,11 +92,24 @@ class _SearchResultPageState extends State<SearchResultPage> {
 
   void loadData() {
     String formattedDate = "${widget.startDate.day.toString().padLeft(2, '0')}/${widget.startDate.month.toString().padLeft(2, '0')}/${widget.startDate.year}";
-    searchTripViewModel.searchTrip(
-      widget.departureId,
-      widget.destinationId,
-      formattedDate,
-    );
+    
+    // Nếu có tham số lọc truyền vào, ta thiết lập params và apply filters thay vì dùng searchTrip mặc định
+    if (widget.pickupStopIds != null || widget.dropoffStopIds != null || widget.busCompanyIds != null) {
+      searchTripViewModel.setBaseParams(widget.departureId, widget.destinationId, formattedDate);
+      
+      // Reset filters cũ và gán giá trị mới
+      searchTripViewModel.pickupStopIds = widget.pickupStopIds ?? [];
+      searchTripViewModel.dropoffStopIds = widget.dropoffStopIds ?? [];
+      searchTripViewModel.busCompanyIds = widget.busCompanyIds ?? [];
+
+      searchTripViewModel.applyFilters();
+    } else {
+      searchTripViewModel.searchTrip(
+        widget.departureId,
+        widget.destinationId,
+        formattedDate,
+      );
+    }
   }
 
   @override

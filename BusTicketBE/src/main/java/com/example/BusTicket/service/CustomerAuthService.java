@@ -130,7 +130,7 @@ public class CustomerAuthService {
             }
 
             // Kiểm tra số điện thoại trùng lặp (ngoài số hiện tại)
-            if (!customer.getPhone().equals(request.getPhone()) && 
+            if (customer.getPhone() != null && !customer.getPhone().equals(request.getPhone()) &&
                 customerRepository.existsByPhone(request.getPhone())) {
                 throw new MyAppException(ErrorCode.PHONE_EXISTED);
             }

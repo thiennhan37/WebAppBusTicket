@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/pages/account_info_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -40,23 +41,43 @@ class SocialLoginSection extends StatelessWidget {
             onPressed: () async {
               final authVM = context.read<AuthViewModel>();
               
-              // Gọi login hoặc register tùy vào trạng thái isLogin
-              final success = isLogin 
-                  ? await authVM.loginWithGoogle() 
-                  : await authVM.registerWithGoogle();
-
-              if (!context.mounted) return;
-
-              if (success) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CustomBottonNav()),
-                      (route) => false,
-                );
-              } else if (authVM.errorMessage != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(authVM.errorMessage!)),
-                );
+              if (isLogin) {
+                final success = await authVM.loginWithGoogle();
+                if (!context.mounted) return;
+                if (success) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CustomBottonNav()),
+                        (route) => false,
+                  );
+                } else if (authVM.errorMessage != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(authVM.errorMessage!)),
+                  );
+                }
+              } else {
+                // Trường hợp Đăng ký bằng Google
+                final googleData = await authVM.signInWithGoogleForRegister();
+                if (!context.mounted) return;
+                
+                if (googleData != null) {
+                  // Chuyển hướng sang trang AccountInfoPages với thông tin Google
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AccountInfoPages(
+                        isGoogleRegister: true,
+                        googleEmail: googleData['email'],
+                        googleIdToken: googleData['idToken'],
+                        googleFullName: googleData['fullName'],
+                      ),
+                    ),
+                  );
+                } else if (authVM.errorMessage != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(authVM.errorMessage!)),
+                  );
+                }
               }
             },
             style: OutlinedButton.styleFrom(
