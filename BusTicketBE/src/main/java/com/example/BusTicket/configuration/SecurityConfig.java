@@ -31,10 +31,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
     private final String[] AUTH_ENDPOINTS = {"/nhaxe/auth/login", "/nhaxe/auth/logout", "/auth/refresh-token",
         "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
-            "/register/verify", "/auth/log-out", "/admin/auth/login"};
+            "/register/verify", "/auth/log-out", "/admin/auth/login", "/auth/google/mobile", "/auth/google/mobile/register"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type", "/customer/companies/{companyId}/rating",
-            "/provinces/{provinceId}/pickup-stops", "/provinces/{provinceId}/dropoff-stops", "/trips/get-companies-info"
+            "/provinces/{provinceId}/pickup-stops", "/provinces/{provinceId}/dropoff-stops", "/trips/get-companies-info" , "/ws/**"
     };
+    private final String[] AUTH_GET_ENDPOINTS = {"/auth/google/login", "/auth/google/callback"};
     private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**", "/api/**", "/admin/create"};
     private final String[] ADMIN_ENDPOINTS = {"/users", "/admin/company-page", "/admin/company-register-page",
         "/admin/company-status", "/admin/company-register", "/admin/staff-page", "/admin/customer-page",
@@ -64,6 +65,7 @@ public class SecurityConfig {
                 request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Browser gửi OPTIONS trước (CORS)
                         .requestMatchers(HttpMethod.GET, CUSTOMER_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, AUTH_GET_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, CUSTOMER_POST_ENDPOINTS).hasRole(RoleEnum.CUSTOMER.name())
                         .requestMatchers(HttpMethod.GET, CUSTOMER_GET_ENDPOINTS).hasRole(RoleEnum.CUSTOMER.name())
                         .requestMatchers(HttpMethod.POST, AUTH_ENDPOINTS).permitAll()

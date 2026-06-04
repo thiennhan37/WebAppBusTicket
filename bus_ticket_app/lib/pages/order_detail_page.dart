@@ -1,12 +1,12 @@
 import 'package:bus_ticket_app/data/models/order_detail_model.dart';
-import 'package:bus_ticket_app/data/models/trip_model.dart';
 import 'package:bus_ticket_app/data/repositories/customer_repository.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/favorite_viewmodel.dart';
+import 'package:bus_ticket_app/data/models/favorite_search_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
-import 'dart:math' as math;
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 
 class OrderDetailPage extends StatefulWidget {
   final String orderId;
@@ -184,28 +184,27 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         ),
                         Consumer<FavoriteViewModel>(
                           builder: (context, favoriteVM, child) {
-                            final bool isFav = favoriteVM.isFavorite(order.bookingOrderId);
+                            final favoriteInfo = FavoriteSearchModel(
+                              departureProvinceId: order.pickupProvinceId,
+                              departureProvinceName: order.pickupProvince,
+                              destinationProvinceId: order.dropoffProvinceId,
+                              destinationProvinceName: order.dropoffProvince,
+                              pickupStopId: order.pickupStopId,
+                              pickupStopName: order.pickupStop,
+                              dropoffStopId: order.dropoffStopId,
+                              dropoffStopName: order.dropoffStop,
+                              busCompanyId: order.busCompanyId,
+                              busCompanyName: order.busCompanyName,
+                              departureTime: DateFormat('HH:mm').format(DateTime.parse(order.departureTime)),
+                            );
+                            final bool isFav = favoriteVM.isFavorite(favoriteInfo);
                             return IconButton(
                               icon: Icon(
                                 isFav ? Icons.favorite : Icons.favorite_border,
                                 color: isFav ? Colors.red : Colors.grey,
                               ),
                               onPressed: () {
-                                final trip = TripModel(
-                                  id: order.bookingOrderId,
-                                  departureTime: DateFormat('HH:mm').format(DateTime.parse(order.departureTime)),
-                                  arrivalTime: '--:--',
-                                  duration: '',
-                                  departureStation: order.pickupStop,
-                                  arrivalStation: order.dropoffStop,
-                                  price: order.totalAmount ~/ (order.seatCount > 0 ? order.seatCount : 1),
-                                  availableSeats: 0,
-                                  busCompanyName: order.busCompanyName,
-                                  busType: order.busType,
-                                  rating: 4.5,
-                                  reviewCount: 100,
-                                );
-                                favoriteVM.toggleFavorite(trip);
+                                favoriteVM.toggleFavorite(favoriteInfo);
                                 
                                 ScaffoldMessenger.of(context).clearSnackBars();
                                 ScaffoldMessenger.of(context).showSnackBar(

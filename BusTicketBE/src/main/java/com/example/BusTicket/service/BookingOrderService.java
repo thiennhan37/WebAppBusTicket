@@ -26,8 +26,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -43,6 +46,9 @@ public class BookingOrderService {
     private final TicketMapper ticketMapper;
     private final RedisTemplate<String, String> redisTemplate;
     private final SendMailService sendMailService;
+    private final NotificationSocketService notificationSocketService;
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
 
     @Value("${booking.customerHoldingSeatPrefixKey}")
     private String CUSTOMER_HOLD_INFO_PREFIX;
@@ -71,7 +77,33 @@ public class BookingOrderService {
         ticketRepository.saveAll(ticketList);
         if (bookingOrder != null && !ticketList.isEmpty()) {
             sendMailService.sendCustomerPaymentSuccessEmail(bookingOrder, ticketList);
+            if (bookingOrder.getBookingUser() != null)
+                notifyCustomerPaymentSuccess(bookingOrder, ticketList);
         }
+    }
+
+    private void notifyCustomerPaymentSuccess(BookingOrder bookingOrder, List<Ticket> ticketList) {
+        if (bookingOrder.getBookingUser() == null) {
+            return;
+        }
+        Trip trip = bookingOrder.getTrip();
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("bookingOrderId", bookingOrder.getId());
+        data.put("tripId", trip != null ? trip.getId() : null);
+        data.put("departureTime", trip != null ? trip.getDepartureTime() : null);
+        data.put("totalCost", bookingOrder.getTotalCost());
+        data.put("ticketIds", ticketList.stream().map(Ticket::getId).toList());
+
+        String departureText = trip != null && trip.getDepartureTime() != null
+                ? " Chuyến đi khởi hành lúc " + trip.getDepartureTime().format(DATE_TIME_FORMATTER) + "."
+                : "";
+        notificationSocketService.notifyCustomer(
+                bookingOrder.getBookingUser().getId(),
+                "PAYMENT_SUCCESS",
+                "Thanh toán thành công",
+                "Đơn #" + bookingOrder.getId() + " đã thanh toán thành công." + departureText,
+                data
+        );
     }
     @Transactional
     public TicketResponse updateTicketByCompany(UpdateTicketRequest request, String tripId){

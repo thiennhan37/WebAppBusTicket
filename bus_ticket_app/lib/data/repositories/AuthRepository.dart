@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
+import '../models/customer_info_model.dart';
 import '../models/customer_register_request_model.dart';
-import '../services/auth_api_service.dart'; // Thay ApiService bằng AuthApiService
+import '../services/auth_api_service.dart';
 import '../models/otp_request_model.dart';
 import '../models/otp_response_model.dart';
 import '../models/otp_verify_model.dart';
@@ -38,6 +39,50 @@ class AuthRepository {
       final response = await _authApiService.verifyOtp(request.toJson());
 
       return AuthResponseModel.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return AuthResponseModel.fromJson(e.response!.data);
+      }
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Google Login
+  Future<AuthResponseModel> googleMobileLogin(String idToken) async {
+    try {
+      final response = await _authApiService.googleMobileLogin({
+        "idToken": idToken,
+      });
+
+      return AuthResponseModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return AuthResponseModel.fromJson(e.response!.data);
+      }
+      throw Exception('Network error: ${e.message}');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Google Register: Request body với cấu trúc profile mới
+  Future<AuthResponseModel> googleMobileRegister(String idToken, CustomerInfoModel customerInfo) async {
+    try {
+      final response = await _authApiService.googleMobileRegister({
+        "idToken": idToken,
+        "profile": {
+          "fullName": customerInfo.fullName,
+          "email": customerInfo.email,
+          "phone": customerInfo.phone,
+          "dob": customerInfo.dob,
+          "gender": customerInfo.gender,
+          "idRegion": customerInfo.idRegion,
+        },
+      });
+
+      return AuthResponseModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       if (e.response != null) {
         return AuthResponseModel.fromJson(e.response!.data);

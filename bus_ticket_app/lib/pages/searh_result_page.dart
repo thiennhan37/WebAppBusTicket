@@ -5,6 +5,8 @@ import 'package:bus_ticket_app/widgets/search_result_widgets/trip_card_widget.da
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 
+import '../data/models/favorite_search_model.dart';
+
 class SearchResultPage extends StatefulWidget {
   final String departureName;
   final String destinationName;
@@ -13,6 +15,9 @@ class SearchResultPage extends StatefulWidget {
   final DateTime startDate;
   final DateTime? endDate;
   final bool isRoundTrip;
+  final List<int>? pickupStopIds;
+  final List<int>? dropoffStopIds;
+  final List<String>? busCompanyIds;
 
   const SearchResultPage({
     super.key,
@@ -23,6 +28,9 @@ class SearchResultPage extends StatefulWidget {
     required this.startDate,
     this.endDate,
     this.isRoundTrip = false,
+    this.pickupStopIds,
+    this.dropoffStopIds,
+    this.busCompanyIds,
   });
 
   @override
@@ -32,6 +40,7 @@ class SearchResultPage extends StatefulWidget {
 
 class _SearchResultPageState extends State<SearchResultPage> {
   late SearchTripViewModel searchTripViewModel;
+  final ScrollController _scrollController = ScrollController();
 
   String _getWeekday(int weekday) {
     switch (weekday) {
@@ -69,12 +78,15 @@ class _SearchResultPageState extends State<SearchResultPage> {
     super.initState();
     searchTripViewModel = GetIt.I<SearchTripViewModel>();
     searchTripViewModel.addListener(_onViewModelChanged);
+    _scrollController.addListener(_onScroll);
     loadData();
   }
 
   @override
   void dispose() {
     searchTripViewModel.removeListener(_onViewModelChanged);
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -82,12 +94,68 @@ class _SearchResultPageState extends State<SearchResultPage> {
     if (mounted) setState(() {});
   }
 
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 200) {
+      searchTripViewModel.loadNextPage();
+    }
+  }
+
   void loadData() {
     String formattedDate = "${widget.startDate.day.toString().padLeft(2, '0')}/${widget.startDate.month.toString().padLeft(2, '0')}/${widget.startDate.year}";
-    searchTripViewModel.searchTrip(
-      widget.departureId,
-      widget.destinationId,
-      formattedDate,
+    
+    // Nếu có tham số lọc truyền vào, ta thiết lập params và apply filters thay vì dùng searchTrip mặc định
+    if (widget.pickupStopIds != null || widget.dropoffStopIds != null || widget.busCompanyIds != null) {
+      searchTripViewModel.setBaseParams(widget.departureId, widget.destinationId, formattedDate);
+      
+      // Reset filters cũ và gán giá trị mới
+      searchTripViewModel.pickupStopIds = widget.pickupStopIds ?? [];
+      searchTripViewModel.dropoffStopIds = widget.dropoffStopIds ?? [];
+      searchTripViewModel.busCompanyIds = widget.busCompanyIds ?? [];
+
+      searchTripViewModel.applyFilters();
+    } else {
+      searchTripViewModel.searchTrip(
+        widget.departureId,
+        widget.destinationId,
+        formattedDate,
+      );
+    }
+  }
+
+  int _paginationFooterItemCount() {
+    if (searchTripViewModel.isLoadingMore ||
+        searchTripViewModel.paginationErrorMessage != null) {
+      return 1;
+    }
+    return 0;
+  }
+
+  Widget _buildPaginationFooter() {
+    if (searchTripViewModel.paginationErrorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Text(
+              searchTripViewModel.paginationErrorMessage!,
+              style: const TextStyle(color: Colors.red, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: searchTripViewModel.loadNextPage,
+              child: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -143,8 +211,7 @@ class _SearchResultPageState extends State<SearchResultPage> {
       ),
       body: Stack(
         children: [
-          if (searchTripViewModel.isLoading)
-            const Center(child: CircularProgressIndicator())
+          if (searchTripViewModel.isLoading && searchTripViewModel.trips.isEmpty)  const Center(child: CircularProgressIndicator())
           else if (searchTripViewModel.errorMessage != null)
             Center(
               child: Padding(
@@ -180,9 +247,14 @@ class _SearchResultPageState extends State<SearchResultPage> {
             )
           else
             ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 80),
-              itemCount: searchTripViewModel.trips.length,
+              itemCount: searchTripViewModel.trips.length + _paginationFooterItemCount(),
               itemBuilder: (context, index) {
+                if (index >= searchTripViewModel.trips.length) {
+                  return _buildPaginationFooter();
+                }
+
                 final trip = searchTripViewModel.trips[index];
                 return TripCard(
                   trip: trip,
@@ -201,6 +273,17 @@ class _SearchResultPageState extends State<SearchResultPage> {
                       ),
                     );
                   },
+                  favoriteInfo: FavoriteSearchModel(
+                    departureProvinceId: widget.departureId,
+                    departureProvinceName: widget.departureName,
+                    destinationProvinceId: widget.destinationId,
+                    destinationProvinceName: widget.destinationName,
+                    pickupStopId: searchTripViewModel.pickupStopIds.isNotEmpty ? searchTripViewModel.pickupStopIds.first : null,
+                    pickupStopName: null,
+                    busCompanyId: searchTripViewModel.busCompanyIds.isNotEmpty ? searchTripViewModel.busCompanyIds.first : '',
+                    busCompanyName: trip.busCompanyName,
+                    departureTime: trip.departureTime,
+                  ),
                 );
               },
             ),

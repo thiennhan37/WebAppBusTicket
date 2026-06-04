@@ -14,10 +14,15 @@ import java.util.List;
 @Builder
 public class CustomerDetailOrderRespone {
     private String bookingOrderId;
+    private String pickupProvinceId;
     private String pickupProvince;
+    private String dropoffProvinceId;
     private String dropoffProvince;
+    private Long pickupStopId;
+    private Long dropoffStopId;
     private String pickupStop;
     private String dropoffStop;
+    private String busCompanyId;
     private String busCompanyName;
     private LocalDateTime departureTime;
     private String busType;

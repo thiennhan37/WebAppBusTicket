@@ -13,6 +13,7 @@ import com.example.BusTicket.specification.TripSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.example.BusTicket.specification.TripSpecification;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 @Service
@@ -46,8 +46,9 @@ public class SearchTripService {
     private String holdingSeatPrefixKey;
 
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final int SEARCH_PAGE_SIZE = 7;
 
-    public List<CustomerTripSearchRespone> findTrips(
+    public Page<CustomerTripSearchRespone> findTrips(
             String startProvince,
             String endProvince,
             LocalDate date,
@@ -63,7 +64,8 @@ public class SearchTripService {
             List<Long> dropoffStopIds,
             String busType,
             Double minRating,
-            String sortBy) {
+            String sortBy,
+            int page) {
         // Validate provinces
         validateProvinces(startProvince, endProvince);
 
@@ -96,12 +98,16 @@ public class SearchTripService {
 
         Sort sort = buildSort(sortBy);
 
-        List<Trip> trips = tripRepository.findAll(spec, sort);
 
-        return trips.stream()
+        List<CustomerTripSearchRespone> filteredTrips = tripRepository.findAll(spec, sort).stream()
                 .map(this::buildTripSearchResponse)
                 .filter(resp -> minRating == null || resp.getRating() >= minRating)
                 .collect(Collectors.toList());
+        int safePage = Math.max(page, 0);
+        Pageable pageable = PageRequest.of(safePage, SEARCH_PAGE_SIZE, sort);
+        int startIndex = Math.min((int) pageable.getOffset(), filteredTrips.size());
+        int endIndex = Math.min(startIndex + pageable.getPageSize(), filteredTrips.size());
+        return new PageImpl<>(filteredTrips.subList(startIndex, endIndex), pageable, filteredTrips.size());
     }
 
 

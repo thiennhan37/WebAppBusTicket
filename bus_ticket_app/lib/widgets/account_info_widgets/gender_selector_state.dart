@@ -1,43 +1,39 @@
 import 'package:flutter/material.dart';
 
-class GenderSelector extends StatefulWidget {
-  const GenderSelector({Key? key}) : super(key: key);
+class GenderSelector extends StatelessWidget {
+  final String selectedGender;
+  final Function(String) onChanged;
 
-  @override
-  State<GenderSelector> createState() => _GenderSelectorState();
-}
-
-class _GenderSelectorState extends State<GenderSelector> {
-  String _selectedGender = 'Nam'; // Mặc định chọn Nam
+  const GenderSelector({
+    super.key,
+    required this.selectedGender,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _buildGenderOption('Nam'),
+        _buildGenderOption(context, 'Nam', 'MALE'),
         const SizedBox(width: 12),
-        _buildGenderOption('Nữ'),
+        _buildGenderOption(context, 'Nữ', 'FEMALE'),
         const SizedBox(width: 12),
-        _buildGenderOption('Khác'),
+        _buildGenderOption(context, 'Khác', 'OTHER'),
       ],
     );
   }
 
-  Widget _buildGenderOption(String title) {
-    bool isSelected = _selectedGender == title;
+  Widget _buildGenderOption(BuildContext context, String title, String value) {
+    bool isSelected = selectedGender == value;
 
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _selectedGender = title;
-          });
-        },
+        onTap: () => onChanged(value),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFF1E88E5) : Colors.white,
-            borderRadius: BorderRadius.circular(30), // Bo tròn như viên thuốc
+            borderRadius: BorderRadius.circular(30),
             border: Border.all(
               color: isSelected
                   ? const Color(0xFF1E88E5)
