@@ -124,7 +124,7 @@ class FavoriteViewModel extends ChangeNotifier {
           sortBy: 'departure_asc',
         );
         
-        if (result.isEmpty) {
+        if (result.trips.isEmpty) {
           // Add a placeholder trip if no matches found for this favorite on the selected date
           final placeholderId = 'fav_${favorite.departureProvinceId}_${favorite.destinationProvinceId}_${favorite.busCompanyId}_${favorite.departureTime.replaceAll(':', '')}';
           final placeholderTrip = TripModel(
@@ -144,7 +144,7 @@ class FavoriteViewModel extends ChangeNotifier {
           allTrips.add(placeholderTrip);
           _tripToFavorite[placeholderId] = favorite;
         } else {
-          for (var trip in result) {
+          for (var trip in result.trips) {
             allTrips.add(trip);
             _tripToFavorite[trip.id] = favorite;
           }

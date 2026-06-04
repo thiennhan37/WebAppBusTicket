@@ -1,5 +1,6 @@
 import 'package:bus_ticket_app/data/models/bus_company_model.dart';
 import 'package:bus_ticket_app/data/models/bus_diagram_model.dart';
+import 'package:bus_ticket_app/data/models/paginated_trip_result.dart';
 import 'package:bus_ticket_app/data/models/stop_model.dart';
 import 'package:bus_ticket_app/data/models/trip_model.dart';
 import 'package:bus_ticket_app/data/services/trip_api_service.dart';
@@ -9,7 +10,7 @@ class TripRepository {
   final TripApiService _tripApiService;
   TripRepository(this._tripApiService);
 
-  Future<List<TripModel>> searchTrip({
+  Future<PaginatedTripResult> searchTrip({
     required String startProvince,
     required String endProvince,
     required String date,
@@ -23,6 +24,7 @@ class TripRepository {
     String? busType,
     double? minRating,
     String? sortBy,
+    int page = 0,
   }) async {
     try {
       final response = await _tripApiService.searchTrip(
@@ -39,9 +41,20 @@ class TripRepository {
         busType: busType,
         minRating: minRating,
         sortBy: sortBy,
+        page: page,
       );
-      final data = response.data['result'] ?? response.data['data'] ?? [];
-      return (data as List).map<TripModel>((json) => TripModel.fromJson(json)).toList();
+      final result = response.data['result'] ?? response.data['data'] ?? [];
+      final content = _extractTripContent(result);
+      final pageInfo = result is Map<String, dynamic> ? result['page'] as Map<String, dynamic>? : null;
+      final currentPage = _readInt(pageInfo?['number']) ?? page;
+      final totalPages = _readInt(pageInfo?['totalPages']);
+      final totalElements = _readInt(pageInfo?['totalElements']);
+      return PaginatedTripResult(
+        trips: content.map((json) => TripModel.fromJson(json)).toList(),
+        currentPage: currentPage,
+        totalPages: totalPages,
+        totalElements: totalElements,
+      );
     } on DioException catch (e) {
       if (e.response != null) {
         final errorMessage = e.response?.data['message'] ?? 'Có lỗi xảy ra khi lấy danh sách chuyến xe';
@@ -51,6 +64,32 @@ class TripRepository {
     } catch (e) {
       throw Exception('Lỗi không xác định: $e');
     }
+  }
+
+  List<dynamic> _extractTripContent(dynamic result) {
+    if (result is List) {
+      return result;
+    }
+    if (result is Map<String, dynamic>) {
+      final content = result['content'];
+      if (content is List) {
+        return content;
+      }
+    }
+    return [];
+  }
+
+  int? _readInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
   }
 
   Future<BusDiagramData> getBusDiagram(String tripId) async {

@@ -21,11 +21,13 @@ class TripApiService {
     String? busType,
     double? minRating,
     String? sortBy,
+    int page = 0,
   }) async {
     final queryParams = <String, dynamic>{
       'startProvince': startProvince,
       'endProvince': endProvince,
       'date': date,
+      'page': page,
     };
 
     if (minPrice != null) queryParams['minPrice'] = minPrice;
