@@ -18,12 +18,20 @@ class AuthViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isTemporarilyBlocked = false;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get isTemporarilyBlocked => _isTemporarilyBlocked;
+
 
   void clearError() {
     _errorMessage = null;
+    notifyListeners();
+  }
+
+  void clearTemporaryBlock() {
+    _isTemporarilyBlocked = false;
     notifyListeners();
   }
 
@@ -36,9 +44,11 @@ class AuthViewModel extends ChangeNotifier {
       final response = await _authRepository.sendOtp(email);
       if (response.isSuccess) {
         _isLoading = false;
+        _isTemporarilyBlocked = false;
         notifyListeners();
         return true;
       } else {
+        _isTemporarilyBlocked = response.isTooManyFailedAttempts;
         _errorMessage = response.message ?? 'Lỗi không xác định khi gửi OTP';
         _isLoading = false;
         notifyListeners();
@@ -66,6 +76,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       final response = await _authRepository.verifyOtp(email, otp);
       if (response.isSuccess && response.result != null) {
+        _isTemporarilyBlocked = false;
         final storage = GetIt.I<AuthStorage>();
         await storage.saveTokens(response.accessToken!, response.refreshToken!);
         if (response.customerInfo != null) await storage.saveUserInfo(response.customerInfo!.toJson());
@@ -74,6 +85,7 @@ class AuthViewModel extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
+        _isTemporarilyBlocked = response.isTooManyFailedAttempts;
         _errorMessage = response.message ?? 'Mã OTP không hợp lệ';
         _isLoading = false;
         notifyListeners();
@@ -116,6 +128,7 @@ class AuthViewModel extends ChangeNotifier {
 
       final response = await _authRepository.googleMobileLogin(idToken);
       if (response.isSuccess && response.result != null) {
+        _isTemporarilyBlocked = false;
         final storage = GetIt.I<AuthStorage>();
         await storage.saveTokens(response.accessToken!, response.refreshToken!);
         if (response.customerInfo != null) {
@@ -237,10 +250,12 @@ class AuthViewModel extends ChangeNotifier {
     try {
       final response = await _authRepository.sendRegistrationOtp(registerData);
       if (response.isSuccess) {
+        _isTemporarilyBlocked = false;
         _isLoading = false;
         notifyListeners();
         return true;
       } else {
+        _isTemporarilyBlocked = response.isTooManyFailedAttempts;
         _errorMessage = response.message ?? 'Đã xảy ra lỗi khi đăng ký.';
         _isLoading = false;
         notifyListeners();
@@ -268,6 +283,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       final response = await _authRepository.verifyRegistrationOtp(email, otp);
       if (response.isSuccess && response.result != null) {
+        _isTemporarilyBlocked = false;
         final storage = GetIt.I<AuthStorage>();
         await storage.saveTokens(response.accessToken!, response.refreshToken!);
         if (response.customerInfo != null) await storage.saveUserInfo(response.customerInfo!.toJson());
@@ -276,6 +292,7 @@ class AuthViewModel extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
+        _isTemporarilyBlocked = response.isTooManyFailedAttempts;
         _errorMessage = response.message ?? 'Mã OTP không hợp lệ hoặc đã hết hạn.';
         _isLoading = false;
         notifyListeners();

@@ -65,6 +65,7 @@ public enum ErrorCode {
     ROUTE_STOP_INVALID(4014, "Điểm đón trả không hợp lệ", HttpStatus.BAD_REQUEST),
     ROUTE_INVALID(4014, "Tuyến đường không hợp lệ", HttpStatus.BAD_REQUEST),
     TICKET_INVALID(4014, "Vé không hợp lệ", HttpStatus.BAD_REQUEST),
+    TOO_MANY_FAILED_ATTEMPTS(4017, "Bạn đã nhập sai quá 5 lần. Vui lòng thử lại sau", HttpStatus.TOO_MANY_REQUESTS),
     ;
     private int code;
     private String message;
