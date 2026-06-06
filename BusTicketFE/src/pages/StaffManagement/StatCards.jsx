@@ -26,10 +26,10 @@ const StatCards = () =>{
       <div className="relative">
         {isLoading || isError ? <div /> :
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-4">
-            <StatCard title="Tổng Nhân viên" count={info.totalStaff} icon={<Users />} colorClass="bg-blue-600" textColor="text-white" />
-            <StatCard title="Nhân viên bán vé" count={info.staffsCount} icon={<Tickets />} colorClass="bg-emerald-500" textColor="text-white" />
-            <StatCard title="Quản lí" count={info.managersCount} icon={<UserCog />} colorClass="bg-amber-500" textColor="text-white" />
-            <StatCard title="Tài khoản bị khóa" count={info.lockedAccountsCount} icon={<LockKeyhole />} colorClass="bg-rose-500" textColor="text-white"/>
+            <StatCard title="Tổng Nhân viên" count={info.totalStaff ?? 0} icon={<Users />} colorClass="bg-blue-600" textColor="text-white" />
+            <StatCard title="Nhân viên bán vé" count={info.staffsCount ?? 0} icon={<Tickets />} colorClass="bg-emerald-500" textColor="text-white" />
+            <StatCard title="Quản lí" count={info.managersCount ?? 0} icon={<UserCog />} colorClass="bg-amber-500" textColor="text-white" />
+            <StatCard title="Tài khoản bị khóa" count={info.lockedAccountsCount ?? 0} icon={<LockKeyhole />} colorClass="bg-rose-500" textColor="text-white"/>
           </div>
         }
       </div>

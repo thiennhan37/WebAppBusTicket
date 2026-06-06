@@ -25,6 +25,17 @@ const StaffService = {
         console.log("   staff   ", staff);
         return api.put(`/nhaxe/member/${staff.id}`, staff)
     }, 
+    importStaffExcel(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Bạn có thể cần thay đổi URL /nhaxe/member/import cho khớp với API Backend của bạn
+        return api.post("/nhaxe/member-list", formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
     getMe(){
         return api.get("/nhaxe/get-me")
     }

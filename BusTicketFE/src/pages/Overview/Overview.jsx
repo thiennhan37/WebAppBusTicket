@@ -32,6 +32,7 @@ const statsData = [
   
 
 const Overview = () => {
+    console.log("reload overview");
   const [isEditing, setIsEditing] = useState(false);
   const queryClient = useQueryClient();
   const { user, company } = useContext(AuthContext);
@@ -132,7 +133,7 @@ const Overview = () => {
           handleUpdate={updateCompany}/>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statsData.map((stat, index) => (
             <div 
               key={index} 
@@ -149,7 +150,7 @@ const Overview = () => {
               </div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* Main Content Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

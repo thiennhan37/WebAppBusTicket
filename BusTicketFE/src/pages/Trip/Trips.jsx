@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import AuthContext from '../../context/AuthContext';
 import { FileInput, Clock, Bus, Tag, CircleX, User, CircleCheckBig } from 'lucide-react';
 import TripHeader from './TripHeader';
 import TripCreate from './TripCreate';
@@ -12,6 +13,8 @@ import ConfirmModal from '../../components/other/ConfirmModal';
 import StatusModal from '../../components/other/StatusModal';
 const Trips = () =>{
   const queryClient = useQueryClient();
+  const { user } = useContext(AuthContext);
+  const isStaff = user?.role?.toLowerCase() === "staff";
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   // code useSearchParams with page, date, status, keyword, sinh ra code
@@ -150,11 +153,12 @@ const Trips = () =>{
         updateFilter={updateFilter}
         dateValue={date}
         setDateValue={setDate}
+        isStaff={isStaff}
       />
       {/* content */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col min-h-[467px]">
-        <div className="flex-grow">
-          <table className="w-full text-left border-collapse">
+        <div className="flex-grow h-[470px]">
+          <table className="w-full text-left border-collapse"> 
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500">
                 <th className="px-6 py-3 font-semibold">Chuyến đi</th>
@@ -162,7 +166,7 @@ const Trips = () =>{
                 <th className="px-6 py-3 font-semibold">Thời gian</th>
                 <th className="px-6 py-3 font-semibold">Tài xế</th>
                 <th className="px-6 py-3 font-semibold">Trạng thái</th>
-                <th className="pr-2 py-3 font-semibold text-right">Thao tác</th>
+                {!isStaff && <th className="pr-6 py-3 font-semibold text-right">Thao tác</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -223,41 +227,43 @@ const Trips = () =>{
                       {toVN(trip.status)}
                     </span>
                   </td>
-                  <td className="py-3 text-right">
-                    {trip.status === "SCHEDULED" ? 
-                        <div className='flex gap-1'>
-                          <button className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 
-                            rounded-lg transition-colors"
-                            title="Cập nhật chuyến đi"
-                          >
-                            <FileInput size={22} onClick={() => handleUpdateTrip(trip)}/>
-                          </button>
-                          <button className="text-green-400 hover:text-green-600 hover:bg-green-200 rounded-lg transition-colors"
-                            title="Mở bán chuyến đi"
-                          >
-                            <CircleCheckBig size={22} onClick={() => handleOpenTrip(trip)}/>
-                          </button>
-                        </div>
-                        : <></>
-                      }
-                    {trip.status === "OPEN" ? 
-                        <div className='flex gap-1'>
-                          <button className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 
-                            rounded-lg transition-colors"
-                            title="Cập nhật chuyến đi"
-                          >
-                            <FileInput size={22} onClick={() => handleUpdateTrip(trip)}/>
-                          </button>
-                          <button className="text-red-400 hover:text-red-600 hover:bg-red-200 
-                            rounded-lg transition-colors"
-                            title="Hủy chuyến đi"
-                          >
-                            <CircleX size={22} onClick={() => handleCancelTrip(trip)}/>
-                          </button> 
-                        </div>
-                        : <></>
-                      }
-                  </td>
+                  {!isStaff && (
+                    <td className="py-3 px-6 text-right">
+                      {trip.status === "SCHEDULED" ? 
+                          <div className='flex justify-end gap-1'>
+                            <button className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 
+                              rounded-lg transition-colors"
+                              title="Cập nhật chuyến đi"
+                            >
+                              <FileInput size={22} onClick={() => handleUpdateTrip(trip)}/>
+                            </button>
+                            <button className="text-green-400 hover:text-green-600 hover:bg-green-200 rounded-lg transition-colors"
+                              title="Mở bán chuyến đi"
+                            >
+                              <CircleCheckBig size={22} onClick={() => handleOpenTrip(trip)}/>
+                            </button>
+                          </div>
+                          : <></>
+                        }
+                      {trip.status === "OPEN" ? 
+                          <div className='flex justify-end gap-1'>
+                            <button className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 
+                              rounded-lg transition-colors"
+                              title="Cập nhật chuyến đi"
+                            >
+                              <FileInput size={22} onClick={() => handleUpdateTrip(trip)}/>
+                            </button>
+                            <button className="text-red-400 hover:text-red-600 hover:bg-red-200 
+                              rounded-lg transition-colors"
+                              title="Hủy chuyến đi"
+                            >
+                              <CircleX size={22} onClick={() => handleCancelTrip(trip)}/>
+                            </button> 
+                          </div>
+                          : <></>
+                        }
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

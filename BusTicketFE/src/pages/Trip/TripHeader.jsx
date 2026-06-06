@@ -3,7 +3,7 @@ import { Search, Plus, Calendar, Filter, ChevronDown } from 'lucide-react';
 import InputGroup from '../../components/other/InputGroup';
 import { useState, useEffect } from 'react';
 import BusService from '../../Services/BusService';
-const TripHeader = ({setIsAddModalOpen, searchParams, updateFilter, dateValue, setDateValue }) => {
+const TripHeader = ({setIsAddModalOpen, searchParams, updateFilter, dateValue, setDateValue, isStaff }) => {
   // test = "da thay doi";
   const [busTypeList, setBusTypeList] = useState([]);
   useEffect(() => {
@@ -22,13 +22,15 @@ const TripHeader = ({setIsAddModalOpen, searchParams, updateFilter, dateValue, s
           <h1 className="text-2xl font-bold text-slate-900">Danh sách chuyến đi</h1>
           <p className="text-sm text-slate-500 mt-1">Quản lý lịch trình, xe và giá vé các chuyến đi</p>
         </div>
-        <button 
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-emerald-600/20 active:scale-95"
-        >
-          <Plus size={20} />
-          <span>Thêm chuyến đi</span>
-        </button>
+        {!isStaff && (
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-emerald-600/20 active:scale-95"
+          >
+            <Plus size={20} />
+            <span>Thêm chuyến đi</span>
+          </button>
+        )}
       </div>
 
       {/* Filter & Search Bar - App-like card */}

@@ -125,4 +125,7 @@ public class AdminReportService {
                 .build();
     }
 
+    public Long getCompanyReport(){
+        return busCompanyRepository.count();
+    }
 }

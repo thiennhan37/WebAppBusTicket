@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { NavLink } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
+import { useContext } from "react";
 import UserSetting from './UserSetting';
 const menuItems = [
   { icon: LayoutDashboard, label: 'Tổng quan', link:'overview', active: true },
@@ -16,12 +17,9 @@ const menuItems = [
   { icon: Star, label: 'Đánh giá', link:'rating', active: false },
 ];
 const SideBar = () =>{
-    // const [activeTab, setActiveTab] = useState("");
-    // const handleNavClick = (e, navName) => {
-    //     e.preventDefault(); 
-    //     setActiveTab(navName);
-    // };
-    // const {user} = useContext(AuthContext)
+    const { user } = useContext(AuthContext);
+    const isStaff = user?.role?.toLowerCase() === "staff";
+    
     return (
     <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col">
       {/* Logo Section */}
@@ -31,7 +29,9 @@ const SideBar = () =>{
 
       {/* Navigation Links */}
       <nav className="flex-1 px-4 space-y-1">
-        {menuItems.map((item) => (
+        {menuItems
+          .filter((item) => !(isStaff && ['staff', 'report', 'rating'].includes(item.link)))
+          .map((item) => (
           <NavLink
             key={item.link}
             to={`/nhaxe/${item.link}`}

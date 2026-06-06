@@ -17,7 +17,11 @@ const AdminReportService = {
   async getRevenueReport() {
     const res = await api.get('/admin-report/revenue');
     return res.data;
-  }
+  }, 
+  async getCompanyReport() {
+    const res = await api.get('/admin-report/company');
+    return res.data;
+  }, 
 };
 
 export default AdminReportService;

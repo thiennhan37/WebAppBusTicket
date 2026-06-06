@@ -39,7 +39,10 @@ public class AdminReportController {
     ApiResponse<AdminCustomerReport> getCustomerReport(){
         return ApiResponse.success(adminReportService.getCustomerReport());
     }
-
+    @GetMapping("/admin-report/company")
+    ApiResponse<Long> getCompanyReport(){
+        return ApiResponse.success(adminReportService.getCompanyReport());
+    }
 
 
 }

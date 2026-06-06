@@ -4,7 +4,7 @@ import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute = (props) => {
   const { user } = useContext(AuthContext);
-  const {type} = props;
+  const { type, notAllowedRoles } = props;
   // Nếu chưa đăng nhập, đá về trang login
   // Bình thường, khi bạn điều hướng (chuyển trang), trình duyệt sẽ lưu trang đó vào History Stack (lịch sử duyệt web).
   // nếu ko replace, khi user bấm back về trang cũ, lại bị đá ra trang login gây khó chịu
@@ -17,6 +17,10 @@ const ProtectedRoute = (props) => {
 	else homeLink = "/nhaxe";
   if(!user){
     return <Navigate to={homeLink} replace></Navigate>
+  }
+
+  if (notAllowedRoles && notAllowedRoles.includes(user?.role?.toLowerCase())) {
+    return <Navigate to="/nhaxe/overview" replace></Navigate>
   }
 
   // Nếu đã đăng nhập, cho phép hiển thị các component con (Outlet)

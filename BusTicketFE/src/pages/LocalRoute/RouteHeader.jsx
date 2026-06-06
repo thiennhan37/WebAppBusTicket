@@ -2,7 +2,7 @@ import React from 'react';
 import { Search, User, Award, Calendar, UserPlus, MapPinPlus } from 'lucide-react';
 import InputGroup from '../../components/other/InputGroup';
 import SearchProvinces from "../../components/generalComponent/SearchProvinces"
-const RouteHeader = ({filterParams, onChangeFilter, setOpenCreate}) => {
+const RouteHeader = ({filterParams, onChangeFilter, setOpenCreate, isStaff}) => {
   console.log("reload routeHeader")
   return (
     <div className="px-6 border-b border-slate-100 pb-5 pt-3">
@@ -12,12 +12,14 @@ const RouteHeader = ({filterParams, onChangeFilter, setOpenCreate}) => {
           <h2 className="text-lg font-bold text-slate-800">Danh sách tuyến đường</h2>
           <p className="text-sm text-slate-500">Quản lý tuyến đường và điểm đón trả khách</p>
         </div>
-        <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 
-          rounded-xl font-medium transition-all shadow-lg shadow-emerald-100 text-sm"
-        onClick={() => setOpenCreate(true)}
-        >
-          <MapPinPlus size={18} /> Thêm tuyến đường
-        </button>
+        {!isStaff && (
+          <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 
+            rounded-xl font-medium transition-all shadow-lg shadow-emerald-100 text-sm"
+          onClick={() => setOpenCreate(true)}
+          >
+            <MapPinPlus size={18} /> Thêm tuyến đường
+          </button>
+        )}
       </div>
 
       {/* Hàng 2: Thanh công cụ Filter */}

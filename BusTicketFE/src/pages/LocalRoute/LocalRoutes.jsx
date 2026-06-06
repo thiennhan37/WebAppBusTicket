@@ -1,5 +1,6 @@
 import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import AuthContext from "../../context/AuthContext";
 import { useSearchParams } from 'react-router-dom';
 import RouteService from "../../Services/routeService";
 import Pagination from "../../components/other/Pagination";
@@ -13,6 +14,8 @@ import UpdateRoute from "./UpdateRoute";
 
 const LocalRoutes = () => {
   console.log("reload localRoutes")
+  const { user } = useContext(AuthContext);
+  const isStaff = user?.role?.toLowerCase() === "staff";
   const [searchParams, setSearchParams] = useSearchParams();
   const [isOpenUpdate, setOpenUpdate] = useState(false);
   // Helper to read params with defaults
@@ -155,7 +158,7 @@ const LocalRoutes = () => {
 
         <div className="flex-1 flex flex-col bg-white max-w-[850px] h-[580px]
           rounded-2xl shadow-sm border border-slate-200">
-          <RouteHeader onChangeFilter={onChangeFilter} filterParams={buildFilterParams()} setOpenCreate={handleOpenCreate}></RouteHeader>
+          <RouteHeader onChangeFilter={onChangeFilter} filterParams={buildFilterParams()} setOpenCreate={handleOpenCreate} isStaff={isStaff}></RouteHeader>
           
           <div className="flex-1 overflow-visible">
             <table className="w-full text-left">
@@ -177,16 +180,18 @@ const LocalRoutes = () => {
                       <td className="px-2 py-3 font-medium text-slate-800 text-center">
                         {Math.floor(route.durationMinutes / 60)} giờ {route.durationMinutes % 60} phút</td>
                       <td className="pl-2 pr-12 py-3 flex gap-1 justify-end">
-                        <div className="flex justify-center hover:bg-green-100 hover:rounded-xl p-2">
-                          <button 
-                            onClick={() => {
-                              handleViewUpdate(route, true)
-                            }}
-                            title="Cài đặt tuyến đường"
-                          >
-                            <Settings className="w-5 h-5 text-green-600" />
-                          </button> 
-                        </div>
+                        {!isStaff && (
+                          <div className="flex justify-center hover:bg-green-100 hover:rounded-xl p-2">
+                            <button 
+                              onClick={() => {
+                                handleViewUpdate(route, true)
+                              }}
+                              title="Cài đặt tuyến đường"
+                            >
+                              <Settings className="w-5 h-5 text-green-600" />
+                            </button> 
+                          </div>
+                        )}
                         <div className="flex justify-center gap-1">
                           <RouteStops routeId={route.id}></RouteStops>
                         </div>

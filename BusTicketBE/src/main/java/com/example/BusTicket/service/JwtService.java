@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-
+import org.springframework.security.oauth2.jwt.Jwt;
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -73,5 +73,36 @@ public class JwtService {
                 .issueTime(signedJWT.getJWTClaimsSet().getIssueTime())
                 .expirationTime(signedJWT.getJWTClaimsSet().getExpirationTime())
                 .build();
+    }
+
+    public Jwt decode(String token) throws JOSEException, ParseException {
+
+        JWSVerifier verifier = new MACVerifier(signerKey.getBytes());
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        boolean isValid = signedJWT.verify(verifier);
+        JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+        Date expirationTime = claimsSet.getExpirationTime();
+        String jwtId = claimsSet.getJWTID();
+
+        String redisKey = "InvalidToken:" + jwtId;
+        if (redisTemplate.opsForValue().get(redisKey) != null) {
+            throw new MyAppException(ErrorCode.INVALID_TOKEN);
+        }
+        if (!(isValid && expirationTime.after(new Date()))) {
+            throw new MyAppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        return new Jwt(
+                token,
+                claimsSet.getIssueTime().toInstant(),
+                claimsSet.getExpirationTime().toInstant(),
+                Map.of(
+                        "alg",
+                        signedJWT.getHeader()
+                                .getAlgorithm()
+                                .getName()
+                ),
+                claimsSet.getClaims()
+        );
     }
 }
