@@ -51,6 +51,8 @@ public class PaymentService {
     private final MomoConfiguration momoConfiguration;
     private final BookingOrderService bookingOrderService;
 
+    @Value("${booking.compMakeOrderPrefixKey}")
+    private String compMakeOrderPrefixKey;
     @Value("${booking.paymentExpirationTime}")
     private int paymentExpirationTime;
     @Value("${booking.paymentPrefixKey}")
@@ -120,15 +122,12 @@ public class PaymentService {
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         if(type.equals(AccountType.COMPANY.name())){
             // chưa lưu lịch sử khi thanh toán/refund thành công
-            log.info("xử lí payment");
             int updatedRow = paymentRepository.updateToSuccess(paymentId);
             // update payment thất bại
             if(updatedRow != 1){
-                log.info("cập nhật payment thất bại");
                 String currentMomoOrderId = payment.getMomoOrderId();
                 // nếu momoOrderId khác với DB --> không phải retry payment --> refund
                 if( !momoOrderId.equals(currentMomoOrderId)){
-                    log.info("thực hiện refund");
                     Long amount = Long.valueOf(payload.get("amount").toString());
                     Long parentTransId = Long.valueOf(payload.get("transId").toString());
                     String description = "Hoàn tiền cho thanh toán hóa đơn #" + bookingOrderId;
@@ -163,7 +162,6 @@ public class PaymentService {
             LocalDateTime expiredTime = payment.getBookingOrder().getCreatedAt().plusSeconds(holdingSeatTime);
             boolean missingOrderCodeInRedis = customerHoldInfo == null || !customerHoldInfo.contains(bookingOrderId);
             if (paymentTime.isAfter(expiredTime) || missingOrderCodeInRedis) {
-                log.info("Payment received after holding time expired. Refunding payment for booking order: {}", bookingOrderId);
                 Long amount = Long.valueOf(payload.get("amount").toString());
                 Long parentTransId = Long.valueOf(payload.get("transId").toString());
                 String description = missingOrderCodeInRedis

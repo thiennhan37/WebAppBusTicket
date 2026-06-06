@@ -4,6 +4,7 @@ import 'package:bus_ticket_app/data/models/order_detail_model.dart';
 import 'package:dio/dio.dart';
 import '../models/update_customer_profile_request_model.dart';
 import '../services/customer_api_service.dart';
+import '../models/trip_rating_model.dart';
 
 class CustomerRepository {
   final CustomerApiService _customerApiService;
@@ -81,6 +82,27 @@ class CustomerRepository {
       throw Exception('Lỗi kết nối mạng: ${e.message}');
     } catch (e) {
       throw Exception('Lỗi không xác định: $e');
+    }
+  }
+
+  Future<TripRatingModel?> getOrderRating(String orderId) async {
+    try {
+      final response = await _customerApiService.getOrderRating(orderId);
+      if (response.data['code'] == 0 && response.data['result'] != null) {
+        return TripRatingModel.fromJson(response.data['result']);
+      }
+      return null;
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final code = e.response?.data['code'];
+        // code == 4006 means data does not exist / not rated yet
+        if (code == 4006) {
+          return null;
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 }

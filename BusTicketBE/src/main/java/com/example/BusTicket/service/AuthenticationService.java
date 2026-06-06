@@ -60,6 +60,7 @@ public class AuthenticationService {
     private final CustomerMapper customerMapper;
     private final MailService mailService;
     private final SendMailService sendMailService;
+    private final AuthAttemptService authAttemptService;
 
     @Value("${jwt.accessTime}")
     private long accessTime;
@@ -212,6 +213,7 @@ public class AuthenticationService {
     }
 
     public void sendOtp(String email) {
+        authAttemptService.assertNotBlocked("customer-login-otp", email);
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new MyAppException(ErrorCode.INVALID_GMAIL));
 
@@ -241,15 +243,18 @@ public class AuthenticationService {
     }
 
     public CustomerAuthenticationResponse verifyOtp(String email, String otp) throws JOSEException {
+        authAttemptService.assertNotBlocked("customer-login-otp", email);
         String redisKey = "OTP_Login:" + email;
         String storedOtp = redisTemplate.opsForValue().get(redisKey);
 
         if (storedOtp == null || !storedOtp.equals(otp)) {
+            authAttemptService.recordFailure("customer-login-otp", email);
             throw new MyAppException(ErrorCode.INVALID_OTP);  // OTP sai hoặc hết hạn
         }
 
         // Xóa OTP sau verify thành công
         redisTemplate.delete(redisKey);
+        authAttemptService.reset("customer-login-otp", email);
 
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new MyAppException(ErrorCode.UNAUTHENTICATED));

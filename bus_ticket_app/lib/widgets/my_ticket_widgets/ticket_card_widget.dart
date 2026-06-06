@@ -1,5 +1,6 @@
 import 'package:bus_ticket_app/data/models/order_model.dart';
 import 'package:bus_ticket_app/data/models/province_model.dart';
+import 'package:bus_ticket_app/data/repositories/customer_repository.dart';
 import 'package:bus_ticket_app/data/repositories/location_repository.dart';
 import 'package:bus_ticket_app/data/services/local/booking_storage.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/my_tickets_viewmodel.dart';
@@ -12,13 +13,56 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 
-class TicketCardWidget extends StatelessWidget {
+class TicketCardWidget extends StatefulWidget {
   final OrderModel order;
 
   const TicketCardWidget({
     super.key,
     required this.order,
   });
+
+  @override
+  State<TicketCardWidget> createState() => _TicketCardWidgetState();
+}
+
+class _TicketCardWidgetState extends State<TicketCardWidget> {
+  bool _isRated = false;
+  bool _isLoadingRating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfRated();
+  }
+
+  Future<void> _checkIfRated() async {
+    final DateTime departureDateTime = DateTime.parse(widget.order.departureTime);
+    final bool isPast = departureDateTime.isBefore(DateTime.now());
+    final bool isPaid = widget.order.orderStatus == 'PAID';
+
+    if (isPaid && isPast) {
+      if (mounted) {
+        setState(() {
+          _isLoadingRating = true;
+        });
+      }
+      try {
+        final rating = await GetIt.I<CustomerRepository>().getOrderRating(widget.order.orderId);
+        if (mounted) {
+          setState(() {
+            _isRated = rating != null;
+            _isLoadingRating = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoadingRating = false;
+          });
+        }
+      }
+    }
+  }
 
   Future<ProvinceModel?> _findProvince(String name) async {
     try {
@@ -43,8 +87,8 @@ class TicketCardWidget extends StatelessWidget {
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    final departureProv = await _findProvince(order.departureProvince);
-    final destinationProv = await _findProvince(order.destinationProvince);
+    final departureProv = await _findProvince(widget.order.departureProvince);
+    final destinationProv = await _findProvince(widget.order.destinationProvince);
 
     if (context.mounted) {
       Navigator.pop(context);
@@ -146,7 +190,7 @@ class TicketCardWidget extends StatelessWidget {
           TextButton(
             onPressed: () async {
               final viewModel = outerContext.read<MyTicketsViewModel>();
-              final orderId = order.orderId;
+              final orderId = widget.order.orderId;
 
               Navigator.pop(dialogContext);
 
@@ -263,7 +307,7 @@ class TicketCardWidget extends StatelessWidget {
               ),
                ElevatedButton(
                  onPressed: () async {
-                   final response = await viewModel.rateOrder(order.orderId, {
+                   final response = await viewModel.rateOrder(widget.order.orderId, {
                      "serviceQuality": serviceQuality,
                      "punctuality": punctuality,
                      "safety": safety,
@@ -294,7 +338,7 @@ class TicketCardWidget extends StatelessWidget {
                      try {
                        final navContext = Navigator.of(dialogContext).context;
                        if (navContext.mounted) {
-                        _showStatusDialogAfterRating(navContext, response);
+                         _showStatusDialogAfterRating(navContext, response);
                        }
                      } catch (e) {
                        debugPrint('Could not get valid context: $e');
@@ -303,6 +347,10 @@ class TicketCardWidget extends StatelessWidget {
                    }
 
                    _showStatusDialogAfterRating(outerContext, response);
+
+                   if (response['code'] == 0) {
+                     _checkIfRated();
+                   }
                  },
                  style: ElevatedButton.styleFrom(
                    backgroundColor: const Color(0xFF1E88E5),
@@ -346,10 +394,10 @@ class TicketCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DateTime departureDateTime = DateTime.parse(order.departureTime);
+    DateTime departureDateTime = DateTime.parse(widget.order.departureTime);
     String timeStr = DateFormat('HH:mm').format(departureDateTime);
     String dateStr = DateFormat('dd/MM/yyyy').format(departureDateTime);
-    String totalCostStr = NumberFormat('#,###', 'vi_VN').format(order.totalCost) + 'đ';
+    String totalCostStr = NumberFormat('#,###', 'vi_VN').format(widget.order.totalCost) + 'đ';
 
     final bool isPast = departureDateTime.isBefore(DateTime.now());
 
@@ -359,7 +407,7 @@ class TicketCardWidget extends StatelessWidget {
     bool showStamp = false;
     bool isPaid = false;
 
-    switch (order.orderStatus) {
+    switch (widget.order.orderStatus) {
       case 'HOLDING':
         statusText = 'Chờ thanh toán';
         statusColor = Colors.orange;
@@ -380,7 +428,7 @@ class TicketCardWidget extends StatelessWidget {
         statusColor = Colors.red;
         break;
       default:
-        statusText = order.orderStatus;
+        statusText = widget.order.orderStatus;
     }
 
     return Container(
@@ -437,9 +485,11 @@ class TicketCardWidget extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => OrderDetailPage(orderId: order.orderId),
+                      builder: (context) => OrderDetailPage(orderId: widget.order.orderId),
                     ),
-                  );
+                  ).then((_) {
+                    _checkIfRated();
+                  });
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -463,13 +513,13 @@ class TicketCardWidget extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${order.departureProvince} → ${order.destinationProvince}',
+                              '${widget.order.departureProvince} → ${widget.order.destinationProvince}',
                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                             const SizedBox(height: 8),
-                            _buildInfoRow('Nhà xe', order.busCompanyName),
+                            _buildInfoRow('Nhà xe', widget.order.busCompanyName),
                             const SizedBox(height: 4),
-                            _buildInfoRow('Mã đơn', order.orderId),
+                            _buildInfoRow('Mã đơn', widget.order.orderId),
                             const SizedBox(height: 4),
                             _buildInfoRow('Tổng tiền', totalCostStr),
                           ],
@@ -488,17 +538,49 @@ class TicketCardWidget extends StatelessWidget {
                     if (isPaid && isPast) ...[
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _showRatingDialog(context),
-                          icon: const Icon(Icons.star, size: 18),
-                          label: const Text('Đánh giá chuyến đi', style: TextStyle(fontWeight: FontWeight.bold)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber,
-                            foregroundColor: Colors.black,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            elevation: 0,
-                          ),
-                        ),
+                        child: _isLoadingRating
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                            )
+                          : _isRated
+                            ? ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => OrderDetailPage(orderId: widget.order.orderId),
+                                    ),
+                                  ).then((_) {
+                                    _checkIfRated();
+                                  });
+                                },
+                                icon: const Icon(Icons.check_circle, size: 18, color: Colors.green),
+                                label: const Text('Đã đánh giá chuyến đi', style: TextStyle(fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green.withOpacity(0.1),
+                                  foregroundColor: Colors.green,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 0,
+                                ),
+                              )
+                            : ElevatedButton.icon(
+                                onPressed: () => _showRatingDialog(context),
+                                icon: const Icon(Icons.star, size: 18),
+                                label: const Text('Đánh giá chuyến đi', style: TextStyle(fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  foregroundColor: Colors.black,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  elevation: 0,
+                                ),
+                              ),
                       ),
                       const SizedBox(height: 8),
                     ],
@@ -538,13 +620,13 @@ class TicketCardWidget extends StatelessWidget {
                                   MaterialPageRoute(
                                     builder: (context) => SeatSelectionPage(
                                       tripId: '',
-                                      busCompanyName: order.busCompanyName,
+                                      busCompanyName: widget.order.busCompanyName,
                                       departureTime: timeStr,
                                       date: dateStr,
                                       departureProvinceId: '',
                                       destinationProvinceId: '',
-                                      existingOrderId: order.orderId,
-                                      totalPrice: order.totalCost,
+                                      existingOrderId: widget.order.orderId,
+                                      totalPrice: widget.order.totalCost,
                                     ),
                                   ),
                                 );

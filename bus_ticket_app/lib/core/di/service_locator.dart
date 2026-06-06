@@ -15,6 +15,7 @@ import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
 import '../../data/repositories/trip_repository.dart';
 import '../../data/services/auth_api_service.dart';
 import '../../data/services/customer_api_service.dart';
+import '../../data/services/firebase_messaging_service.dart';
 import '../../data/services/local/auth_storage.dart';
 import '../../data/services/local/booking_storage.dart';
 import '../../data/services/local/notification_storage.dart';
@@ -71,6 +72,14 @@ void setupServiceLocator() {
       getIt<AuthStorage>(),
       getIt<NotificationStorage>(),
       getIt<NotificationSocketService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<FirebaseMessagingService>(
+        () => FirebaseMessagingService(
+      getIt<ApiClient>(),
+      getIt<AuthStorage>(),
+      getIt<NotificationStorage>(),
     ),
   );
 

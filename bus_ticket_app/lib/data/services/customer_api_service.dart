@@ -33,4 +33,8 @@ class CustomerApiService {
       data: ratingData,
     );
   }
+
+  Future<Response> getOrderRating(String orderId) async {
+    return await _apiClient.get('${ApiConstants.rateOrder}$orderId/rating');
+  }
 }

@@ -36,6 +36,7 @@ public class CustomerAuthService {
     private final MailService mailService;
     private final ObjectMapper objectMapper;
     private final JwtService jwtService;
+    private final AuthAttemptService authAttemptService;
 
     @Value("${jwt.accessTime}")
     private long accessTime;
@@ -43,6 +44,7 @@ public class CustomerAuthService {
     private long refreshTime;
 
     public void initiateCustomerRegistration(CustomerRegisterRequest request) {
+        authAttemptService.assertNotBlocked("customer-register-otp", request.getEmail());
         try {
             if (customerRepository.existsByEmail(request.getEmail())) {
                 throw new MyAppException(ErrorCode.EMAIL_EXISTED);
@@ -75,11 +77,13 @@ public class CustomerAuthService {
     }
 
     public CustomerAuthenticationResponse verifyRegistrationOtp(String email, String otp) throws Exception {
+        authAttemptService.assertNotBlocked("customer-register-otp", email);
         String otpKey = "OTP_REG:" + email;
         String infoKey = "INFO_REG:" + email;
 
         String storedOtp = redisTemplate.opsForValue().get(otpKey);
         if (storedOtp == null || !storedOtp.equals(otp)) {
+            authAttemptService.recordFailure("customer-register-otp", email);
             throw new MyAppException(ErrorCode.INVALID_OTP);
         }
 
@@ -102,6 +106,7 @@ public class CustomerAuthService {
 
             redisTemplate.delete(otpKey);
             redisTemplate.delete(infoKey);
+            authAttemptService.reset("customer-register-otp", email);
 
             String accessToken = jwtService.generateToken(savedCustomer, accessTime);
             String refreshToken = jwtService.generateToken(savedCustomer, refreshTime);

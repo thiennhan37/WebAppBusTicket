@@ -3,6 +3,7 @@ package com.example.BusTicket.service;
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.request.TripRatingRequest;
 import com.example.BusTicket.dto.response.BusCompanyRatingResponse;
+import com.example.BusTicket.dto.response.DetailRatingResponse;
 import com.example.BusTicket.entity.BookingOrder;
 import com.example.BusTicket.entity.Customer;
 import com.example.BusTicket.entity.Ticket;
@@ -82,5 +83,21 @@ public class TripRatingService {
                 .avgStars(Math.round(avg * 100.0) / 100.0)
                 .totalRatings(count)
                 .build();
+    }
+
+    public DetailRatingResponse getCustomerTripRating(String orderId) {
+        Jwt jwt = JwtHelper.getJwt();
+        Customer customer = customerRepository.findById(jwt.getSubject())
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+
+        BookingOrder bookingOrder = bookingOrderRepository.findById(orderId)
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+
+        if (!bookingOrder.getBookingUser().getId().equals(customer.getId())) {
+            throw new MyAppException(ErrorCode.ACCESS_DENIED);
+        }
+
+        return tripRatingRepository.findDetailByBookingOrderIdAndCustomerId(orderId, customer.getId())
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
     }
 }
