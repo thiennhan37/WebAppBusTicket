@@ -3,7 +3,7 @@ import { Building2, Phone, Mail, FileText, User, Image as ImageIcon } from 'luci
 const DetailedForm = ({formData, isEditing, handleChange}) => {
     return (
         <div className="lg:col-span-2">
-            <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-sm">
+            <div className="bg-blue-50 rounded-3xl p-6 md:p-8 border border-slate-100 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-blue-500" />
                 Chi tiết hồ sơ

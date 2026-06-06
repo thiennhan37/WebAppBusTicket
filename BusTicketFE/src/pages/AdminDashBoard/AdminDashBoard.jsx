@@ -55,10 +55,11 @@ const AdminDashboard = () => {
       setError(null);
 
       try {
-        const [custRes, ticketRes, revRes] = await Promise.all([
+        const [custRes, ticketRes, revRes, companyRes] = await Promise.all([
           AdminReportService.getCustomerReport(),
           AdminReportService.getTicketReport(),
-          AdminReportService.getRevenueReport()
+          AdminReportService.getRevenueReport(), 
+          AdminReportService.getCompanyReport()
         ]);
 
         if (!mounted) return;
@@ -95,7 +96,7 @@ const AdminDashboard = () => {
           totalTicketCurrentMonth: ticketRes?.result?.totalTicketCurrentMonth ?? 0,
           canceledTicketCurrentMonth: ticketRes?.result?.canceledTicketCurrentMonth ?? 0,
           totalRevenueCurrentMonth: revRes?.result?.totalRevenueCurrentMonth ?? 0,
-          companiesCount: revenueCompanyList.length
+          companiesCount: companyRes?.result ?? 0
         }));
 
       } catch (err) {

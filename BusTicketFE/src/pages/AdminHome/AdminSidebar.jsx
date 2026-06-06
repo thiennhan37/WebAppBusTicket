@@ -11,7 +11,7 @@ const menus = [
   {title: "Nhà xe", icon: Bus, path: "/admin/companies"},
   {title: "Yêu cầu đăng ký", icon: ClipboardList, path: "/admin/register-company"},
   {title: "Người dùng", icon: Users, path: "/admin/users"},
-  {title: "Báo cáo", icon: BarChart3, path: "/admin/reports"},
+  // {title: "Báo cáo", icon: BarChart3, path: "/admin/reports"},
 ]; 
 
 export default function Sidebar() {

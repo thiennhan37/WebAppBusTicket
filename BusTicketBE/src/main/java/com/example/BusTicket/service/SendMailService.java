@@ -4,6 +4,7 @@ import com.example.BusTicket.entity.BookingOrder;
 import com.example.BusTicket.entity.BusCompany;
 import com.example.BusTicket.entity.Payment;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class SendMailService {
     private final MailService mailService; // Inject MailService bạn đã viết
     private final MomoService momoService;
 
+    @Async
     public void sendCredentials(String employeeEmail, String password, String companyName) {
         // 1. Tạo mật khẩu ngẫu nhiên (Lấy 8 ký tự đầu của UUID)
         if(companyName == null) companyName = "VEXEDAT";

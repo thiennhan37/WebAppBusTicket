@@ -40,9 +40,12 @@ function App() {
                 <Route path="/nhaxe/trips" element={<Trips/>}></Route>
                 <Route path="/nhaxe/ticket" element={<Ticket/>}></Route>
                 <Route path="/nhaxe/local-routes" element={<LocalRoutes/>}></Route>
-                <Route path="/nhaxe/staff" element={<StaffManagement/>}></Route>
-                <Route path="/nhaxe/report" element={<Report/>}></Route>
-                <Route path="/nhaxe/rating" element={<Rating/>}></Route>
+                
+                <Route element={<ProtectedRoute type="company" notAllowedRoles={['staff']} />}>
+                  <Route path="/nhaxe/staff" element={<StaffManagement/>}></Route>
+                  <Route path="/nhaxe/report" element={<Report/>}></Route>
+                  <Route path="/nhaxe/rating" element={<Rating/>}></Route>
+                </Route>
             </Route>
           </Route>
 

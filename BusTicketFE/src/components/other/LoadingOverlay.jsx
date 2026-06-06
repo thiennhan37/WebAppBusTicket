@@ -2,7 +2,7 @@ import React from 'react';
 
 const LoadingOverlay = ({ message = "Đang xử lý dữ liệu..." }) => {
   return (
-    <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
+    <div className="absolute inset-0 z-[200] flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
       {/* Vòng xoay Spinner */}
       <div className="relative flex items-center justify-center">
         <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-blue-600 border-t-transparent"></div>

@@ -5,6 +5,7 @@ import com.example.BusTicket.dto.request.CompanyUserCrRequest;
 import com.example.BusTicket.dto.request.CompanyUserUpRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.CompanyUserResponse;
+import com.example.BusTicket.dto.response.CustomResponse;
 import com.example.BusTicket.service.CompanyUserService;
 import com.nimbusds.jose.JOSEException;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
 
@@ -43,6 +45,12 @@ public class CompanyUserController {
     ApiResponse<CompanyUserResponse> createCompanyUser(@RequestBody @Valid CompanyUserCrRequest request){
 
         return ApiResponse.success(companyUserService.createCompanyUser(request));
+//        log.info("end controller");
+    }
+    @PostMapping("/member-list")
+    ApiResponse<CustomResponse> importListCompanyUser(@RequestParam MultipartFile file){
+
+        return ApiResponse.success(companyUserService.importListCompanyUser(file));
 //        log.info("end controller");
     }
     @PutMapping("/member/{id}")

@@ -33,18 +33,24 @@ public class SecurityConfig {
         "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
             "/register/verify", "/auth/log-out", "/admin/auth/login"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type", "/customer/companies/{companyId}/rating",
-            "/provinces/{provinceId}/pickup-stops", "/provinces/{provinceId}/dropoff-stops", "/trips/get-companies-info"
+            "/provinces/{provinceId}/pickup-stops", "/provinces/{provinceId}/dropoff-stops", "/trips/get-companies-info",
+            "/ws/**"
     };
     private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**", "/api/**", "/admin/create"};
     private final String[] ADMIN_ENDPOINTS = {"/users", "/admin/company-page", "/admin/company-register-page",
         "/admin/company-status", "/admin/company-register", "/admin/staff-page", "/admin/customer-page",
     "/admin/company-status", "/admin/customer-status", "/admin/staff-status",
-    "/admin-report/revenue", "/admin-report/ticket", "/admin-report/customer"};
-    private final String[] MANAGER_ENDPOINTS = {"/nhaxe/member", "/nhaxe/routes", "/nhaxe/trips", "/nhaxe/trips/open",
+    "/admin-report/**"};
+
+    private final String[] MANAGER_VIEW_ENDPOINTS = {"/nhaxe/member", "/nhaxe/trips/open",
             "/nhaxe/trips/cancel", "/nhaxe/companyReport", "/nhaxe/rating", "/nhaxe/rating-page"};
+    private final String[] MANAGER_UPDATE_ENDPOINTS = {"/nhaxe/member/**", "/nhaxe/routes/**", "/nhaxe/trips/**", "/nhaxe/trips/open",
+            "/nhaxe/trips/cancel", "/nhaxe/companyReport", "/nhaxe/rating", "/nhaxe/rating-page", "/nhaxe/member-list"};
+
     private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes", "/nhaxe/bus-company"};
     private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
             "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order", "/auth/change-password"};
+
     private final String[] CUSTOMER_ENDPOINTS = {"/trips/search", "/trips/stops", "/trips/bus-diagram"};
     private final String[] CUSTOMER_POST_ENDPOINTS = {"/customer/orders/hold-seats/**", "/customer/orders/payment/**", "/customer/orders/{orderId}/rating"};
     private final String[] CUSTOMER_GET_ENDPOINTS = {"/customer/orders/payment-status", "/customer/orders/recent",
@@ -69,13 +75,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, AUTH_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
-                        .requestMatchers(HttpMethod.POST, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
-                        .requestMatchers(HttpMethod.PUT, MANAGER_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
+
+                        .requestMatchers(HttpMethod.GET, MANAGER_VIEW_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
+                        .requestMatchers(HttpMethod.POST, MANAGER_UPDATE_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
+                        .requestMatchers(HttpMethod.PUT, MANAGER_UPDATE_ENDPOINTS).hasRole(RoleEnum.MANAGER.name())
+
                         .requestMatchers(HttpMethod.GET, COMPANY_VIEW_ENDPOINTS)
                             .hasAnyRole(RoleEnum.MANAGER.name(), RoleEnum.STAFF.name())
                         .requestMatchers(HttpMethod.POST, COMPANY_UPDATE_ENDPOINTS)
                             .hasAnyRole(RoleEnum.MANAGER.name(), RoleEnum.STAFF.name())
+                        .requestMatchers(HttpMethod.PUT, COMPANY_UPDATE_ENDPOINTS)
+                        .hasAnyRole(RoleEnum.MANAGER.name(), RoleEnum.STAFF.name())
+
                         .requestMatchers(HttpMethod.PUT, ADMIN_ENDPOINTS).hasRole(RoleEnum.ADMIN.name())
                         .requestMatchers(HttpMethod.POST, ADMIN_ENDPOINTS).hasRole(RoleEnum.ADMIN.name())
                         .requestMatchers(HttpMethod.GET, ADMIN_ENDPOINTS).hasRole(RoleEnum.ADMIN.name())

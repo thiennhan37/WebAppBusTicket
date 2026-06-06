@@ -1,8 +1,8 @@
 import React from 'react';
-import { Search, User, Award, Calendar, UserPlus, ChevronDown } from 'lucide-react';
+import { Search, User, Award, Calendar, UserPlus, ChevronDown, Upload, Download } from 'lucide-react';
 import InputGroup from '../../components/other/InputGroup';
 
-const StaffListHeader = ({setRightPanelMode, filterParams, setFilterParams}) => {
+const StaffListHeader = ({setRightPanelMode, filterParams, setFilterParams, handleImportExcel, handleDownloadSample}) => {
   console.log("reload listHeader")
   const onChangeRole = (e) => {
     const newParams = {...filterParams, role: e.target.value}
@@ -26,12 +26,27 @@ const StaffListHeader = ({setRightPanelMode, filterParams, setFilterParams}) => 
           <h2 className="text-lg font-bold text-slate-800">Danh sách nhân sự</h2>
           <p className="text-sm text-slate-500">Quản lý đội ngũ tài xế và nhân viên nhà xe</p>
         </div>
-        <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 
-        rounded-xl font-medium transition-all shadow-lg shadow-emerald-100 text-sm"
-        onClick={() => setRightPanelMode("create")}
-        >
-          <UserPlus size={18} /> Thêm nhân viên
-        </button>
+        <div className="flex gap-2">
+          <button className="flex items-center gap-2 bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 
+          rounded-xl font-medium transition-all shadow-lg shadow-slate-100 text-sm"
+          onClick={handleDownloadSample}
+          >
+            <Download size={18} /> Tải mẫu
+          </button>
+          
+          <label className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 
+          rounded-xl font-medium transition-all shadow-lg shadow-blue-100 text-sm cursor-pointer">
+            <Upload size={18} /> Nhập Excel
+            <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleImportExcel} />
+          </label>
+
+          <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 
+          rounded-xl font-medium transition-all shadow-lg shadow-emerald-100 text-sm"
+          onClick={() => setRightPanelMode("create")}
+          >
+            <UserPlus size={18} /> Thêm nhân viên
+          </button>
+        </div>
       </div>
 
       {/* Hàng 2: Thanh công cụ Filter */}
