@@ -26,7 +26,7 @@ class ApiConstants {
   static String getDropoffStops(String provinceId) => '$baseUrl/provinces/$provinceId/dropoff-stops';
   static const String googleMobileLogin = '$baseUrl/auth/google/mobile';
   static const String googleMobileRegister = '$baseUrl/auth/google/mobile/register';
-
+  static const String deviceTokens = '$baseUrl/api/device-tokens';
   // HTTP Headers
   static const Map<String, String> headers = {
     'Content-Type': 'application/json',

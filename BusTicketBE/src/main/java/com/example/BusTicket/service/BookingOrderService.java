@@ -47,8 +47,11 @@ public class BookingOrderService {
     private final RedisTemplate<String, String> redisTemplate;
     private final SendMailService sendMailService;
     private final NotificationSocketService notificationSocketService;
+    private final TripDepartureNotificationScheduler tripDepartureNotificationScheduler;
+    private final FcmNotificationService fcmNotificationService;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+    private final SeatReservationService seatReservationService;
 
     @Value("${booking.customerHoldingSeatPrefixKey}")
     private String CUSTOMER_HOLD_INFO_PREFIX;
@@ -63,6 +66,7 @@ public class BookingOrderService {
     public void paymentSuccessfully(String bookingOrderId){
         List<Ticket> ticketList = ticketRepository.getTicketsBecomeSuccessfulPayment(bookingOrderId);
         List<TripSeat> tripSeatList = ticketList.stream().map(Ticket::getTripSeat).toList();
+        List<String> tripSeatIdList = tripSeatList.stream().map(TripSeat::getId).distinct().toList();
 
         for(TripSeat ts : tripSeatList) ts.setStatus(TripSeatEnum.BOOKED.name());
         for(Ticket t : ticketList) t.setStatus(TicketStatusEnum.PAID.name());
@@ -71,6 +75,8 @@ public class BookingOrderService {
                         : ticketList.getFirst().getBookingOrder();
         if(bookingOrder != null && bookingOrder.getBookingUser() != null){
             redisTemplate.delete(CUSTOMER_HOLD_INFO_PREFIX + bookingOrder.getBookingUser().getId());
+            seatReservationService.deleteInvalidOrder(bookingOrder.getBookingUser().getId(), bookingOrderId, tripSeatIdList);
+            tripDepartureNotificationScheduler.sendDepartureRemindersForOrder(bookingOrder);
         }
 
         tripSeatRepository.saveAll(tripSeatList);
@@ -97,11 +103,23 @@ public class BookingOrderService {
         String departureText = trip != null && trip.getDepartureTime() != null
                 ? " Chuyến đi khởi hành lúc " + trip.getDepartureTime().format(DATE_TIME_FORMATTER) + "."
                 : "";
+        String customerId = bookingOrder.getBookingUser().getId();
+        String message = "Đơn #" + bookingOrder.getId() + " đã thanh toán thành công." + departureText;
+
+
         notificationSocketService.notifyCustomer(
-                bookingOrder.getBookingUser().getId(),
+                customerId,
                 "PAYMENT_SUCCESS",
                 "Thanh toán thành công",
-                "Đơn #" + bookingOrder.getId() + " đã thanh toán thành công." + departureText,
+                message,
+                data
+        );
+
+        fcmNotificationService.sendToCustomer(
+                customerId,
+                "PAYMENT_SUCCESS",
+                "Thanh toán thành công",
+                message,
                 data
         );
     }

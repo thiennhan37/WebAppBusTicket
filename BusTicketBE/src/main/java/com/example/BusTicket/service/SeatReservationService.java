@@ -37,7 +37,7 @@ public class SeatReservationService {
         deleteSeatsScript.setLocation(new ClassPathResource("scripts/delete_invalid_order.lua"));
         deleteSeatsScript.setResultType(Long.class);
     }
-    public boolean tryHoldSeats(String creatingStaffId, String bookingUserId, String orderId,
+    public boolean  tryHoldSeats(String creatingStaffId, String bookingUserId, String orderId,
                                 List<String> tripSeatIdList, int ttlSeconds) {
         String compMakeOrderKey = compMakeOrderPrefixKey + resolveOrderActorId(creatingStaffId, bookingUserId);
         String tempOrderKey = tempOrderPrefixKey + orderId;

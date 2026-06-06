@@ -32,6 +32,7 @@ public class TripDepartureNotificationScheduler {
     private final BookingOrderRepository bookingOrderRepository;
     private final NotificationSocketService notificationSocketService;
     private final RedisTemplate<String, String> redisTemplate;
+    private final FcmNotificationService fcmNotificationService;
 
     @Scheduled(fixedRate = 10000)
     public void sendDepartureReminders() {
@@ -45,7 +46,6 @@ public class TripDepartureNotificationScheduler {
 
     private void sendReminderForWindow(ReminderConfig reminder, LocalDateTime start, LocalDateTime end) {
         List<BookingOrder> orders = bookingOrderRepository.findPaidCustomerOrdersDepartingBetween(start, end);
-//        List<BookingOrder> orders = bookingOrderRepository.findByBookingUserIdForNotification("CUST-0001");
         for (BookingOrder order : orders) {
             try {
                 if (order.getBookingUser() == null || order.getTrip() == null) {
@@ -83,14 +83,46 @@ public class TripDepartureNotificationScheduler {
         String message = routeName == null || routeName.isBlank()
                 ? "Chuyến đi của bạn sẽ khởi hành lúc " + departureText + "."
                 : "Chuyến " + routeName + " sẽ khởi hành lúc " + departureText + ".";
-
+        String customerId = order.getBookingUser().getId();
         notificationSocketService.notifyCustomer(
-                order.getBookingUser().getId(),
+                customerId,
                 "TRIP_DEPARTURE_REMINDER",
                 reminder.title(),
                 message,
                 data
         );
+        fcmNotificationService.sendToCustomer(
+                customerId,
+                "TRIP_DEPARTURE_REMINDER",
+                reminder.title(),
+                message,
+                data
+        );
+    }
+
+
+    public void sendDepartureRemindersForOrder(BookingOrder order) {
+        if (order == null || order.getTrip() == null || order.getTrip().getDepartureTime() == null
+                || order.getBookingUser() == null) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime departure = order.getTrip().getDepartureTime();
+        long secondsUntilDeparture = java.time.temporal.ChronoUnit.SECONDS.between(now, departure);
+
+        for (ReminderConfig reminder : REMINDERS) {
+            long targetSeconds = reminder.beforeDeparture().toSeconds();
+            long windowStart = targetSeconds;
+            long windowEnd = targetSeconds + SCAN_WINDOW.toSeconds();
+            if (secondsUntilDeparture >= windowStart && secondsUntilDeparture <= windowEnd) {
+                String lockKey = "notification:trip-reminder:" + reminder.code() + ":" + order.getId();
+                Boolean firstSend = redisTemplate.opsForValue()
+                        .setIfAbsent(lockKey, "1", REMINDER_LOCK_TTL);
+                if (Boolean.TRUE.equals(firstSend)) {
+                    notifyCustomer(order, reminder);
+                }
+            }
+        }
     }
 
     private record ReminderConfig(String code, Duration beforeDeparture, String title) {

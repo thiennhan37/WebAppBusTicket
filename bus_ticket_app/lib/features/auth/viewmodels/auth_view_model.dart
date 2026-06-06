@@ -9,6 +9,7 @@ import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/constants/google_auth_constants.dart';
+import '../../../data/services/firebase_messaging_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _authRepository;
@@ -28,6 +29,15 @@ class AuthViewModel extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  Future<void> _initializePostLoginServices() async {
+    await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
+    try {
+      await GetIt.I<FirebaseMessagingService>().registerCurrentDeviceToken();
+    } catch (e) {
+      debugPrint('Không thể đăng ký FCM token: $e');
+    }
   }
 
   void clearTemporaryBlock() {
@@ -80,7 +90,7 @@ class AuthViewModel extends ChangeNotifier {
         final storage = GetIt.I<AuthStorage>();
         await storage.saveTokens(response.accessToken!, response.refreshToken!);
         if (response.customerInfo != null) await storage.saveUserInfo(response.customerInfo!.toJson());
-        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
+        await _initializePostLoginServices();
         _isLoading = false;
         notifyListeners();
         return true;
@@ -134,7 +144,7 @@ class AuthViewModel extends ChangeNotifier {
         if (response.customerInfo != null) {
           await storage.saveUserInfo(response.customerInfo!.toJson());
         }
-        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
+        await _initializePostLoginServices();
         _isLoading = false;
         notifyListeners();
         return true;
@@ -209,7 +219,7 @@ class AuthViewModel extends ChangeNotifier {
         if (response.customerInfo != null) {
           await storage.saveUserInfo(response.customerInfo!.toJson());
         }
-        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
+        await _initializePostLoginServices();
         _isLoading = false;
         notifyListeners();
         return true;
@@ -312,7 +322,7 @@ class AuthViewModel extends ChangeNotifier {
       if (refreshToken == null || refreshToken.isEmpty) return false;
       final success = await _apiClient.refreshToken();
       if (success) {
-        await GetIt.I<NotificationViewModel>().initializeForCurrentCustomer();
+        await _initializePostLoginServices();
       }
       return success;
     } catch (e) {
