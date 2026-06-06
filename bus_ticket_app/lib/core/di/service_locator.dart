@@ -7,6 +7,7 @@ import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmod
 import 'package:bus_ticket_app/features/customer/viewmodels/favorite_viewmodel.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/my_tickets_viewmodel.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/profile_viewmodel.dart';
+import 'package:bus_ticket_app/features/notification/viewmodels/notification_view_model.dart';
 import 'package:get_it/get_it.dart';
 import 'package:bus_ticket_app/data/repositories/AuthRepository.dart';
 import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
@@ -14,8 +15,11 @@ import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
 import '../../data/repositories/trip_repository.dart';
 import '../../data/services/auth_api_service.dart';
 import '../../data/services/customer_api_service.dart';
+import '../../data/services/firebase_messaging_service.dart';
 import '../../data/services/local/auth_storage.dart';
 import '../../data/services/local/booking_storage.dart';
+import '../../data/services/local/notification_storage.dart';
+import '../../data/services/notification_socket_service.dart';
 import '../../data/services/trip_api_service.dart';
 import '../storage/storage_service.dart';
 import '../network/api_client.dart';
@@ -61,6 +65,23 @@ void setupServiceLocator() {
   getIt.registerLazySingleton<StorageService>(() => StorageService());
   getIt.registerLazySingleton<AuthStorage>(() => AuthStorage(getIt<StorageService>()));
   getIt.registerLazySingleton<BookingStorage>(() => BookingStorage(getIt<StorageService>()));
+  getIt.registerLazySingleton<NotificationStorage>(() => NotificationStorage(getIt<StorageService>()));
+  getIt.registerLazySingleton<NotificationSocketService>(() => NotificationSocketService());
+  getIt.registerLazySingleton<NotificationViewModel>(
+        () => NotificationViewModel(
+      getIt<AuthStorage>(),
+      getIt<NotificationStorage>(),
+      getIt<NotificationSocketService>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<FirebaseMessagingService>(
+        () => FirebaseMessagingService(
+      getIt<ApiClient>(),
+      getIt<AuthStorage>(),
+      getIt<NotificationStorage>(),
+    ),
+  );
 
   getIt.registerLazySingleton<ApiClient>(
         () => ApiClient(getIt<AuthStorage>()),
@@ -70,7 +91,7 @@ void setupServiceLocator() {
   );
   getIt.registerLazySingleton<ProfileViewModel>(() => ProfileViewModel(getIt<CustomerRepository>()));
   getIt.registerFactory<MyTicketsViewModel>(() => MyTicketsViewModel(getIt<CustomerRepository>()));
-  getIt.registerLazySingleton<FavoriteViewModel>(() => FavoriteViewModel());
+  getIt.registerLazySingleton<FavoriteViewModel>(() => FavoriteViewModel(getIt<TripRepository>()));
 
   // 2. Đăng ký Feature Data Sources
   getIt.registerLazySingleton<AuthApiService>(

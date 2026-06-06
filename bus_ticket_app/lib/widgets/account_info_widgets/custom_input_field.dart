@@ -8,6 +8,8 @@ class CustomInputField extends StatefulWidget {
   final Widget? suffixIcon;
   final TextInputType? keyboardInputType;
   final Function(String)? onChanged;
+  final bool readOnly;
+  final VoidCallback? onTap;
 
   const CustomInputField({
     super.key,
@@ -18,6 +20,8 @@ class CustomInputField extends StatefulWidget {
     this.suffixIcon,
     this.keyboardInputType,
     this.onChanged,
+    this.readOnly = false,
+    this.onTap,
   });
 
   @override
@@ -29,12 +33,10 @@ class _CustomInputFieldState extends State<CustomInputField> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _controller = TextEditingController(text: widget.initValue);
   }
 
-  // Nếu dữ liệu load bất đồng bộ (sau khung hình đầu), cần thêm hàm này
   @override
   void didUpdateWidget(covariant CustomInputField oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -54,9 +56,10 @@ class _CustomInputFieldState extends State<CustomInputField> {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: _controller,
-      // initialValue: widget.initValue,
       keyboardType: widget.keyboardInputType,
       onChanged: widget.onChanged,
+      readOnly: widget.readOnly,
+      onTap: widget.onTap,
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         label: Text.rich(
@@ -69,19 +72,19 @@ class _CustomInputFieldState extends State<CustomInputField> {
               if (widget.isRequired)
                 const TextSpan(
                   text: '*',
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: Colors.red),
                 ),
             ],
           ),
         ),
         floatingLabelBehavior: FloatingLabelBehavior.always,
-        // Đẩy nhãn lên trên khi nhập
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         hintText: widget.hintText,
         hintStyle: TextStyle(
           color: Colors.grey.shade400,
           fontWeight: FontWeight.normal,
         ),
+        suffixIcon: widget.suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -92,7 +95,7 @@ class _CustomInputFieldState extends State<CustomInputField> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.blue, width: 1.5),
+          borderSide: const BorderSide(color: Colors.blue, width: 1.5),
         ),
       ),
     );

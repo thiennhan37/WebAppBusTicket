@@ -1,12 +1,13 @@
 import 'package:bus_ticket_app/data/models/order_detail_model.dart';
-import 'package:bus_ticket_app/data/models/trip_model.dart';
 import 'package:bus_ticket_app/data/repositories/customer_repository.dart';
 import 'package:bus_ticket_app/features/customer/viewmodels/favorite_viewmodel.dart';
+import 'package:bus_ticket_app/data/models/favorite_search_model.dart';
+import 'package:bus_ticket_app/data/models/trip_rating_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
-import 'dart:math' as math;
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 
 class OrderDetailPage extends StatefulWidget {
   final String orderId;
@@ -19,11 +20,13 @@ class OrderDetailPage extends StatefulWidget {
 
 class _OrderDetailPageState extends State<OrderDetailPage> {
   late Future<OrderDetailModel> _orderDetailFuture;
+  late Future<TripRatingModel?> _tripRatingFuture;
 
   @override
   void initState() {
     super.initState();
     _orderDetailFuture = GetIt.I<CustomerRepository>().getOrderDetail(widget.orderId);
+    _tripRatingFuture = GetIt.I<CustomerRepository>().getOrderRating(widget.orderId);
   }
 
   String _getDayOfWeek(DateTime date) {
@@ -66,18 +69,19 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
         ),
       ),
-      body: FutureBuilder<OrderDetailModel>(
-        future: _orderDetailFuture,
+      body: FutureBuilder<List<dynamic>>(
+        future: Future.wait([_orderDetailFuture, _tripRatingFuture]),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Lỗi: ${snapshot.error}'));
-          } else if (!snapshot.hasData) {
+          } else if (!snapshot.hasData || snapshot.data!.length < 2) {
             return const Center(child: Text('Không tìm thấy dữ liệu'));
           }
 
-          final order = snapshot.data!;
+          final order = snapshot.data![0] as OrderDetailModel;
+          final rating = snapshot.data![1] as TripRatingModel?;
           final departureDateTime = DateTime.parse(order.departureTime);
           final bool isPast = departureDateTime.isBefore(DateTime.now());
 
@@ -128,11 +132,87 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   ],
                 ),
 
+                if (rating != null) ...[
+                  const SizedBox(height: 8),
+                  _buildRatingSection(rating),
+                ],
+
                 const SizedBox(height: 32),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildRatingSection(TripRatingModel rating) {
+    return _buildInfoSection(
+      title: 'Đánh giá chuyến đi',
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Đánh giá trung bình',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+            Row(
+              children: [
+                Text(
+                  rating.averageStars.toStringAsFixed(1),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.amber),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.star, color: Colors.amber, size: 20),
+              ],
+            ),
+          ],
+        ),
+        const Divider(height: 24),
+        _buildRatingStarsRow('Chất lượng dịch vụ', rating.serviceQuality),
+        _buildRatingStarsRow('Đúng giờ', rating.punctuality),
+        _buildRatingStarsRow('An toàn', rating.safety),
+        _buildRatingStarsRow('Vệ sinh', rating.cleanliness),
+        if (rating.description != null && rating.description!.isNotEmpty) ...[
+          const Divider(height: 24),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Nhận xét',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              rating.description!,
+              style: const TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.black87),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildRatingStarsRow(String label, int score) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          Row(
+            children: List.generate(5, (index) {
+              return Icon(
+                index < score ? Icons.star : Icons.star_border,
+                color: Colors.amber,
+                size: 18,
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -184,28 +264,27 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                         ),
                         Consumer<FavoriteViewModel>(
                           builder: (context, favoriteVM, child) {
-                            final bool isFav = favoriteVM.isFavorite(order.bookingOrderId);
+                            final favoriteInfo = FavoriteSearchModel(
+                              departureProvinceId: order.pickupProvinceId,
+                              departureProvinceName: order.pickupProvince,
+                              destinationProvinceId: order.dropoffProvinceId,
+                              destinationProvinceName: order.dropoffProvince,
+                              pickupStopId: order.pickupStopId,
+                              pickupStopName: order.pickupStop,
+                              dropoffStopId: order.dropoffStopId,
+                              dropoffStopName: order.dropoffStop,
+                              busCompanyId: order.busCompanyId,
+                              busCompanyName: order.busCompanyName,
+                              departureTime: DateFormat('HH:mm').format(DateTime.parse(order.departureTime)),
+                            );
+                            final bool isFav = favoriteVM.isFavorite(favoriteInfo);
                             return IconButton(
                               icon: Icon(
                                 isFav ? Icons.favorite : Icons.favorite_border,
                                 color: isFav ? Colors.red : Colors.grey,
                               ),
                               onPressed: () {
-                                final trip = TripModel(
-                                  id: order.bookingOrderId,
-                                  departureTime: DateFormat('HH:mm').format(DateTime.parse(order.departureTime)),
-                                  arrivalTime: '--:--',
-                                  duration: '',
-                                  departureStation: order.pickupStop,
-                                  arrivalStation: order.dropoffStop,
-                                  price: order.totalAmount ~/ (order.seatCount > 0 ? order.seatCount : 1),
-                                  availableSeats: 0,
-                                  busCompanyName: order.busCompanyName,
-                                  busType: order.busType,
-                                  rating: 4.5,
-                                  reviewCount: 100,
-                                );
-                                favoriteVM.toggleFavorite(trip);
+                                favoriteVM.toggleFavorite(favoriteInfo);
                                 
                                 ScaffoldMessenger.of(context).clearSnackBars();
                                 ScaffoldMessenger.of(context).showSnackBar(

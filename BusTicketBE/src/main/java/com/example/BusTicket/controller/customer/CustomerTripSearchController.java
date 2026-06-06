@@ -8,6 +8,8 @@ import com.example.BusTicket.service.ProvinceService;
 import com.example.BusTicket.service.SearchTripService;
 import com.example.BusTicket.service.TripService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -44,9 +46,10 @@ public class CustomerTripSearchController {
             @RequestParam(required = false) List<Long> dropoffStopIds,
             @RequestParam(required = false) String busType,
             @RequestParam(required = false) Double minRating,
-            @RequestParam(required = false, defaultValue = "departure_asc") String sortBy) {
+            @RequestParam(required = false, defaultValue = "departure_asc") String sortBy,
+            @RequestParam(required = false, defaultValue = "0") int page) {
 
-        List<CustomerTripSearchRespone> trips = tripService.findTrips(
+        Page<CustomerTripSearchRespone> trips = tripService.findTrips(
                 startProvince,
                 endProvince,
                 date,
@@ -62,9 +65,10 @@ public class CustomerTripSearchController {
                 dropoffStopIds,
                 busType,
                 minRating,
-                sortBy
+                sortBy,
+                page
         );
-        return ApiResponse.success(trips);
+        return ApiResponse.success(new PagedModel<>(trips));
     }
 
     @GetMapping("/stops")

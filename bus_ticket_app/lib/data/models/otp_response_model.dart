@@ -19,4 +19,6 @@ class OtpResponseModel {
   bool get isSuccess => code == 0;
 
   bool get isEmailNotFound => code == 4021;
+
+  bool get isTooManyFailedAttempts => code == 4017;
 }

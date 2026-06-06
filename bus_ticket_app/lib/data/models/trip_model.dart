@@ -40,6 +40,8 @@ class TripModel {
   @JsonKey(name: 'reviewCount', defaultValue: 0)
   final int reviewCount;
 
+
+
   TripModel({
     required this.id,
     required this.departureTime,

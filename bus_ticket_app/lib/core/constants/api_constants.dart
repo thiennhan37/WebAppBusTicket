@@ -1,6 +1,7 @@
 class ApiConstants {
   // Base URL
   static const String baseUrl = 'http://localhost:8080/vexedat';
+  static const String notificationSocketUrl = '$baseUrl/ws/notifications';
 
   static const String sendOtp = '$baseUrl/auth/send-otp';
   static const String verifyOtp = '$baseUrl/auth/verify-otp';
@@ -23,7 +24,9 @@ class ApiConstants {
   static const String getCompaniesInfo = '$baseUrl/trips/get-companies-info';
   static String getPickupStops(String provinceId) => '$baseUrl/provinces/$provinceId/pickup-stops';
   static String getDropoffStops(String provinceId) => '$baseUrl/provinces/$provinceId/dropoff-stops';
-
+  static const String googleMobileLogin = '$baseUrl/auth/google/mobile';
+  static const String googleMobileRegister = '$baseUrl/auth/google/mobile/register';
+  static const String deviceTokens = '$baseUrl/api/device-tokens';
   // HTTP Headers
   static const Map<String, String> headers = {
     'Content-Type': 'application/json',

@@ -29,6 +29,34 @@ public interface BookingOrderRepository extends JpaRepository<BookingOrder, Stri
     """)
     List<BookingOrder> findRecentOrdersByCustomerId(@Param("customerId") String customerId,
                                                     @Param("fromTime") LocalDateTime fromTime);
+
+    @Query("""
+        SELECT DISTINCT bo FROM BookingOrder bo
+        JOIN FETCH bo.bookingUser bu
+        JOIN FETCH bo.trip t
+        LEFT JOIN FETCH t.route r
+        LEFT JOIN FETCH r.arrivalProvince
+        LEFT JOIN FETCH r.destinationProvince
+        WHERE t.status = 'OPEN'
+          AND t.departureTime >= :start
+          AND t.departureTime < :end
+          AND EXISTS (
+              SELECT 1 FROM Ticket tk
+              WHERE tk.bookingOrder = bo
+                AND tk.status = 'PAID'
+          )
+    """)
+    List<BookingOrder> findPaidCustomerOrdersDepartingBetween(@Param("start") LocalDateTime start,
+                                                              @Param("end") LocalDateTime end);
+
+    @Query("""
+    SELECT DISTINCT bo FROM BookingOrder bo
+    JOIN FETCH bo.bookingUser
+    JOIN FETCH bo.trip t
+    LEFT JOIN FETCH t.route
+    WHERE bo.bookingUser.id = :customerId
+""")
+    List<BookingOrder> findByBookingUserIdForNotification(@Param("customerId") String customerId);
 }
 
 

@@ -142,6 +142,11 @@ public class CustomerManagerBookingOrderService {
 
         Ticket firstTicket = ticketList.getFirst();
         return CustomerDetailOrderRespone.builder()
+                .pickupProvinceId(firstTicket.getArrival().getStop().getProvince().getId())
+                .dropoffProvinceId(firstTicket.getDestination().getStop().getProvince().getId())
+                .pickupStopId(firstTicket.getArrival().getStop().getId())
+                .dropoffStopId(firstTicket.getDestination().getStop().getId())
+                .busCompanyId(bookingOrder.getTrip().getBusCompany().getId())
                 .bookingOrderId(bookingOrder.getId())
                 .pickupProvince(firstTicket.getArrival().getStop().getProvince().getName())
                 .dropoffProvince(firstTicket.getDestination().getStop().getProvince().getName())

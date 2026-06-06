@@ -25,6 +25,8 @@ class OtpVerificationWidget extends StatefulWidget {
 class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
   int _timerSeconds = 30;
   Timer? _timer;
+  Timer? _lockTimer;
+  int _otpLockSeconds = 0;
   final TextEditingController _otpController = TextEditingController();
 
   @override
@@ -52,12 +54,76 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
   void dispose() {
     _timer?.cancel();
     _otpController.dispose();
+    _lockTimer?.cancel();
     super.dispose();
+  }
+
+  bool get _isOtpLocked => _otpLockSeconds > 0;
+
+  String get _lockCountdownText {
+    final minutes = (_otpLockSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_otpLockSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  void _startOtpLock(AuthViewModel authVM) {
+    _lockTimer?.cancel();
+    _timer?.cancel();
+    _otpController.clear();
+
+    setState(() {
+      _otpLockSeconds = 5 * 60;
+    });
+
+    _lockTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_otpLockSeconds <= 1) {
+        timer.cancel();
+        authVM.clearTemporaryBlock();
+        if (mounted) {
+          setState(() => _otpLockSeconds = 0);
+          _startTimer();
+        }
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _otpLockSeconds--;
+        });
+      }
+    });
+  }
+
+  void _handleOtpFailure(AuthViewModel authVM) {
+    if (!authVM.isTemporarilyBlocked || _isOtpLocked) return;
+
+    _startOtpLock(authVM);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          authVM.errorMessage ??
+              'Bạn đã nhập sai quá 5 lần. Vui lòng thử lại sau 5 phút.',
+        ),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   // --- Hàm xử lý Xác nhận OTP ---
   Future<void> _onVerifyOtp() async {
     final otp = _otpController.text.trim();
+    if (_isOtpLocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'OTP đang bị khóa tạm thời. Vui lòng thử lại sau $_lockCountdownText.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
     if (otp.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng nhập đủ 6 số OTP')),
@@ -76,7 +142,14 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
       isSuccess = await authVM.verifyOtp(otp, widget.contactInfo);
     }
 
-    if (isSuccess && mounted) {
+    if (!mounted) return;
+
+    if (!isSuccess) {
+      _handleOtpFailure(authVM);
+      return;
+    }
+
+    if (isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(widget.isRegister
@@ -97,7 +170,17 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
   // --- Hàm xử lý Gửi lại OTP ---
   Future<void> _onResendOtp() async {
     final authVM = context.read<AuthViewModel>();
-
+    if (_isOtpLocked) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Bạn chỉ có thể gửi lại OTP sau $_lockCountdownText.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
     // RẼ NHÁNH API GỬI LẠI Ở ĐÂY
     bool isSuccess = false;
     if (widget.isRegister && widget.registerData != null) {
@@ -108,7 +191,14 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
       isSuccess = await authVM.sendOtp(widget.contactInfo);
     }
 
-    if (isSuccess && mounted) {
+    if (!mounted) return;
+
+    if (!isSuccess) {
+      _handleOtpFailure(authVM);
+      return;
+    }
+
+    if (isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Đã gửi lại mã OTP thành công!'),
@@ -202,7 +292,46 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
                         ),
 
                         // Hiển thị lỗi từ ViewModel (nếu có)
-                        if (authVM.errorMessage != null) ...[
+                        if (_isOtpLocked) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(
+                                  Icons.lock_clock,
+                                  color: Colors.red,
+                                  size: 30,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  authVM.errorMessage ??
+                                      'Bạn đã nhập sai OTP quá 5 lần.',
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Vui lòng thử lại sau $_lockCountdownText',
+                                  style: TextStyle(
+                                    color: Colors.red.shade700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (authVM.errorMessage != null) ...[
                           const SizedBox(height: 12),
                           Text(
                             authVM.errorMessage!,
@@ -225,7 +354,9 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
                                   borderRadius: BorderRadius.circular(8)),
                             ),
                             // Vô hiệu hóa nút nếu đang loading
-                            onPressed: authVM.isLoading ? null : _onVerifyOtp,
+                            onPressed: (authVM.isLoading || _isOtpLocked)
+                                ? null
+                                : _onVerifyOtp,
                             child: authVM.isLoading
                                 ? const SizedBox(
                                     width: 24,
@@ -233,9 +364,11 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
                                     child: CircularProgressIndicator(
                                         color: Colors.white, strokeWidth: 2),
                                   )
-                                : const Text(
-                                    'Xác nhận',
-                                    style: TextStyle(
+                                : Text(
+                              _isOtpLocked
+                                  ? 'Thử lại sau $_lockCountdownText'
+                                  : 'Xác nhận',
+                              style: const TextStyle(
                                         fontSize: 16,
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold),
@@ -255,15 +388,17 @@ class _OtpVerificationScreeWidget extends State<OtpVerificationWidget> {
                             ),
                             GestureDetector(
                               // Cho phép bấm nếu đếm ngược về 0 VÀ không bị loading
-                              onTap: (_timerSeconds == 0 && !authVM.isLoading)
+                              onTap: (_timerSeconds == 0 && !authVM.isLoading && !_isOtpLocked)
                                   ? _onResendOtp
                                   : null,
                               child: Text(
-                                _timerSeconds == 0
+                                _isOtpLocked
+                                    ? 'Gửi lại sau $_lockCountdownText'
+                                    : _timerSeconds == 0
                                     ? 'Gửi lại ngay'
                                     : 'Gửi lại sau ${_timerSeconds}s',
                                 style: TextStyle(
-                                  color: _timerSeconds == 0
+                                  color: (_timerSeconds == 0 && !_isOtpLocked)
                                       ? const Color(0xFF2073E8)
                                       : Colors.grey,
                                   fontWeight: FontWeight.bold,

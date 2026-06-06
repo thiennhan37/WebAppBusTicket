@@ -5,10 +5,15 @@ part 'order_detail_model.g.dart';
 @JsonSerializable()
 class OrderDetailModel {
   final String bookingOrderId;
+  final String pickupProvinceId;
   final String pickupProvince;
+  final String dropoffProvinceId;
   final String dropoffProvince;
+  final int pickupStopId;
   final String pickupStop;
+  final int dropoffStopId;
   final String dropoffStop;
+  final String busCompanyId;
   final String busCompanyName;
   final String departureTime;
   final String busType;
@@ -21,10 +26,15 @@ class OrderDetailModel {
 
   OrderDetailModel({
     required this.bookingOrderId,
+    required this.pickupProvinceId,
     required this.pickupProvince,
+    required this.dropoffProvinceId,
     required this.dropoffProvince,
+    required this.pickupStopId,
     required this.pickupStop,
+    required this.dropoffStopId,
     required this.dropoffStop,
+    required this.busCompanyId,
     required this.busCompanyName,
     required this.departureTime,
     required this.busType,

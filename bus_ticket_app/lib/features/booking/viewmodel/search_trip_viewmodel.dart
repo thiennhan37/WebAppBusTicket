@@ -14,6 +14,18 @@ class SearchTripViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
+
+  bool _hasNextPage = true;
+  bool get hasNextPage => _hasNextPage;
+
+  int _currentPage = 0;
+  int get currentPage => _currentPage;
+
+  String? _paginationErrorMessage;
+  String? get paginationErrorMessage => _paginationErrorMessage;
+
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
@@ -80,12 +92,18 @@ class SearchTripViewModel extends ChangeNotifier {
     minRating = null;
     _sortBy = 'departure_asc';
 
-    await _fetchTrips();
+    await _fetchTrips(page: 0, reset: true);
   }
 
   Future<void> applyFilters() async {
     if (_startProvince == null || _endProvince == null || _date == null) return;
-    await _fetchTrips();
+    await _fetchTrips(page: 0, reset: true);
+  }
+
+  Future<void> loadNextPage() async {
+    if (_startProvince == null || _endProvince == null || _date == null) return;
+    if (_isLoading || _isLoadingMore || !_hasNextPage) return;
+    await _fetchTrips(page: _currentPage + 1, reset: false);
   }
 
   void clearFilters() {
@@ -102,13 +120,23 @@ class SearchTripViewModel extends ChangeNotifier {
     applyFilters();
   }
 
-  Future<void> _fetchTrips() async {
-    _isLoading = true;
-    _errorMessage = null;
+  Future<void> _fetchTrips({required int page, required bool reset}) async {
+    if (reset) {
+      _isLoading = true;
+      _isLoadingMore = false;
+      _trips = [];
+      _currentPage = 0;
+      _hasNextPage = true;
+      _errorMessage = null;
+      _paginationErrorMessage = null;
+    } else {
+      _isLoadingMore = true;
+      _paginationErrorMessage = null;
+    }
     notifyListeners();
 
     try {
-      _trips = await _tripRepository.searchTrip(
+      final result = await _tripRepository.searchTrip(
         startProvince: _startProvince!,
         endProvince: _endProvince!,
         date: _date!,
@@ -122,12 +150,27 @@ class SearchTripViewModel extends ChangeNotifier {
         busType: busType,
         minRating: minRating,
         sortBy: _sortBy,
+        page: page,
       );
+      if (reset) {
+        _trips = result.trips;
+      } else {
+        _trips = [..._trips, ...result.trips];
+      }
+      _currentPage = result.currentPage;
+      _hasNextPage = result.hasNextPage;
       _isLoading = false;
+      _isLoadingMore = false;
       notifyListeners();
     } catch (e) {
-      _errorMessage = 'Lỗi kết nối: $e';
-      _isLoading = false;
+      if (reset) {
+        _errorMessage = 'Lỗi kết nối: $e';
+        _isLoading = false;
+        _isLoadingMore = false;
+      } else {
+        _paginationErrorMessage = 'Không thể tải thêm chuyến xe. Vui lòng thử lại.';
+        _isLoadingMore = false;
+      }
       notifyListeners();
     }
   }

@@ -7,6 +7,7 @@ class NotificationItem extends StatelessWidget {
   final String title;
   final String content;
   final String time;
+  final bool read;
 
   const NotificationItem({
     Key? key,
@@ -16,13 +17,14 @@ class NotificationItem extends StatelessWidget {
     required this.title,
     required this.content,
     required this.time,
+    this.read = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      color: Colors.white,
+      color: read ? Colors.white : const Color(0xFFF7FBFF),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

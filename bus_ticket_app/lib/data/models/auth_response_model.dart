@@ -21,6 +21,8 @@ class AuthResponseModel {
 
   bool get isInvalidOtp => code == 4022;
 
+  bool get isTooManyFailedAttempts => code == 4017;
+
   // Easy getters
   String? get accessToken => result?.accessToken;
 

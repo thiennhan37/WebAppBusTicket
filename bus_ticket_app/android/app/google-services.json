@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "286936948481",
+    "project_id": "busticket-4cb8a",
+    "storage_bucket": "busticket-4cb8a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:286936948481:android:9fa9153690d1a081650500",
+        "android_client_info": {
+          "package_name": "com.example.bus_ticket_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9qlpveDq6LuoKhDU7lA_nEV16qcea9eA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
