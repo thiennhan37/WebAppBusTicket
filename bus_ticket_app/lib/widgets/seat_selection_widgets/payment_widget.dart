@@ -45,21 +45,21 @@ class PaymentWidget extends StatelessWidget {
 
           // Momo
           _buildPaymentMethod(
-            icon: Icons.account_balance_wallet, // Giả sử icon momo
+            icon: Icons.account_balance_wallet,
             title: 'Ví MoMo',
             subtitle: 'Thanh toán qua ứng dụng MoMo',
-            isSelected: true, // Tạm thời mặc định chọn cái đầu
-            onTap: () {},
+            isSelected: viewModel.selectedPaymentMethod == 'momo',
+            onTap: () => viewModel.selectPaymentMethod('momo'),
           ),
           const SizedBox(height: 12),
 
-          // QR Pay
+          // VN Pay
           _buildPaymentMethod(
             icon: Icons.qr_code_scanner,
-            title: 'Chuyển khoản bằng mã QR',
+            title: 'Chuyển khoản bằng VNPay',
             subtitle: 'Hỗ trợ nhiều ví điện tử & hơn 42 ngân hàng',
-            isSelected: false,
-            onTap: () {},
+            isSelected: viewModel.selectedPaymentMethod == 'vnpay',
+            onTap: () => viewModel.selectPaymentMethod('vnpay'),
             isNew: true,
           ),
 

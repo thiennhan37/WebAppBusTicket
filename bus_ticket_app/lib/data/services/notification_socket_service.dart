@@ -14,16 +14,20 @@ class NotificationSocketService {
 
   bool get isConnected => _client?.connected == true;
 
-  void connect(String customerId) {
+  void connect(String customerId, String? token) {
     if (_customerId == customerId && isConnected) {
       return;
     }
 
     disconnect();
     _customerId = customerId;
+    final url = token != null && token.isNotEmpty
+        ? '${ApiConstants.notificationSocketUrl}?token=$token'
+        : ApiConstants.notificationSocketUrl;
+
     _client = StompClient(
       config: StompConfig.sockJS(
-        url: ApiConstants.notificationSocketUrl,
+        url: url,
         onConnect: _onConnect,
         onWebSocketError: (error) => print('Notification socket error: $error'),
         onStompError: (frame) => print('Notification STOMP error: ${frame.body}'),

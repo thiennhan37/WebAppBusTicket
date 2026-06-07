@@ -23,6 +23,7 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
 
     Payment findByBookingOrderIdAndType(String bookingOrderId, String type);
     Payment findByMomoOrderId(String momoOrderId);
+    Payment findByVnpayOrderId(String vnpayOrderId);
 
     boolean existsByBookingOrderIdAndTypeAndStatus(String bookingOrderId, String type, String status);
 }

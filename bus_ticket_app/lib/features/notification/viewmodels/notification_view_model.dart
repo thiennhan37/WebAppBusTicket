@@ -39,7 +39,8 @@ class NotificationViewModel extends ChangeNotifier {
     _customerId = customerId;
     _notifications = _notificationStorage.getNotifications(customerId);
     notifyListeners();
-    _socketService.connect(customerId);
+    final token = await _authStorage.getAccessToken();
+    _socketService.connect(customerId, token);
   }
 
   Future<void> markAllAsRead() async {
