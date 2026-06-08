@@ -19,7 +19,8 @@ public class Message {
     private Integer id;
     private String content, senderRole, senderId;
     private LocalDateTime sentAt;
-    private Boolean isRead;
+    private Integer unreadCustomerCount;
+    private Integer unreadCompanyCount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", referencedColumnName = "id")

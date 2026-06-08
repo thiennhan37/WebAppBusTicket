@@ -9,10 +9,14 @@ import com.example.BusTicket.entity.*;
 import com.example.BusTicket.enums.RoleEnum;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
+import com.example.BusTicket.mapper.CustomerMapper;
 import com.example.BusTicket.mapper.MessageMapper;
 import com.example.BusTicket.repository.jpa.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -32,6 +36,7 @@ public class ChatService {
     private final MessageMapper messageMapper;
     private final CustomerRepository customerRepository;
     private final BusCompanyRepository busCompanyRepository;
+    private final CustomerMapper customerMapper;
 
     private static final String OPEN_STATUS = "OPEN";
 
@@ -66,13 +71,32 @@ public class ChatService {
 
         LocalDateTime now = LocalDateTime.now();
 
+        // compute unread counts based on previous message in the conversation
+        var lastMessageOpt = messageRepository.findTopByConversationIdOrderBySentAtDesc(conversation.getId());
+        int lastUnreadCompany = lastMessageOpt.map(m -> m.getUnreadCompanyCount() == null ? 0 : m.getUnreadCompanyCount()).orElse(0);
+        int lastUnreadCustomer = lastMessageOpt.map(m -> m.getUnreadCustomerCount() == null ? 0 : m.getUnreadCustomerCount()).orElse(0);
+
+        int unreadCustomerCount = 0;
+        int unreadCompanyCount = 0;
+
+        if (RoleEnum.CUSTOMER.name().equals(account.role())) {
+            // customer sent a message -> company has one more unread
+            unreadCompanyCount = lastUnreadCompany + 1;
+            unreadCustomerCount = 0;
+        } else {
+            // staff/manager sent a message -> customer has one more unread
+            unreadCustomerCount = lastUnreadCustomer + 1;
+            unreadCompanyCount = 0;
+        }
+
         Message message = Message.builder()
                 .conversation(conversation)
                 .senderId(account.accountId())
                 .senderRole(account.role())
                 .content(request.getContent().trim())
                 .sentAt(now)
-                .isRead(false)
+                .unreadCustomerCount(unreadCustomerCount)
+                .unreadCompanyCount(unreadCompanyCount)
                 .build();
         messageRepository.save(message);
 
@@ -115,13 +139,34 @@ public class ChatService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<MessageResponse> getMessages(Integer conversationId) {
+    @Transactional
+    public List<MessageResponse> getMessages(Integer conversationId, Pageable pageable) {
         Conversation conversation = conversationRepository.findByIdWithParticipants(conversationId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
-        validateConversationAccess(conversation, getChatAccount(JwtHelper.getJwt()));
+        ChatAccount account = getChatAccount(JwtHelper.getJwt());
+        validateConversationAccess(conversation, account);
 
-        return messageRepository.findByConversationIdOrderBySentAtAsc(conversationId).stream()
+        List<Message> messages = messageRepository.findByConversationIdOrderBySentAtAsc(conversationId);
+
+        boolean modified = false;
+        if (RoleEnum.CUSTOMER.name().equals(account.role())) {
+            modified = messageRepository.markCustomerRead(conversationId) > 0;
+        } else {
+            modified = messageRepository.markCompanyRead(conversationId) > 0;
+        }
+
+        if (modified) {
+//            messageRepository.saveAll(messages);
+            MessageResponse last = messageRepository.findTopByConversationIdOrderBySentAtDesc(conversationId)
+                    .map(messageMapper::toMessageResponse)
+                    .orElse(null);
+            messagingTemplate.convertAndSend("/topic/conversation/" + conversation.getId() + "/read", last);
+            messagingTemplate.convertAndSend("/topic/company/"
+                    + conversation.getBusCompany().getId() + "/conversations", last);
+        }
+        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 10, Sort.by("sentAt").descending());
+        Page<Message> messagePage = messageRepository.findByConversationId(conversationId, fixedPageable);
+        return messages.stream()
                 .map(messageMapper::toMessageResponse)
                 .toList();
     }
@@ -146,8 +191,7 @@ public class ChatService {
                 .status(conversation.getStatus())
                 .createdAt(conversation.getCreatedAt())
                 .lastMessageAt(conversation.getLastMessageAt())
-                .customerId(conversation.getCustomer().getId())
-                .customerName(conversation.getCustomer().getFullName())
+                .customer(customerMapper.toCustomerInfoResponse(conversation.getCustomer()))
                 .busCompanyId(conversation.getBusCompany().getId())
                 .busCompanyName(conversation.getBusCompany().getCompanyName())
                 .lastMessage(lastMessage)

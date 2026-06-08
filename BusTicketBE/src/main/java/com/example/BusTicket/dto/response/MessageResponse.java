@@ -17,6 +17,7 @@ public class MessageResponse {
     private String senderId;
     private String senderRole;
     private String content;
-    private Boolean isRead;
     private LocalDateTime sentAt;
+    private Integer unreadCustomerCount;
+    private Integer unreadCompanyCount;
 }

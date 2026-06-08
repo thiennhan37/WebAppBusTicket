@@ -16,8 +16,7 @@ public class ConversationResponse {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime lastMessageAt;
-    private String customerId;
-    private String customerName;
+    private CustomerInfoResponse customer;
     private String busCompanyId;
     private String busCompanyName;
     private MessageResponse lastMessage;
