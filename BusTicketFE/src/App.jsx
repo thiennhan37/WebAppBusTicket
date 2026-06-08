@@ -20,6 +20,7 @@ import AdminDashboard from './pages/AdminDashBoard/AdminDashBoard'
 import AdminManageCompany from './pages/AdminManageCompany/AdminManageCompany'
 import AdminRegisterCompany from './pages/AdminRegisterCompany/AdminRegisterCompany'
 import AdminManageAccount from './pages/AdminManageCompany/AdminManageAccount'
+import Chat from './pages/Chat/Chat'
 
 function App() { 
   return (
@@ -40,6 +41,7 @@ function App() {
                 <Route path="/nhaxe/trips" element={<Trips/>}></Route>
                 <Route path="/nhaxe/ticket" element={<Ticket/>}></Route>
                 <Route path="/nhaxe/local-routes" element={<LocalRoutes/>}></Route>
+                <Route path="/nhaxe/chat" element={<Chat/>}></Route>
                 
                 <Route element={<ProtectedRoute type="company" notAllowedRoles={['staff']} />}>
                   <Route path="/nhaxe/staff" element={<StaffManagement/>}></Route>
