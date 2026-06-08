@@ -12,11 +12,14 @@ import com.example.BusTicket.exception.MyAppException;
 import com.example.BusTicket.mapper.CustomerMapper;
 import com.example.BusTicket.mapper.MessageMapper;
 import com.example.BusTicket.repository.jpa.*;
+import com.example.BusTicket.specification.ConversationSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -128,25 +132,37 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public List<ConversationResponse> getMyConversations() {
+    public Page<ConversationResponse> getMyConversations(String customerInfo, String companyInfo, Pageable pageable) {
         ChatAccount account = getChatAccount(JwtHelper.getJwt());
-        List<Conversation> conversations = RoleEnum.CUSTOMER.name().equals(account.role())
-                ? conversationRepository.findAllByCustomerId(account.accountId())
-                : conversationRepository.findAllByBusCompanyId(account.busCompanyId());
+        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(),
+                10, Sort.by("lastMessageAt").descending());
 
-        return conversations.stream()
+        Specification<Conversation> spec = Specification
+                .where(ConversationSpecification.containsCompanyInfo(companyInfo))
+                .and(ConversationSpecification.containsCustomerInfo(customerInfo));
+
+        // add role-based restriction
+        if (RoleEnum.CUSTOMER.name().equals(account.role())) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("customer").get("id"), account.accountId()));
+        } else {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("busCompany").get("id"), account.busCompanyId()));
+        }
+
+        Page<Conversation> page = conversationRepository.findAll(spec, fixedPageable);
+
+        List<ConversationResponse> dtoList = page.getContent().stream()
                 .map(this::toConversationResponse)
-                .toList();
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, fixedPageable, page.getTotalElements());
     }
 
     @Transactional
-    public List<MessageResponse> getMessages(Integer conversationId, Pageable pageable) {
+    public Page<MessageResponse> getMessages(Integer conversationId, Pageable pageable) {
         Conversation conversation = conversationRepository.findByIdWithParticipants(conversationId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         ChatAccount account = getChatAccount(JwtHelper.getJwt());
         validateConversationAccess(conversation, account);
-
-        List<Message> messages = messageRepository.findByConversationIdOrderBySentAtAsc(conversationId);
 
         boolean modified = false;
         if (RoleEnum.CUSTOMER.name().equals(account.role())) {
@@ -156,7 +172,6 @@ public class ChatService {
         }
 
         if (modified) {
-//            messageRepository.saveAll(messages);
             MessageResponse last = messageRepository.findTopByConversationIdOrderBySentAtDesc(conversationId)
                     .map(messageMapper::toMessageResponse)
                     .orElse(null);
@@ -164,11 +179,24 @@ public class ChatService {
             messagingTemplate.convertAndSend("/topic/company/"
                     + conversation.getBusCompany().getId() + "/conversations", last);
         }
-        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 10, Sort.by("sentAt").descending());
+
+        // Use pageable to load a single page of messages from newest -> oldest, then reverse
+        int page = Math.max(0, pageable.getPageNumber());
+//        int size = pageable.getPageSize() > 0 ? pageable.getPageSize() : 10;
+        int size = 10;
+        Pageable fixedPageable = PageRequest.of(page, size, Sort.by("sentAt").descending());
         Page<Message> messagePage = messageRepository.findByConversationId(conversationId, fixedPageable);
-        return messages.stream()
+
+        // Page.getContent() can return an unmodifiable list in some implementations
+        // create a mutable copy first, then reverse in-place to chronological order
+        List<Message> messages = new java.util.ArrayList<>(messagePage.getContent());
+        java.util.Collections.reverse(messages);
+
+        List<MessageResponse> dtoList = messages.stream()
                 .map(messageMapper::toMessageResponse)
-                .toList();
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, fixedPageable, messagePage.getTotalElements());
     }
 
     private void validateConversationAccess(Conversation conversation, ChatAccount account) {

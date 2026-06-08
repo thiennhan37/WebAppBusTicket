@@ -1,12 +1,31 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Client } from "@stomp/stompjs";
 import { AlertCircle, MessagesSquare, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import AuthContext from "../../context/AuthContext";
 import ChatService from "../../Services/ChatService";
-import { normalizePageContent, buildFallbackConversations, getDisplayName } from "./ChatUtils";
+import { normalizePagedResult } from "./ChatUtils";
 import ChatSidebar from "./ChatSidebar";
 import ChatWindow from "./ChatWindow";
+
+const MESSAGE_PAGE_SIZE = 20;
+
+const createEmptyMessagesMeta = () => ({
+  page: -1,
+  totalPages: 0,
+  hasMore: false,
+  loading: false,
+  loadingMore: false,
+});
+
+const mapConversations = (conversations = []) =>
+  conversations.map((conv) => ({
+    ...conv,
+    unreadCustomerCount: conv.unreadCustomerCount ?? conv.lastMessage?.unreadCustomerCount ?? 0,
+    unreadCompanyCount: conv.unreadCompanyCount ?? conv.lastMessage?.unreadCompanyCount ?? 0,
+  }));
 
 const API_HTTP_URL = "http://localhost:8080/vexedat";
 const API_WS_URL = API_HTTP_URL.replace(/^http/, "ws");
@@ -19,12 +38,11 @@ const Chat = () => {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [messagesByConversation, setMessagesByConversation] = useState({});
+  const [messagesMetaByConversation, setMessagesMetaByConversation] = useState({});
   const [messageInput, setMessageInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [manualConversationId, setManualConversationId] = useState("");
   const [connectionStatus, setConnectionStatus] = useState("disconnected");
-  const [apiStatus, setApiStatus] = useState("idle");
   const [lastError, setLastError] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
   const stompClientRef = useRef(null);
   const conversationSubscriptionRef = useRef(null);
   const subscribedConversationRef = useRef(null);
@@ -34,10 +52,66 @@ const Chat = () => {
   const accessToken = useMemo(() => localStorage.getItem("accessToken") || "", []);
   const currentUserId = user?.id || user?.userId || user?.email || user?.phone || "";
 
+  const getFilterParams = () => ({
+    page: Number(searchParams.get("page")) || 1,
+    customerInfo: searchParams.get("customerInfo") || "",
+  });
+
+  const filterParams = getFilterParams();
+
+  const updateFilterParams = (updater) => {
+    setSearchParams({
+      page: String(updater.page || 1),
+      customerInfo: updater.customerInfo ?? "",
+    });
+  };
+
+  const onPageChange = (newPage) => {
+    updateFilterParams({ ...filterParams, page: newPage });
+  };
+
+  const onCustomerInfoChange = (customerInfo) => {
+    updateFilterParams({ ...filterParams, customerInfo, page: 1 });
+  };
+
+  const {
+    data: conversationResult,
+    isFetching: isFetchingConversations,
+    isError: isConversationError,
+  } = useQuery({
+    queryKey: ["chatConversations", filterParams],
+    queryFn: async () => {
+      const response = await ChatService.getConversations({
+        customerInfo: filterParams.customerInfo,
+        page: filterParams.page > 0 ? filterParams.page - 1 : 0,
+      });
+      return normalizePagedResult(response);
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 0,
+  });
+
+  const totalPages = conversationResult?.page?.totalPages || 1;
+  const totalElements = conversationResult?.page?.totalElements ?? conversations.length;
+  const apiStatus = isConversationError ? "fallback" : "success";
+
   useEffect(() => {
     activeConversationIdRef.current = activeConversationId;
   }, [activeConversationId]);
 
+  useEffect(() => {
+    if (!conversationResult) return;
+
+    const mapped = mapConversations(conversationResult.content);
+    setConversations(mapped);
+    setActiveConversationId((current) => {
+      if (!mapped.length) return "";
+      if (!mapped.some((conversation) => String(conversation.id) === String(current))) {
+        return String(mapped[0].id);
+      }
+      return current;
+    });
+  }, [conversationResult]);
   const activeConversation = useMemo(
     () => conversations.find((conversation) => String(conversation.id) === String(activeConversationId)),
     [activeConversationId, conversations]
@@ -48,20 +122,12 @@ const Chat = () => {
     [activeConversationId, messagesByConversation]
   );
 
-  const filteredConversations = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    if (!normalizedSearch) return conversations;
-    return conversations.filter((conversation) => {
-      const lastMessageText = typeof conversation.lastMessage === 'string' 
-        ? conversation.lastMessage 
-        : conversation.lastMessage?.content || "";
-      const text = `${getDisplayName(conversation)} ${conversation.id} ${lastMessageText}`.toLowerCase();
-      return text.includes(normalizedSearch);
-    });
-  }, [conversations, searchTerm]);
+  const activeMessagesMeta = useMemo(
+    () => messagesMetaByConversation[activeConversationId] || createEmptyMessagesMeta(),
+    [activeConversationId, messagesMetaByConversation]
+  );
 
-  const upsertConversationPreview = useCallback((message) => {
-    setConversations((current) => {
+  const upsertConversationPreview = useCallback((message) => {    setConversations((current) => {
       const exists = current.some((conversation) => String(conversation.id) === String(message.conversationId));
       const updated = current.map((conversation) => {
         if (String(conversation.id) !== String(message.conversationId)) return conversation;
@@ -192,48 +258,72 @@ const Chat = () => {
     setConnectionStatus("disconnected");
   }, []);
 
-  const loadConversations = useCallback(async () => {
-    setApiStatus("loading");
-    try {
-      const response = await ChatService.getConversations({
-        busCompanyId: company?.id || user?.busCompanyId,
-        keyword: searchTerm,
-      });
-      const data = normalizePageContent(response);
-      if (data.length) {
-        // Normalize unread counts: backend may include them only on lastMessage
-        const mapped = data.map((conv) => ({
-          ...conv,
-          unreadCustomerCount: conv.unreadCustomerCount ?? conv.lastMessage?.unreadCustomerCount ?? 0,
-          unreadCompanyCount: conv.unreadCompanyCount ?? conv.lastMessage?.unreadCompanyCount ?? 0,
-        }));
-        setConversations(mapped);
-        setActiveConversationId(String(mapped[0].id));
-      }
-      setApiStatus(data.length ? "success" : "fallback");
-    } catch (error) {
-      setApiStatus("fallback");
-      console.warn("API danh sách hội thoại chưa sẵn sàng, dùng dữ liệu nhập tay.", error);
-    }
-  }, [company, searchTerm, user]);
-
-  const loadMessages = useCallback(async (conversationId) => {
+  const loadMessages = useCallback(async (conversationId, { page = 0, prepend = false } = {}) => {
     if (!conversationId) return;
+
+    const key = String(conversationId);
+    setMessagesMetaByConversation((current) => ({
+      ...current,
+      [key]: {
+        ...(current[key] || createEmptyMessagesMeta()),
+        loading: !prepend,
+        loadingMore: prepend,
+      },
+    }));
+
     try {
-      const response = await ChatService.getMessages({ conversationId });
-      const data = normalizePageContent(response);
-      setMessagesByConversation((current) => ({ ...current, [String(conversationId)]: data }));
+      const response = await ChatService.getMessages({
+        conversationId,
+        page,
+        size: MESSAGE_PAGE_SIZE,
+      });
+      const { content, page: pageInfo } = normalizePagedResult(response);
+
+      setMessagesByConversation((current) => {
+        const previousMessages = current[key] || [];
+        if (prepend) {
+          const existingIds = new Set(previousMessages.map((item) => item.id).filter(Boolean));
+          const olderMessages = content.filter((item) => !item.id || !existingIds.has(item.id));
+          return { ...current, [key]: [...olderMessages, ...previousMessages] };
+        }
+        return { ...current, [key]: content };
+      });
+
+      setMessagesMetaByConversation((current) => ({
+        ...current,
+        [key]: {
+          page: pageInfo.number,
+          totalPages: pageInfo.totalPages,
+          hasMore: pageInfo.number + 1 < pageInfo.totalPages,
+          loading: false,
+          loadingMore: false,
+        },
+      }));
     } catch (error) {
+      setMessagesMetaByConversation((current) => ({
+        ...current,
+        [key]: {
+          ...(current[key] || createEmptyMessagesMeta()),
+          loading: false,
+          loadingMore: false,
+        },
+      }));
       console.warn("API lịch sử tin nhắn chưa sẵn sàng.", error);
     }
   }, []);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      loadConversations();
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [loadConversations]);
+  const loadOlderMessages = useCallback(() => {
+    if (!activeConversationId) return;
+
+    const key = String(activeConversationId);
+    const meta = messagesMetaByConversation[key] || createEmptyMessagesMeta();
+    if (!meta.hasMore || meta.loading || meta.loadingMore) return;
+
+    loadMessages(activeConversationId, {
+      page: (meta.page ?? 0) + 1,
+      prepend: true,
+    });
+  }, [activeConversationId, loadMessages, messagesMetaByConversation]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -252,7 +342,7 @@ const Chat = () => {
       setConversations((current) =>
         current.map((conversation) =>
           String(conversation.id) === String(activeConversationId)
-            ? { ...conversation, unreadCustomerCount: 0, unreadCompanyCount: 0 }
+            ? { ...conversation, unreadCompanyCount: 0 }
             : conversation
         )
       );
@@ -264,33 +354,8 @@ const Chat = () => {
     return () => window.clearTimeout(timer);
   }, [activeConversationId, connectionStatus, loadMessages, subscribeToConversation]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeMessages]);
-
   const handleSelectConversation = (conversationId) => {
     setActiveConversationId(String(conversationId));
-  };
-
-  const handleAddManualConversation = () => {
-    const id = manualConversationId.trim();
-    if (!id) return;
-    setConversations((current) => {
-      if (current.some((conversation) => String(conversation.id) === id)) return current;
-      return [
-        {
-          id,
-          customerName: `Khách hàng #${id}`,
-          lastMessage: "Hội thoại được thêm thủ công để kết nối WebSocket.",
-          lastMessageAt: new Date().toISOString(),
-          status: "OPEN",
-          unreadCount: 0,
-        },
-        ...current,
-      ];
-    });
-    setActiveConversationId(id);
-    setManualConversationId("");
   };
 
   const handleSendMessage = (event) => {
@@ -366,15 +431,17 @@ const Chat = () => {
 
         <section className="grid h-[calc(100vh-200px)] min-h-[550px] grid-cols-1 overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm lg:grid-cols-[360px_minmax(0,1fr)]">
           <ChatSidebar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            manualConversationId={manualConversationId}
-            setManualConversationId={setManualConversationId}
-            handleAddManualConversation={handleAddManualConversation}
-            filteredConversations={filteredConversations}
+            filterParams={filterParams}
+            onCustomerInfoChange={onCustomerInfoChange}
+            conversations={conversations}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            onPageChange={onPageChange}
+            isFetching={isFetchingConversations}
             apiStatus={apiStatus}
             activeConversationId={activeConversationId}
             handleSelectConversation={handleSelectConversation}
+            viewerRole={user?.role}
           />
 
           <ChatWindow
@@ -382,11 +449,13 @@ const Chat = () => {
             company={company}
             activeConversationId={activeConversationId}
             activeMessages={activeMessages}
+            activeMessagesMeta={activeMessagesMeta}
             currentUserId={currentUserId}
             messagesEndRef={messagesEndRef}
             messageInput={messageInput}
             setMessageInput={setMessageInput}
             handleSendMessage={handleSendMessage}
+            onLoadOlderMessages={loadOlderMessages}
             connectionStatus={connectionStatus}
           />
         </section>

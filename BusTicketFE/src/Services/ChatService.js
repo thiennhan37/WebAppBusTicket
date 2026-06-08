@@ -1,15 +1,20 @@
 import api from "./api";
 
 const ChatService = {
-  getConversations({ busCompanyId, page = 0, size = 20, keyword = "" } = {}) {
+  getConversations({ customerInfo = "", companyInfo = "", page = 0, size = 10 } = {}) {
     return api.get("/api/chat/conversations", {
-      params: { busCompanyId, page, size, keyword: keyword || null },
+      params: {
+        customerInfo: customerInfo || null,
+        companyInfo: companyInfo || null,
+        page,
+        size,
+      },
     });
   },
 
-  getMessages({ conversationId, page = 0, size = 50 } = {}) {
+  getMessages({ conversationId, page = 0, size = 20 } = {}) {
     return api.get(`/api/chat/conversations/${conversationId}/messages`, {
-      params: { page, size, sort: "sentAt,asc" },
+      params: { page, size },
     });
   },
 };

@@ -6,6 +6,22 @@ export const normalizePageContent = (payload) => {
   return [];
 };
 
+export const normalizePagedResult = (payload) => {
+  const data = payload?.data?.result ?? payload?.result ?? payload;
+  const content = normalizePageContent(payload);
+  const page = data?.page ?? {};
+
+  return {
+    content,
+    page: {
+      number: page.number ?? 0,
+      size: page.size ?? content.length,
+      totalElements: page.totalElements ?? content.length,
+      totalPages: page.totalPages ?? (content.length ? 1 : 0),
+    },
+  };
+};
+
 export const buildFallbackConversations = (company, user) => [
   // {
   //   id: "1",
@@ -28,6 +44,14 @@ export const buildFallbackConversations = (company, user) => [
   //   isLocal: true,
   // },
 ];
+
+export const getUnreadCountForViewer = (conversation, viewerRole = "COMPANY") => {
+  const role = viewerRole?.toUpperCase();
+  if (role === "CUSTOMER") {
+    return Number(conversation?.unreadCustomerCount || 0);
+  }
+  return Number(conversation?.unreadCompanyCount || 0);
+};
 
 export const getDisplayName = (conversation) =>
   `${conversation?.customer?.fullName ? conversation?.customer?.fullName : ""}`;
