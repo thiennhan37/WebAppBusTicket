@@ -127,8 +127,10 @@ public class VNPayService {
         params.put("vnp_SecureHash", signature);
 
         try {
+            log.info("Calling VNPay refund API url={} params={}", vnPayConfig.getRefundUrl(), params);
             ResponseEntity<Map> response = restTemplate.postForEntity(
                     vnPayConfig.getRefundUrl(), params, Map.class);
+            log.info("VNPay refund API response status={}, body={}", response.getStatusCode(), response.getBody());
             Map<String, Object> result = response.getBody();
 
             if (result == null) {

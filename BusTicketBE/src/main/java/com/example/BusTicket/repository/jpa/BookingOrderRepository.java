@@ -57,6 +57,14 @@ public interface BookingOrderRepository extends JpaRepository<BookingOrder, Stri
     WHERE bo.bookingUser.id = :customerId
 """)
     List<BookingOrder> findByBookingUserIdForNotification(@Param("customerId") String customerId);
+
+    @Query("""
+        SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END
+        FROM Payment p
+        WHERE p.bookingOrder.id = :bookingOrderId
+          AND p.status = 'SUCCESSFUL'
+    """)
+    boolean isBookingOrderPaid(@Param("bookingOrderId") String bookingOrderId);
 }
 
 

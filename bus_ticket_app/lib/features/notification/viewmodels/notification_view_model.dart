@@ -49,6 +49,15 @@ class NotificationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> markAsRead(String eventId) async {
+    final index = _notifications.indexWhere((item) => item.eventId == eventId);
+    if (index != -1 && !_notifications[index].read) {
+      _notifications[index] = _notifications[index].copyWith(read: true);
+      await _persist();
+      notifyListeners();
+    }
+  }
+
   void disconnect() {
     _socketService.disconnect();
     _customerId = null;

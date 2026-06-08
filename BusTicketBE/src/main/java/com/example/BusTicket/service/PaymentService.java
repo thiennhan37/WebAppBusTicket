@@ -58,6 +58,7 @@ public class PaymentService {
     private final VNPayUtil vnPayUtil;
     private final VNPayConfig vnPayConfig;
     private final BookingOrderService bookingOrderService;
+    private final BookingOrderRepository bookingOrderRepository;
 
     @Value("${booking.compMakeOrderPrefixKey}")
     private String compMakeOrderPrefixKey;
@@ -65,7 +66,6 @@ public class PaymentService {
     private int paymentExpirationTime;
     @Value("${booking.paymentPrefixKey}")
     private String paymentPrefixKey;
-    private final BookingOrderRepository bookingOrderRepository;
     @Value("${booking.holdingSeatTime}")
     private int holdingSeatTime;
     @Value("${booking.customerHoldingSeatPrefixKey}")
@@ -169,7 +169,7 @@ public class PaymentService {
                     .atZone(ZoneId.systemDefault()).toLocalDateTime();
             LocalDateTime expiredTime = payment.getBookingOrder().getCreatedAt().plusSeconds(holdingSeatTime);
             boolean missingOrderCodeInRedis = customerHoldInfo == null || !customerHoldInfo.contains(bookingOrderId);
-            if (paymentTime.isAfter(expiredTime) || missingOrderCodeInRedis) {
+            if (paymentTime.isAfter(expiredTime) || missingOrderCodeInRedis || bookingOrderRepository.isBookingOrderPaid(bookingOrderId)) {
                 Long amount = Long.valueOf(payload.get("amount").toString());
                 Long parentTransId = Long.valueOf(payload.get("transId").toString());
                 String description = missingOrderCodeInRedis
@@ -402,7 +402,7 @@ public class PaymentService {
         boolean refunded = false;
         Long amount = amountStr != null ? Long.parseLong(amountStr) / 100L : 0L;
 
-        if (paymentTime.isAfter(expiredTime) || missingOrderCodeInRedis) {
+        if (paymentTime.isAfter(expiredTime) || missingOrderCodeInRedis || bookingOrderRepository.isBookingOrderPaid(bookingOrderId)) {
             String description = missingOrderCodeInRedis
                     ? "Hoan tien do khong tim thay ma don hang #" + bookingOrderId
                     : "Hoan tien thanh toan qua han hoa don #" + bookingOrderId;
@@ -452,17 +452,30 @@ public class PaymentService {
                 .build();
         Payment refundPayment = createPayment(paymentRequest);
         refundPayment.setPaymentMethod("VNPAY");
+        try {
+            VNPayRefundResponse refundResponse = vnPayService.createVNPayRefund(
+                    originalPaymentId, amount, transactionNo, description, "127.0.0.1");
 
-        VNPayRefundResponse refundResponse = vnPayService.createVNPayRefund(
-                originalPaymentId, amount, transactionNo, description, "127.0.0.1");
-
-        refundPayment.setVnpayOrderId(refundResponse.getTransactionNo());
-        if ("00".equals(refundResponse.getResponseCode())) {
-            refundPayment.setStatus(PaymentEnum.SUCCESSFUL.name());
-        } else {
+            refundPayment.setVnpayOrderId(refundResponse.getTransactionNo());
+            if ("00".equals(refundResponse.getResponseCode())) {
+                refundPayment.setStatus(PaymentEnum.SUCCESSFUL.name());
+            } else {
+                refundPayment.setStatus(PaymentEnum.FAILED.name());
+                log.error("VNPay refund failed: code={}, message={}", refundResponse.getResponseCode(), refundResponse.getMessage());
+            }
+            paymentRepository.save(refundPayment);
+            return refundPayment.getStatus().equals(PaymentEnum.SUCCESSFUL.name());
+        } catch (MyAppException e) {
+            // ensure refund record persisted with FAILED status and log root cause
             refundPayment.setStatus(PaymentEnum.FAILED.name());
+            paymentRepository.save(refundPayment);
+            log.error("Exception while calling VNPay refund API for paymentId={}, bookingOrderId={}: {}", originalPaymentId, bookingOrderId, e.getMessage(), e);
+            return false;
+        } catch (Exception e) {
+            refundPayment.setStatus(PaymentEnum.FAILED.name());
+            paymentRepository.save(refundPayment);
+            log.error("Unexpected error while refunding VNPay paymentId={}, bookingOrderId={}: {}", originalPaymentId, bookingOrderId, e.getMessage(), e);
+            return false;
         }
-        paymentRepository.save(refundPayment);
-        return refundPayment.getStatus().equals(PaymentEnum.SUCCESSFUL.name());
     }
 }

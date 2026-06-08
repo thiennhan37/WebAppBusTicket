@@ -1,7 +1,9 @@
 import 'package:bus_ticket_app/data/models/recent_search_model.dart';
 import 'package:bus_ticket_app/data/services/local/booking_storage.dart';
+import 'package:bus_ticket_app/pages/searh_result_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:intl/intl.dart';
 
 class RecentList extends StatefulWidget {
   const RecentList({super.key});
@@ -33,6 +35,79 @@ class _RecentListState extends State<RecentList> {
         _recentSearches = _storage.getRecentSearches();
       });
     }
+  }
+
+  DateTime _parseDate(String dateStr) {
+    try {
+      final parts = dateStr.split('/');
+      if (parts.length == 3) {
+        return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+      }
+    } catch (e) {
+      debugPrint("Error parsing date: $e");
+    }
+    return DateTime.now();
+  }
+
+  void _handleRecentSearchTap(RecentSearchModel item) async {
+    DateTime itemDate = _parseDate(item.date);
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+
+    if (itemDate.isAtSameMomentAs(today) || itemDate.isAfter(today)) {
+      // Ngày trong tương lai hoặc hôm nay -> nhảy tới trang tìm kiếm
+      _navigateToSearchResult(item, itemDate);
+    } else {
+      // Ngày cũ -> Hiện lịch chọn ngày mới
+      final DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: today,
+        firstDate: today,
+        lastDate: today.add(const Duration(days: 365)),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (pickedDate != null) {
+        // Cập nhật lại ngày trong storage
+        final updatedItem = RecentSearchModel(
+          departureName: item.departureName,
+          destinationName: item.destinationName,
+          departureId: item.departureId,
+          destinationId: item.destinationId,
+          date: DateFormat('dd/MM/yyyy').format(pickedDate),
+          isRoundTrip: item.isRoundTrip,
+          endDate: item.endDate,
+        );
+        _storage.addRecentSearch(updatedItem);
+        
+        _navigateToSearchResult(item, pickedDate);
+      }
+    }
+  }
+
+  void _navigateToSearchResult(RecentSearchModel item, DateTime startDate) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SearchResultPage(
+          departureName: item.departureName,
+          destinationName: item.destinationName,
+          departureId: item.departureId,
+          destinationId: item.destinationId,
+          startDate: startDate,
+          isRoundTrip: item.isRoundTrip,
+          endDate: item.endDate != null ? _parseDate(item.endDate!) : null,
+        ),
+      ),
+    );
   }
 
   @override
@@ -79,12 +154,16 @@ class _RecentListState extends State<RecentList> {
             itemCount: _recentSearches.length,
             itemBuilder: (context, index) {
               final item = _recentSearches[index];
-              return _buildRecentCard(
-                from: item.departureName,
-                to: item.destinationName,
-                date: item.isRoundTrip && item.endDate != null 
-                    ? "${item.date} - ${item.endDate}" 
-                    : item.date,
+              return InkWell(
+                onTap: () => _handleRecentSearchTap(item),
+                borderRadius: BorderRadius.circular(12),
+                child: _buildRecentCard(
+                  from: item.departureName,
+                  to: item.destinationName,
+                  date: item.isRoundTrip && item.endDate != null 
+                      ? "${item.date} - ${item.endDate}" 
+                      : item.date,
+                ),
               );
             },
           ),
@@ -93,7 +172,6 @@ class _RecentListState extends State<RecentList> {
     );
   }
 
-  // Hàm build từng thẻ card
   Widget _buildRecentCard({
     required String from,
     required String to,
@@ -129,7 +207,6 @@ class _RecentListState extends State<RecentList> {
             ),
           ),
           const SizedBox(width: 12),
-          //Cột chứa text địa điểm và thời gian
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +254,6 @@ class _RecentListState extends State<RecentList> {
     );
   }
 
-  // Hàm vẽ dấu chấm tròn ở giữa
   Widget _buildCircleDot(Color color) {
     return Container(
       width: 10,
@@ -190,7 +266,6 @@ class _RecentListState extends State<RecentList> {
     );
   }
 
-  //Hàm vẽ đường nét đức giữa hai vòng tròn
   Widget _buildDottedLine() {
     return Column(
       children: List.generate(
