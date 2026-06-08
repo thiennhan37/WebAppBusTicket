@@ -121,6 +121,13 @@ class TripApiService {
     );
   }
 
+  Future<Response> getVNPayUrl(String orderId) async {
+    return await _apiClient.post(
+      '${ApiConstants.vnpayPayment}$orderId',
+      requiresToken: true,
+    );
+  }
+
   Future<Response> checkPaymentStatus(String bookingOrderId) async {
     return await _apiClient.get(
       ApiConstants.checkPaymentStatus,

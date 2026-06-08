@@ -251,22 +251,6 @@ class _SearchCardState extends State<SearchCard> {
                   ),
                 ),
               ),
-              Row(
-                children: [
-                  const Text("Khứ hồi"),
-                  Switch(
-                    value: _isRoundTrip,
-                    onChanged: (val) {
-                      setState(() {
-                        _isRoundTrip = val;
-                        if (!val) {
-                          _endDate = null;
-                        }
-                      });
-                    },
-                  ),
-                ],
-              ),
             ],
           ),
           const SizedBox(height: 16),

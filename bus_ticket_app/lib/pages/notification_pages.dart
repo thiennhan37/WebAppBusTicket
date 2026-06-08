@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/pages/order_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -48,12 +49,12 @@ class NotificationPages extends StatelessWidget {
         ],
       ),
       body: Consumer<NotificationViewModel>(
-        builder: (context, viewModel, _) => _buildNotificationList(viewModel),
+        builder: (context, viewModel, _) => _buildNotificationList(viewModel, context),
       ),
     );
   }
 
-  Widget _buildNotificationList(NotificationViewModel viewModel) {
+  Widget _buildNotificationList(NotificationViewModel viewModel, BuildContext context) {
     final notifications = viewModel.notifications;
     if (notifications.isEmpty) {
       return const Center(
@@ -78,6 +79,19 @@ class NotificationPages extends StatelessWidget {
               content: notification.message,
               time: notification.displayTime,
               read: notification.read,
+              onTap: () {
+                viewModel.markAsRead(notification.eventId);
+                
+                final orderId = notification.data['orderId'] ?? notification.data['bookingOrderId'];
+                if (orderId != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrderDetailPage(orderId: orderId.toString()),
+                    ),
+                  );
+                }
+              },
             ),
             if (index < notifications.length - 1) _buildDivider(),
           ],

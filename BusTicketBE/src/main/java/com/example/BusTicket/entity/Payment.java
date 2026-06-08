@@ -12,7 +12,9 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    private String momoOrderId;
+    private String momoOrderId;    // nullable – chỉ có giá trị khi thanh toán qua Momo
+    private String vnpayOrderId;   // nullable – chỉ có giá trị khi thanh toán qua VNPay
+    private String paymentMethod;  // "MOMO" | "VNPAY"
     private String status;
     private String type;
     private Long transId;

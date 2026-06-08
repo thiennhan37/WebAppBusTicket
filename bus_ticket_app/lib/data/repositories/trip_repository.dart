@@ -201,6 +201,17 @@ class TripRepository {
     }
   }
 
+  Future<Response> getVNPayUrl(String orderId) async {
+    try {
+      return await _tripApiService.getVNPayUrl(orderId);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        return e.response!;
+      }
+      rethrow;
+    }
+  }
+
   Future<bool> checkPaymentStatus(String bookingOrderId) async {
     try {
       final response = await _tripApiService.checkPaymentStatus(bookingOrderId);

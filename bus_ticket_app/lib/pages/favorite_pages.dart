@@ -1,4 +1,5 @@
 import 'package:bus_ticket_app/features/customer/viewmodels/favorite_viewmodel.dart';
+import 'package:bus_ticket_app/pages/seat_selection_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -175,6 +176,33 @@ class _FavoritePagesState extends State<FavoritePages> {
     return '$dayLabel, ${DateFormat('dd/MM/yyyy').format(date)}';
   }
 
+  Widget _buildHeartIcon(dynamic trip) {
+    return Consumer<FavoriteViewModel>(
+      builder: (context, favoriteVM, child) {
+        final isFav = favoriteVM.isTripFavorite(trip.id);
+        return GestureDetector(
+          onTap: () {
+            if (isFav) {
+              favoriteVM.removeFavoriteByTripId(trip.id);
+              ScaffoldMessenger.of(context).clearSnackBars();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Đã bỏ yêu thích'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            }
+          },
+          child: Icon(
+            isFav ? Icons.favorite : Icons.favorite_border,
+            color: isFav ? Colors.red : Colors.grey,
+            size: 24,
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildFavoriteTripCard(dynamic trip) {
     bool isClosed = false;
     final now = DateTime.now();
@@ -250,11 +278,19 @@ class _FavoritePagesState extends State<FavoritePages> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 25),
-                        Text(
-                          trip.arrivalStation,
-                          style: const TextStyle(fontSize: 13, color: Colors.grey),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                trip.arrivalStation,
+                                style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            // Hình trái tim ngang hàng với điểm trả
+                            _buildHeartIcon(trip),
+                          ],
                         ),
                       ],
                     ),
@@ -281,7 +317,40 @@ class _FavoritePagesState extends State<FavoritePages> {
                           '${trip.availableSeats} chỗ trống',
                           style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
-                      ]
+                        const SizedBox(height: 12),
+                        // Nút Chọn chỗ đưa vào chỗ hình trái tim cũ
+                        ElevatedButton(
+                          onPressed: () {
+                            final favorite = context.read<FavoriteViewModel>().getFavoriteForTrip(trip.id);
+                            if (favorite != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SeatSelectionPage(
+                                    tripId: trip.id,
+                                    busCompanyName: trip.busCompanyName,
+                                    departureTime: trip.departureTime,
+                                    date: DateFormat('dd/MM/yyyy').format(_selectedDate),
+                                    departureProvinceId: favorite.departureProvinceId,
+                                    destinationProvinceId: favorite.destinationProvinceId,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFD54F),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Chọn chỗ',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
@@ -329,8 +398,7 @@ class _FavoritePagesState extends State<FavoritePages> {
                                     departureId: favorite.departureProvinceId,
                                     destinationId: favorite.destinationProvinceId,
                                     startDate: _selectedDate,
-                                    pickupStopIds: favorite.pickupStopId != null ? [favorite.pickupStopId!] : null,
-                                    dropoffStopIds: favorite.dropoffStopId != null ? [favorite.dropoffStopId!] : null,
+                                    // Đã bỏ pickupStopIds và dropoffStopIds
                                     busCompanyIds: favorite.busCompanyId.isNotEmpty ? [favorite.busCompanyId] : null,
                                   ),
                                 ),
@@ -344,29 +412,6 @@ class _FavoritePagesState extends State<FavoritePages> {
                         ),
                       ],
                     ),
-                  ),
-                  Consumer<FavoriteViewModel>(
-                    builder: (context, favoriteVM, child) {
-                      final isFav = favoriteVM.isTripFavorite(trip.id);
-                      return IconButton(
-                        icon: Icon(
-                          isFav ? Icons.favorite : Icons.favorite_border,
-                          color: isFav ? Colors.red : Colors.grey,
-                        ),
-                        onPressed: () {
-                          if (isFav) {
-                            favoriteVM.removeFavoriteByTripId(trip.id);
-                            ScaffoldMessenger.of(context).clearSnackBars();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Đã bỏ yêu thích'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          }
-                        },
-                      );
-                    },
                   ),
                 ],
               ),

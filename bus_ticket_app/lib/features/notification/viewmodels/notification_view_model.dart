@@ -39,13 +39,23 @@ class NotificationViewModel extends ChangeNotifier {
     _customerId = customerId;
     _notifications = _notificationStorage.getNotifications(customerId);
     notifyListeners();
-    _socketService.connect(customerId);
+    final token = await _authStorage.getAccessToken();
+    _socketService.connect(customerId, token);
   }
 
   Future<void> markAllAsRead() async {
     _notifications = _notifications.map((item) => item.copyWith(read: true)).toList();
     await _persist();
     notifyListeners();
+  }
+
+  Future<void> markAsRead(String eventId) async {
+    final index = _notifications.indexWhere((item) => item.eventId == eventId);
+    if (index != -1 && !_notifications[index].read) {
+      _notifications[index] = _notifications[index].copyWith(read: true);
+      await _persist();
+      notifyListeners();
+    }
   }
 
   void disconnect() {

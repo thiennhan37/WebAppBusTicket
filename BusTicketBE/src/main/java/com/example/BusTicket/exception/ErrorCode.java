@@ -22,6 +22,9 @@ public enum ErrorCode {
     ERROR_MOMO_IPN(1013, "Momo không phản hồi IPN", HttpStatus.BAD_REQUEST),
     ERROR_SIGNATURE(1014, "Chữ kí chưa xác thực", HttpStatus.UNAUTHORIZED),
     ERROR_S3(1012, "S3 Amazon bị lỗi", HttpStatus.BAD_REQUEST),
+    ERROR_VNPAY_PAYMENT(1015, "Thanh toán VNPay thất bại", HttpStatus.BAD_REQUEST),
+    ERROR_VNPAY_IPN(1016, "VNPay IPN không hợp lệ", HttpStatus.BAD_REQUEST),
+    ERROR_VNPAY_REFUND(1017, "Hoàn tiền VNPay thất bại", HttpStatus.BAD_REQUEST),
     CANCEL_TRIP_INVALID(4008, "Hủy chuyến thất bại", HttpStatus.BAD_REQUEST),
 
 

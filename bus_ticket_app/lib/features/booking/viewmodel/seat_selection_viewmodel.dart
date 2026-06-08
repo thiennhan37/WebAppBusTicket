@@ -5,6 +5,7 @@ import 'package:bus_ticket_app/data/models/stop_model.dart';
 import 'package:bus_ticket_app/data/repositories/trip_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:string_normalizer/string_normalizer.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SeatSelectionViewModel extends ChangeNotifier {
   final TripRepository _tripRepository;
@@ -150,10 +151,11 @@ class SeatSelectionViewModel extends ChangeNotifier {
 
   void startStatusCheck() {
     _statusCheckTimer?.cancel();
-    if (_selectedPaymentMethod != 'momo' || _orderCode == null) return;
+    // Bắt đầu polling khi có mã đơn hàng và đã chọn phương thức thanh toán
+    if ((_selectedPaymentMethod != 'momo' && _selectedPaymentMethod != 'vnpay') || _orderCode == null) return;
 
     _statusCheckTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
-      if (_currentStep == 6 && _selectedPaymentMethod == 'momo' && _orderCode != null && !_isPaymentSuccessful) {
+      if (_currentStep == 6 && (_selectedPaymentMethod == 'momo' || _selectedPaymentMethod == 'vnpay') && _orderCode != null && !_isPaymentSuccessful) {
         print('Checking payment status for OrderId: $_orderCode');
         final isPaid = await _tripRepository.checkPaymentStatus(_orderCode!);
         if (isPaid) {
@@ -176,9 +178,11 @@ class SeatSelectionViewModel extends ChangeNotifier {
 
   void selectPaymentMethod(String method) {
     _selectedPaymentMethod = method;
-    if (method == 'momo') {
-      if (_paymentData != null) {
-        startStatusCheck();
+    if (method == 'momo' || method == 'vnpay') {
+      startStatusCheck();
+      // Nếu là vnpay, tự động gọi processPayment để lấy URL và mở trình duyệt
+      if (method == 'vnpay') {
+        processPayment();
       }
     } else {
       stopStatusCheck();
@@ -401,6 +405,10 @@ class SeatSelectionViewModel extends ChangeNotifier {
       return false;
     }
 
+    if (_selectedPaymentMethod == 'vnpay') {
+      return await _processVNPay();
+    }
+
     if (_paymentData != null) {
       startStatusCheck();
       return true;
@@ -439,6 +447,43 @@ class SeatSelectionViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> _processVNPay() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _tripRepository.getVNPayUrl(_orderCode!);
+      final data = response.data;
+      if (data['code'] == 0 || data['code'] == 1000) {
+        final result = data['result'] ?? data['data'];
+        final payUrl = result['payUrl'];
+        if (payUrl != null) {
+          final uri = Uri.parse(payUrl);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+            _isLoading = false;
+            startStatusCheck();
+            notifyListeners();
+            return true;
+          } else {
+            _errorMessage = "Không thể mở liên kết thanh toán";
+          }
+        } else {
+          _errorMessage = "Không tìm thấy liên kết thanh toán";
+        }
+      } else {
+        _errorMessage = data['message'] ?? "Lỗi lấy liên kết thanh toán VNPay";
+      }
+    } catch (e) {
+      _errorMessage = "Lỗi kết nối VNPay";
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return false;
+  }
+
   void toggleSeatSelection(String seatCode) {
     if (_busDiagramData == null) return;
 
@@ -470,9 +515,6 @@ class SeatSelectionViewModel extends ChangeNotifier {
     if (_currentStep < 6) {
       _currentStep++;
       _searchQuery = '';
-      if (_currentStep == 6 && _selectedPaymentMethod == 'momo') {
-        startStatusCheck();
-      }
       notifyListeners();
     }
   }
@@ -490,9 +532,7 @@ class SeatSelectionViewModel extends ChangeNotifier {
 
   void goToStep(int step) {
     _currentStep = step;
-    if (_currentStep == 6 && _selectedPaymentMethod == 'momo') {
-      startStatusCheck();
-    } else {
+    if (_currentStep != 6) {
       stopStatusCheck();
     }
     notifyListeners();

@@ -7,7 +7,6 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.config.ChannelRegistration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.*;
 
 @Configuration
@@ -25,9 +24,11 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
                 .setAllowedOriginPatterns("*");
 
         registry.addEndpoint("/ws/notifications")
+                .addInterceptors(jwtHandshakeInterceptor)
                 .setAllowedOriginPatterns("*");
 
         registry.addEndpoint("/ws/notifications")
+                .addInterceptors(jwtHandshakeInterceptor)
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }

@@ -145,27 +145,6 @@ public class CustomerBookingForOrderService {
         // Lưu lịch sử booking tạm thời
         saveHistoryForBooking(bookingOrder, customer, ticketList);
 
-        // Tạo payment PENDING cho order này
-        PaymentRequest paymentRequest = PaymentRequest.builder()
-                .amount(totalCost)
-                .bookingOrderId(bookingOrder.getId())
-                .type(MomoEnum.PAYMENT.name())
-                .build();
-
-        Payment payment = paymentService.createPayment(paymentRequest);
-
-        // Tạo momo payment (QR + payUrl) lưu vào redis để khách lấy QR sau
-        MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder()
-                .bookingOrderId(bookingOrder.getId())
-                .paymentId(payment.getId())
-                .orderInfo("Thanh toán hóa đơn #" + bookingOrder.getId())
-                .build();
-
-        MomoPaymentResponse momoResponse = momoService.createMomoPayment(momoPaymentRequest, AccountType.CUSTOMER);
-        redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId(),
-                momoResponse.getPayUrl(), Duration.ofSeconds(holdingSeatTime));
-        redisTemplate.opsForValue().set(paymentPrefixKey + payment.getId() + ":qr",
-                momoResponse.getQrCodeUrl(), Duration.ofSeconds(holdingSeatTime));
 
         // vẫn lưu hold info cho client
         String holdInfo = customer.getId() + ":" + orderId + ":" + String.join(",", tripSeatIdList);
@@ -201,9 +180,16 @@ public class CustomerBookingForOrderService {
             bookingOrder.setCustomerEmail(request.getCustomerEmail());
         bookingOrderRepository.save(bookingOrder);
 
-        // 4. Lấy payment đã tạo khi hold và trả về momo QR cho khách
+        // 4. Lấy payment đã tạo khi hold (nếu có). Nếu chưa có -> tạo payment PENDING cho order này
         Payment payment = paymentRepository.findByBookingOrderIdAndType(orderId, MomoEnum.PAYMENT.name());
-        if (payment == null) throw new MyAppException(ErrorCode.NOT_EXISTED);
+        if (payment == null) {
+            PaymentRequest paymentRequest = PaymentRequest.builder()
+                    .amount(bookingOrder.getTotalCost())
+                    .bookingOrderId(bookingOrder.getId())
+                    .type(MomoEnum.PAYMENT.name())
+                    .build();
+            payment = paymentService.createPayment(paymentRequest);
+        }
 
         return paymentService.getMomoQrForCustomer(payment.getId());
     }

@@ -36,7 +36,8 @@ public class SecurityConfig {
             "/provinces/{provinceId}/pickup-stops", "/provinces/{provinceId}/dropoff-stops", "/trips/get-companies-info" , "/ws/**"
     };
     private final String[] AUTH_GET_ENDPOINTS = {"/auth/google/login", "/auth/google/callback"};
-    private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**", "/api/**", "/admin/create"};
+    private final String[] PUBLIC_GET_ENDPOINTS = {"/vnpay/ipn", "/vnpay/return"};
+    private final String[] PUBLIC_POST_ENDPOINTS = {"/bus-type", "/momo/**", "/vnpay/payment-url", "/api/**", "/admin/create"};
     private final String[] ADMIN_ENDPOINTS = {"/users", "/admin/company-page", "/admin/company-register-page",
         "/admin/company-status", "/admin/company-register", "/admin/staff-page", "/admin/customer-page",
     "/admin/company-status", "/admin/customer-status", "/admin/staff-status",
@@ -71,6 +72,7 @@ public class SecurityConfig {
                         // Browser gửi OPTIONS trước (CORS)
                         .requestMatchers(HttpMethod.GET, CUSTOMER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, AUTH_GET_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                         // web socket
                         .requestMatchers("/api/chat/**").authenticated()
                         .requestMatchers(HttpMethod.POST, CUSTOMER_POST_ENDPOINTS).hasRole(RoleEnum.CUSTOMER.name())

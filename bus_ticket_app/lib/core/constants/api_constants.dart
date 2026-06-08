@@ -15,6 +15,7 @@ class ApiConstants {
   static const String busDiagram = '$baseUrl/trips/bus-diagram';
   static const String holdSeats = '$baseUrl/customer/orders/hold-seats/';
   static const String momoPayment = '$baseUrl/customer/orders/payment/';
+  static const String vnpayPayment = '$baseUrl/vnpay/payment-url/';
   static const String checkPaymentStatus = '$baseUrl/customer/orders/payment-status';
   static const String getRecentOrders = '$baseUrl/customer/orders/recent';
   static const String updateProfile = '$baseUrl/customer/profile';
