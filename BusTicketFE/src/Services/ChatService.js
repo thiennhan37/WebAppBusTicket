@@ -1,9 +1,14 @@
 import api from "./api";
 
 const ChatService = {
-  getConversations({ busCompanyId, page = 0, size = 20, keyword = "" } = {}) {
+  getConversations({ customerInfo = "", companyInfo = "", page = 0, size = 10 } = {}) {
     return api.get("/api/chat/conversations", {
-      params: { busCompanyId, page, size, keyword: keyword || null },
+      params: {
+        customerInfo: customerInfo || null,
+        companyInfo: companyInfo || null,
+        page,
+        size,
+      },
     });
   },
 

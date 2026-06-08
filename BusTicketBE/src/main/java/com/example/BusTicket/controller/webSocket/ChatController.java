@@ -27,8 +27,10 @@ public class ChatController {
     }
 
     @GetMapping("/conversations")
-    public ApiResponse<List<ConversationResponse>> getMyConversations() {
-        return ApiResponse.success(chatService.getMyConversations());
+    public ApiResponse<PagedModel<ConversationResponse>> getMyConversations(@RequestParam(required = false) String customerInfo,
+                                                                            @RequestParam(required = false) String companyInfo,
+                                                                            Pageable pageable) {
+        return ApiResponse.success(new PagedModel<>(chatService.getMyConversations(customerInfo, companyInfo, pageable)));
     }
 
     @GetMapping("/conversations/{conversationId}/messages")

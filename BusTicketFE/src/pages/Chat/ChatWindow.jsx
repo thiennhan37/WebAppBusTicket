@@ -248,7 +248,10 @@ const ChatWindow = ({
                 )}
                 <div className={`max-w-[72%] rounded-3xl px-4 py-3 shadow-sm ${bgClass}`}>
                   <p className="whitespace-pre-wrap break-words text-sm leading-6">{message.content}</p>
-                  <div className={`mt-2 text-[11px] ${timeColorClass}`}>
+                  <div
+                    className={`mt-2 text-[11px] ${isRightSide ? "text-right" : "text-left"} 
+                      ${timeColorClass}`}
+                  >
                     {formatTime(message.sentAt)} {senderLabel ? `• ${senderLabel}` : ""}
                   </div>
                 </div>

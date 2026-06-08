@@ -45,6 +45,14 @@ export const buildFallbackConversations = (company, user) => [
   // },
 ];
 
+export const getUnreadCountForViewer = (conversation, viewerRole = "COMPANY") => {
+  const role = viewerRole?.toUpperCase();
+  if (role === "CUSTOMER") {
+    return Number(conversation?.unreadCustomerCount || 0);
+  }
+  return Number(conversation?.unreadCompanyCount || 0);
+};
+
 export const getDisplayName = (conversation) =>
   `${conversation?.customer?.fullName ? conversation?.customer?.fullName : ""}`;
 
