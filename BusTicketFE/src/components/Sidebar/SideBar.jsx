@@ -1,7 +1,7 @@
 
 import { 
   LayoutDashboard, Users, Tickets, Route, 
-  BarChart3, BusFront, ChartNoAxesCombined , Star 
+  BarChart3, BusFront, ChartNoAxesCombined , Star, MessagesSquare 
 } from 'lucide-react';
 import { NavLink } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
@@ -15,6 +15,7 @@ const menuItems = [
   { icon: Users, label: 'Nhân sự', link:'staff', active: false },
   { icon: ChartNoAxesCombined, label: 'Thống kê', link:'report', active: false },
   { icon: Star, label: 'Đánh giá', link:'rating', active: false },
+  { icon: MessagesSquare, label: 'WebChat', link:'chat', active: false },
 ];
 const SideBar = () =>{
     const { user } = useContext(AuthContext);

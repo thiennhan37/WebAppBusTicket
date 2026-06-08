@@ -53,6 +53,8 @@ public enum ErrorCode {
     RATED_ORDER(4015, "Đơn hàng đã được đánh giá", HttpStatus.BAD_REQUEST),
     COMPANY_BLOCKED(4016, "Công ty đã bị vô hiệu hóa", HttpStatus.UNAUTHORIZED),
 
+    WS_ACCESS_DENIED(4017, "Web socket - không có quyền truy cập", HttpStatus.FORBIDDEN),
+
     INVALID_GMAIL(4021, "Không tìm thấy gmail này trong hệ thống", HttpStatus.BAD_REQUEST),
     INVALID_OTP(4022, "Sai OTP hoặc OTP đã hết hạn", HttpStatus.BAD_REQUEST),
     INVALID_CUSTOMER_REGISTER(4023, "Gmail hoặc số điện thoại đã được sử dụng", HttpStatus.BAD_REQUEST),

@@ -1,6 +1,5 @@
 import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmodel.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
 class SeatDiagramWidget extends StatelessWidget {
@@ -93,7 +92,7 @@ class SeatDiagramWidget extends StatelessWidget {
         if (floorIndex == 0) ...[
           Align(
             alignment: Alignment.centerLeft,
-            child: Icon(MdiIcons.steering, color: Colors.grey, size: 30),
+            child: Icon(Icons.radio_button_checked, color: Colors.grey, size: 30),
           ),
           const SizedBox(height: 16),
         ] else ...[
