@@ -8,6 +8,7 @@ import com.example.BusTicket.dto.response.MessageResponse;
 import com.example.BusTicket.service.ChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.web.bind.annotation.*;
@@ -31,8 +32,9 @@ public class ChatController {
     }
 
     @GetMapping("/conversations/{conversationId}/messages")
-    public ApiResponse<List<MessageResponse>> getMessages(@PathVariable Integer conversationId, Pageable pageable) {
-        return ApiResponse.success(chatService.getMessages(conversationId, pageable));
+    public ApiResponse<PagedModel<MessageResponse>> getMessages(@PathVariable Integer conversationId, Pageable pageable) {
+        Page<MessageResponse> page = chatService.getMessages(conversationId, pageable);
+        return ApiResponse.success(new PagedModel<>(page));
     }
 
     @PostMapping("/messages")

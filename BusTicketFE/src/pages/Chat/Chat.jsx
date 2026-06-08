@@ -4,7 +4,17 @@ import { AlertCircle, MessagesSquare, RefreshCw, Wifi, WifiOff } from "lucide-re
 import { toast } from "sonner";
 import AuthContext from "../../context/AuthContext";
 import ChatService from "../../Services/ChatService";
-import { normalizePageContent, buildFallbackConversations, getDisplayName } from "./ChatUtils";
+import { normalizePageContent, normalizePagedResult, getDisplayName } from "./ChatUtils";
+
+const MESSAGE_PAGE_SIZE = 20;
+
+const createEmptyMessagesMeta = () => ({
+  page: -1,
+  totalPages: 0,
+  hasMore: false,
+  loading: false,
+  loadingMore: false,
+});
 import ChatSidebar from "./ChatSidebar";
 import ChatWindow from "./ChatWindow";
 
@@ -19,6 +29,7 @@ const Chat = () => {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [messagesByConversation, setMessagesByConversation] = useState({});
+  const [messagesMetaByConversation, setMessagesMetaByConversation] = useState({});
   const [messageInput, setMessageInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [manualConversationId, setManualConversationId] = useState("");
@@ -46,6 +57,11 @@ const Chat = () => {
   const activeMessages = useMemo(
     () => messagesByConversation[activeConversationId] || [],
     [activeConversationId, messagesByConversation]
+  );
+
+  const activeMessagesMeta = useMemo(
+    () => messagesMetaByConversation[activeConversationId] || createEmptyMessagesMeta(),
+    [activeConversationId, messagesMetaByConversation]
   );
 
   const filteredConversations = useMemo(() => {
@@ -217,16 +233,72 @@ const Chat = () => {
     }
   }, [company, searchTerm, user]);
 
-  const loadMessages = useCallback(async (conversationId) => {
+  const loadMessages = useCallback(async (conversationId, { page = 0, prepend = false } = {}) => {
     if (!conversationId) return;
+
+    const key = String(conversationId);
+    setMessagesMetaByConversation((current) => ({
+      ...current,
+      [key]: {
+        ...(current[key] || createEmptyMessagesMeta()),
+        loading: !prepend,
+        loadingMore: prepend,
+      },
+    }));
+
     try {
-      const response = await ChatService.getMessages({ conversationId });
-      const data = normalizePageContent(response);
-      setMessagesByConversation((current) => ({ ...current, [String(conversationId)]: data }));
+      const response = await ChatService.getMessages({
+        conversationId,
+        page,
+        size: MESSAGE_PAGE_SIZE,
+      });
+      const { content, page: pageInfo } = normalizePagedResult(response);
+
+      setMessagesByConversation((current) => {
+        const previousMessages = current[key] || [];
+        if (prepend) {
+          const existingIds = new Set(previousMessages.map((item) => item.id).filter(Boolean));
+          const olderMessages = content.filter((item) => !item.id || !existingIds.has(item.id));
+          return { ...current, [key]: [...olderMessages, ...previousMessages] };
+        }
+        return { ...current, [key]: content };
+      });
+
+      setMessagesMetaByConversation((current) => ({
+        ...current,
+        [key]: {
+          page: pageInfo.number,
+          totalPages: pageInfo.totalPages,
+          hasMore: pageInfo.number + 1 < pageInfo.totalPages,
+          loading: false,
+          loadingMore: false,
+        },
+      }));
     } catch (error) {
+      setMessagesMetaByConversation((current) => ({
+        ...current,
+        [key]: {
+          ...(current[key] || createEmptyMessagesMeta()),
+          loading: false,
+          loadingMore: false,
+        },
+      }));
       console.warn("API lịch sử tin nhắn chưa sẵn sàng.", error);
     }
   }, []);
+
+  const loadOlderMessages = useCallback(() => {
+    if (!activeConversationId) return;
+
+    const key = String(activeConversationId);
+    const meta = messagesMetaByConversation[key] || createEmptyMessagesMeta();
+    if (!meta.hasMore || meta.loading || meta.loadingMore) return;
+
+    loadMessages(activeConversationId, {
+      page: (meta.page ?? 0) + 1,
+      prepend: true,
+    });
+  }, [activeConversationId, loadMessages, messagesMetaByConversation]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -263,10 +335,6 @@ const Chat = () => {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [activeConversationId, connectionStatus, loadMessages, subscribeToConversation]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeMessages]);
 
   const handleSelectConversation = (conversationId) => {
     setActiveConversationId(String(conversationId));
@@ -382,11 +450,13 @@ const Chat = () => {
             company={company}
             activeConversationId={activeConversationId}
             activeMessages={activeMessages}
+            activeMessagesMeta={activeMessagesMeta}
             currentUserId={currentUserId}
             messagesEndRef={messagesEndRef}
             messageInput={messageInput}
             setMessageInput={setMessageInput}
             handleSendMessage={handleSendMessage}
+            onLoadOlderMessages={loadOlderMessages}
             connectionStatus={connectionStatus}
           />
         </section>

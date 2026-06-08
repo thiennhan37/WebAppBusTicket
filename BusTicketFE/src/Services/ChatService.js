@@ -7,9 +7,9 @@ const ChatService = {
     });
   },
 
-  getMessages({ conversationId, page = 0, size = 50 } = {}) {
+  getMessages({ conversationId, page = 0, size = 20 } = {}) {
     return api.get(`/api/chat/conversations/${conversationId}/messages`, {
-      params: { page, size, sort: "sentAt,asc" },
+      params: { page, size },
     });
   },
 };
