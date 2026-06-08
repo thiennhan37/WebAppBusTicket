@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatMessageRequest {
-    private String conversationId;
+    private Integer conversationId;
     private String content;
 
 }

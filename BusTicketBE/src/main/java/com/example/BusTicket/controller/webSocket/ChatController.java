@@ -1,14 +1,15 @@
 package com.example.BusTicket.controller.webSocket;
 
+import com.example.BusTicket.dto.request.ChatMessageRequest;
+import com.example.BusTicket.dto.request.CreateConversationRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
+import com.example.BusTicket.dto.response.ConversationResponse;
 import com.example.BusTicket.dto.response.MessageResponse;
 import com.example.BusTicket.service.ChatService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.web.PagedModel;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,10 +19,23 @@ import java.util.List;
 public class ChatController {
     private final ChatService chatService;
 
-//    @GetMapping("/conversations/{conversationId}/messages")
-//    public ApiResponse<PagedModel<MessageResponse>> getMessages(@PathVariable String conversationId) {
-//        return ApiResponse.<PagedModel<MessageResponse>>builder()
-//                .result(chatService.getMessages(conversationId))
-//                .build();
-//    }
+    @PostMapping("/conversations")
+    public ApiResponse<ConversationResponse> createOrGetConversation(@Valid @RequestBody CreateConversationRequest request) {
+        return ApiResponse.success(chatService.createOrGetConversation(request));
+    }
+
+    @GetMapping("/conversations")
+    public ApiResponse<List<ConversationResponse>> getMyConversations() {
+        return ApiResponse.success(chatService.getMyConversations());
+    }
+
+    @GetMapping("/conversations/{conversationId}/messages")
+    public ApiResponse<List<MessageResponse>> getMessages(@PathVariable Integer conversationId) {
+        return ApiResponse.success(chatService.getMessages(conversationId));
+    }
+
+    @PostMapping("/messages")
+    public ApiResponse<MessageResponse> sendMessage(@RequestBody ChatMessageRequest request) {
+        return ApiResponse.success(chatService.sendMessage(request));
+    }
 }

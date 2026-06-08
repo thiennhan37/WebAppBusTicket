@@ -71,6 +71,8 @@ public class SecurityConfig {
                         // Browser gửi OPTIONS trước (CORS)
                         .requestMatchers(HttpMethod.GET, CUSTOMER_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, AUTH_GET_ENDPOINTS).permitAll()
+                        // web socket
+                        .requestMatchers("/api/chat/**").authenticated()
                         .requestMatchers(HttpMethod.POST, CUSTOMER_POST_ENDPOINTS).hasRole(RoleEnum.CUSTOMER.name())
                         .requestMatchers(HttpMethod.GET, CUSTOMER_GET_ENDPOINTS).hasRole(RoleEnum.CUSTOMER.name())
                         .requestMatchers(HttpMethod.POST, AUTH_ENDPOINTS).permitAll()
