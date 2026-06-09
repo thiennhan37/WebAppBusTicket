@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class VNPayPaymentResponse {
     private String payUrl;
+    /** vnp_CreateDate gửi khi tạo URL thanh toán – dùng cho refund (vnp_TransactionDate) */
+    private String vnpCreateDate;
 }
 
 
