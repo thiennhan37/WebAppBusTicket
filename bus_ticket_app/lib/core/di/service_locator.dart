@@ -1,3 +1,4 @@
+import 'package:bus_ticket_app/data/repositories/chat_repository.dart';
 import 'package:bus_ticket_app/data/repositories/customer_repository.dart';
 import 'package:bus_ticket_app/data/repositories/location_repository.dart';
 import 'package:bus_ticket_app/data/services/location_api_service.dart';
@@ -14,6 +15,8 @@ import 'package:bus_ticket_app/features/auth/viewmodels/auth_view_model.dart';
 
 import '../../data/repositories/trip_repository.dart';
 import '../../data/services/auth_api_service.dart';
+import '../../data/services/chat_api_service.dart';
+import '../../data/services/chat_socket_service.dart';
 import '../../data/services/customer_api_service.dart';
 import '../../data/services/firebase_messaging_service.dart';
 import '../../data/services/local/auth_storage.dart';
@@ -85,6 +88,15 @@ void setupServiceLocator() {
 
   getIt.registerLazySingleton<ApiClient>(
         () => ApiClient(getIt<AuthStorage>()),
+  );
+  getIt.registerLazySingleton<ChatApiService>(
+        () => ChatApiService(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ChatRepository>(
+        () => ChatRepository(getIt<ChatApiService>()),
+  );
+  getIt.registerLazySingleton<ChatSocketService>(
+        () => ChatSocketService(),
   );
   getIt.registerLazySingleton<CustomerRepository>(
         () => CustomerRepository(getIt<CustomerApiService>()),

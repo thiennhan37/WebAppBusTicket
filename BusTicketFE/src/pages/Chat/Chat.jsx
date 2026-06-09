@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Client } from "@stomp/stompjs";
 import { AlertCircle, MessagesSquare, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ const TOPIC_PREFIX = "/topic/conversation/";
 
 const Chat = () => {
   const { user, company } = useContext(AuthContext);
+  const queryClient = useQueryClient();
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [messagesByConversation, setMessagesByConversation] = useState({});
@@ -44,8 +45,9 @@ const Chat = () => {
   const [lastError, setLastError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
   const stompClientRef = useRef(null);
-  const conversationSubscriptionRef = useRef(null);
-  const subscribedConversationRef = useRef(null);
+  // Map of conversationId -> STOMP subscription. We subscribe to all visible conversations
+  // so previews update even when a different conversation is active.
+  const conversationSubscriptionsRef = useRef({});
   const activeConversationIdRef = useRef(activeConversationId);
   const messagesEndRef = useRef(null);
 
@@ -110,7 +112,7 @@ const Chat = () => {
         return String(mapped[0].id);
       }
       return current;
-    });
+    }); 
   }, [conversationResult]);
   const activeConversation = useMemo(
     () => conversations.find((conversation) => String(conversation.id) === String(activeConversationId)),
@@ -182,25 +184,56 @@ const Chat = () => {
     upsertConversationPreview(message);
   }, [upsertConversationPreview]);
 
-  const subscribeToConversation = useCallback((conversationId) => {
-    const client = stompClientRef.current;
-    if (!client?.connected || !conversationId) return;
+  const subscribeToConversation = useCallback(
+    (conversationId) => {
+      const client = stompClientRef.current;
+      if (!client?.connected || !conversationId) return;
+      const key = String(conversationId);
+      if (conversationSubscriptionsRef.current[key]) return; // already subscribed
 
-    conversationSubscriptionRef.current?.unsubscribe();
-    conversationSubscriptionRef.current = client.subscribe(
-      `${TOPIC_PREFIX}${conversationId}`,
-      (frame) => {
-        try {
-          const message = JSON.parse(frame.body);
-          addMessage(message);
-        } catch (error) {
-          console.error("Không thể đọc tin nhắn websocket", error);
-        }
-      },
-      { ack: "auto" }
-    );
-    subscribedConversationRef.current = String(conversationId);
-  }, [addMessage]);
+      try {
+        const sub = client.subscribe(
+          `${TOPIC_PREFIX}${conversationId}`,
+          (frame) => {
+            try {
+              const message = JSON.parse(frame.body);
+              addMessage(message);
+            } catch (error) {
+              console.error("Không thể đọc tin nhắn websocket", error);
+            }
+          },
+          { ack: "auto" }
+        );
+        conversationSubscriptionsRef.current[key] = sub;
+      } catch (err) {
+        console.warn("Không thể subscribe topic", conversationId, err);
+      }
+    },
+    [addMessage]
+  );
+
+  const unsubscribeFromConversation = useCallback((conversationId) => {
+    const key = String(conversationId);
+    const sub = conversationSubscriptionsRef.current[key];
+    if (!sub) return;
+    try {
+      sub.unsubscribe();
+    } catch (e) {
+      // ignore
+    }
+    delete conversationSubscriptionsRef.current[key];
+  }, []);
+
+  const unsubscribeAllConversations = useCallback(() => {
+    Object.keys(conversationSubscriptionsRef.current).forEach((key) => {
+      try {
+        conversationSubscriptionsRef.current[key]?.unsubscribe();
+      } catch (e) {
+        // ignore
+      }
+    });
+    conversationSubscriptionsRef.current = {};
+  }, []);
 
   const connectSocket = useCallback(() => {
     if (!accessToken) {
@@ -224,7 +257,7 @@ const Chat = () => {
       heartbeatOutgoing: 10000,
       onConnect: () => {
         setConnectionStatus("connected");
-        subscribeToConversation(activeConversationIdRef.current);
+        // once connected, we'll subscribe to all conversations in a dedicated effect
       },
       onStompError: (frame) => {
         setConnectionStatus("error");
@@ -235,20 +268,18 @@ const Chat = () => {
         setLastError("Không thể kết nối WebSocket. Kiểm tra BusTicketBE và token đăng nhập.");
       },
       onWebSocketClose: () => {
-        conversationSubscriptionRef.current = null;
-        subscribedConversationRef.current = null;
+        // clear any tracked subscriptions
+        unsubscribeAllConversations();
         setConnectionStatus((currentStatus) => (currentStatus === "error" ? "error" : "disconnected"));
       },
     });
 
     stompClientRef.current = client;
     client.activate();
-  }, [accessToken, subscribeToConversation]);
+  }, [accessToken, subscribeToConversation, unsubscribeAllConversations]);
 
   const disconnectSocket = useCallback(() => {
-    conversationSubscriptionRef.current?.unsubscribe();
-    conversationSubscriptionRef.current = null;
-    subscribedConversationRef.current = null;
+    unsubscribeAllConversations();
 
     const client = stompClientRef.current;
     stompClientRef.current = null;
@@ -256,7 +287,7 @@ const Chat = () => {
       client.deactivate();
     }
     setConnectionStatus("disconnected");
-  }, []);
+  }, [unsubscribeAllConversations]);
 
   const loadMessages = useCallback(async (conversationId, { page = 0, prepend = false } = {}) => {
     if (!conversationId) return;
@@ -346,16 +377,71 @@ const Chat = () => {
             : conversation
         )
       );
-
-      if (connectionStatus === "connected" && subscribedConversationRef.current !== String(activeConversationId)) {
-        subscribeToConversation(activeConversationIdRef.current);
-      }
+      // subscription to conversation topics is handled centrally to keep previews updated
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [activeConversationId, connectionStatus, loadMessages, subscribeToConversation]);
+  }, [activeConversationId, loadMessages]);
+
+  // Maintain subscriptions for all conversations while connected. Subscribe to newly
+  // loaded conversations and unsubscribe from removed ones.
+  useEffect(() => {
+    if (connectionStatus !== "connected") return;
+
+    const currentSubs = new Set(Object.keys(conversationSubscriptionsRef.current));
+    const newIds = new Set(conversations.map((c) => String(c.id)));
+
+    // subscribe to new conversations
+    conversations.forEach((c) => {
+      const id = String(c.id);
+      if (!currentSubs.has(id)) subscribeToConversation(id);
+    });
+
+    // unsubscribe removed conversations
+    currentSubs.forEach((id) => {
+      if (!newIds.has(id)) {
+        try {
+          conversationSubscriptionsRef.current[id]?.unsubscribe();
+        } catch (e) {}
+        delete conversationSubscriptionsRef.current[id];
+      }
+    });
+  }, [conversations, connectionStatus, subscribeToConversation]);
 
   const handleSelectConversation = (conversationId) => {
     setActiveConversationId(String(conversationId));
+  };
+
+  const { mutateAsync: startConversation, isPending: isStartingConversation } = useMutation({
+    mutationFn: async (customer) => {
+      const response = await ChatService.createOrGetConversation({ customerId: customer.id });
+      return response?.data?.result;
+    },
+    onSuccess: (conversation) => {
+      if (!conversation?.id) return;
+
+      const [mappedConversation] = mapConversations([conversation]);
+      setConversations((current) => {
+        const exists = current.some((item) => String(item.id) === String(mappedConversation.id));
+        if (exists) {
+          return current.map((item) =>
+            String(item.id) === String(mappedConversation.id) ? { ...item, ...mappedConversation } : item
+          );
+        }
+        return [mappedConversation, ...current];
+      });
+      setActiveConversationId(String(conversation.id));
+      subscribeToConversation(conversation.id);
+      queryClient.invalidateQueries({ queryKey: ["chatConversations"] });
+      toast.success("Đã mở hội thoại với khách hàng");
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || "Không thể tạo hội thoại với khách hàng");
+      throw error;
+    },
+  });
+
+  const handleStartConversation = async (customer) => {
+    await startConversation(customer);
   };
 
   const handleSendMessage = (event) => {
@@ -441,6 +527,8 @@ const Chat = () => {
             apiStatus={apiStatus}
             activeConversationId={activeConversationId}
             handleSelectConversation={handleSelectConversation}
+            onStartConversation={handleStartConversation}
+            isStartingConversation={isStartingConversation}
             viewerRole={user?.role}
           />
 

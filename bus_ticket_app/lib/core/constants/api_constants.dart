@@ -28,6 +28,10 @@ class ApiConstants {
   static const String googleMobileLogin = '$baseUrl/auth/google/mobile';
   static const String googleMobileRegister = '$baseUrl/auth/google/mobile/register';
   static const String deviceTokens = '$baseUrl/api/device-tokens';
+  static const String chatConversations = '$baseUrl/api/chat/conversations';
+  static const String chatMessages = '$baseUrl/api/chat/messages';
+  static const String chatSocketUrl = '$baseUrl/ws';
+  static const String companiesForChat = '$baseUrl/customer/companies-list';
   // HTTP Headers
   static const Map<String, String> headers = {
     'Content-Type': 'application/json',

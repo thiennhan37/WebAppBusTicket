@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Search, CheckCircle2, Clock, Loader2, Plus } from "lucide-react";
 import Pagination from "../../components/other/Pagination";
 import { getDisplayName, getInitials, formatTime, getUnreadCountForViewer } from "./ChatUtils";
+import NewChatModal from "./NewChatModal";
 
 const ChatSidebar = ({
   filterParams,
@@ -14,8 +15,17 @@ const ChatSidebar = ({
   apiStatus,
   activeConversationId,
   handleSelectConversation,
+  onStartConversation,
+  isStartingConversation = false,
   viewerRole = "COMPANY",
 }) => {
+  const [showNewChatModal, setShowNewChatModal] = useState(false);
+
+  const handleSelectCustomer = async (customer) => {
+    await onStartConversation(customer);
+    setShowNewChatModal(false);
+  };
+
   return (
     <aside className="flex h-full min-h-0 flex-col border-r border-slate-100 bg-white">
       <div className="border-b border-slate-100 p-4">
@@ -29,7 +39,7 @@ const ChatSidebar = ({
           />
           <button
             type="button"
-            onClick={() => {}}
+            onClick={() => setShowNewChatModal(true)}
             className="rounded-2xl bg-slate-900 px-3 text-white transition hover:bg-slate-700"
             title="Thêm hội thoại"
           >
@@ -130,6 +140,14 @@ const ChatSidebar = ({
         <div className="border-t border-slate-100 p-3">
           <Pagination page={filterParams.page} totalPages={totalPages} onPageChange={onPageChange} />
         </div>
+      )}
+
+      {showNewChatModal && (
+        <NewChatModal
+          onClose={() => setShowNewChatModal(false)}
+          onSelectCustomer={handleSelectCustomer}
+          isStarting={isStartingConversation}
+        />
       )}
     </aside>
   );

@@ -33,6 +33,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
 import java.util.Map;
+import java.util.UUID;
 
 import java.time.LocalDateTime;
 import java.util.Random;
@@ -158,6 +159,26 @@ public class AuthenticationService {
         else{
             throw new RuntimeException("Chưa tạo admin");
         }
+    }
+
+    public void forgotPasswordCompany(String email) {
+        if (email == null || email.isBlank()) {
+            throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        }
+
+        CompanyUser user = companyUserRepository.findByEmail(email)
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+
+        if (user.getStatus().equals(StatusEnum.BLOCKED.name())) {
+            throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
+        String newPassword = UUID.randomUUID().toString().substring(0, 8);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        companyUserRepository.save(user);
+
+        String companyName = user.getBusCompany() != null ? user.getBusCompany().getCompanyName() : null;
+        sendMailService.sendForgotPasswordEmail(email, companyName, newPassword);
     }
 
     public CompanyRegister registerCompany(CompanyRegisterRequest request){

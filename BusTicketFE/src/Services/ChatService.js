@@ -17,6 +17,13 @@ const ChatService = {
       params: { page, size },
     });
   },
+
+  createOrGetConversation({ customerId, busCompanyId } = {}) {
+    return api.post("/api/chat/conversations", {
+      customerId: customerId || null,
+      busCompanyId: busCompanyId || null,
+    });
+  },
 };
 
 export default ChatService;

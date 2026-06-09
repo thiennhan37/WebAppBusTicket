@@ -1,4 +1,4 @@
-import 'package:bus_ticket_app/widgets/bottom_navigation.dart';
+import 'package:bus_ticket_app/widgets/home_pages_widgets/chat_entry_card.dart';
 import 'package:bus_ticket_app/widgets/home_pages_widgets/header.dart';
 import 'package:bus_ticket_app/widgets/home_pages_widgets/recent_list.dart';
 import 'package:bus_ticket_app/widgets/home_pages_widgets/service_tabs.dart';
@@ -32,6 +32,7 @@ class _HomePagesState extends State<HomePages> {
             ),
             SizedBox(height: 24.0),
             ServiceTabs(),
+            ChatEntryCard(),
             RecentList(),
           ],
         ),
