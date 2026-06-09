@@ -87,6 +87,13 @@ public class TripSpecification {
         };
     }
 
+    public static Specification<Trip> hasDepartureTimeAfter(LocalDateTime minDepartureTime) {
+        return (root, query, cb) -> {
+            if (minDepartureTime == null) return cb.conjunction();
+            return cb.greaterThanOrEqualTo(root.get("departureTime"), minDepartureTime);
+        };
+    }
+
     public static Specification<Trip> hasPickupStop(Long pickupStopId) {
         return (root, query, cb) -> {
             if (pickupStopId == null) return cb.conjunction();

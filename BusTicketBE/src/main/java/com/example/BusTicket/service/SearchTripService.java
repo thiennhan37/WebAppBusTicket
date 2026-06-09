@@ -96,6 +96,10 @@ public class SearchTripService {
                 .and(TripSpecification.hasAnyDropoffStops(effectiveDropoffStopIds))
                 .and(TripSpecification.withBusTypeName(busType));
 
+        if (date != null && date.equals(LocalDate.now())) {
+            spec = spec.and(TripSpecification.hasDepartureTimeAfter(LocalDateTime.now().plusHours(1)));
+        }
+
         Sort sort = buildSort(sortBy);
 
 
