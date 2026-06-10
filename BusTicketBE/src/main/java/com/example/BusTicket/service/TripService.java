@@ -247,7 +247,8 @@ public class TripService {
             throw new MyAppException(ErrorCode.ACCESS_DENIED);
         if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
             throw new MyAppException(ErrorCode.CANCEL_TRIP_INVALID);
-
+        if( trip.getDepartureTime().isBefore(LocalDateTime.now()))
+            throw new MyAppException(ErrorCode.TRIP_HAS_ARRIVED);
 
         // hủy các ticket
         List<Ticket> ticketList = tripRepository.getTicketForCancelTrip(tripId);

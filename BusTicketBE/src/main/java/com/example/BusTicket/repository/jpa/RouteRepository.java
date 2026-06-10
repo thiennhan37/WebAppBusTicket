@@ -17,7 +17,7 @@ import java.util.List;
 public interface RouteRepository extends JpaRepository<Route, Long> {
     Page<Route> findAll(Specification specification, Pageable pageable);
     List<Route> findAll();
-
+    Route findByName(String name);
     @Query(value = """
         SELECT r.name, COUNT(tk.id) as ticket_count
         FROM route r

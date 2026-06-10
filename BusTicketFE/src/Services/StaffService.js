@@ -14,7 +14,7 @@ const StaffService = {
     createStaff(staff){
         const userRaw = localStorage.getItem("user")
         const user = userRaw ? JSON.parse(userRaw) : null;
-        
+        console.log("staff: ", staff);
         const newStaff = {...staff, busCompanyId:user.busCompanyId, 
             role: toEng(staff.role), gender: toEng(staff.gender)};
         return api.post("/nhaxe/member", newStaff);

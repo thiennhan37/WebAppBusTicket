@@ -77,12 +77,12 @@ const StaffManagement = () => {
   const staffList = result?.content || []; 
   const totalPages = result?.page.totalPages || 1;
 
-  const [newStaff, setNewStaff] = useState({fullName: '',role: 'Quản lí',phone: '',email: '',dob: '', gender: 'MALE'});
+  const [newStaff, setNewStaff] = useState({fullName: '',role: 'Quản lí',phone: '',email: '',dob: '', gender: 'Nam'});
   
   const { mutate:mutateCreate, error : errorCreate } = useMutation({
     mutationFn: (newStaff) => StaffService.createStaff(newStaff),
     onSuccess: () => {
-        setNewStaff({ fullName: '', role: '', phone: '', email: '', dob: '', gender: '' });
+        setNewStaff({ fullName: '', role: 'Quản lí', phone: '', email: '', dob: '', gender: 'Nam' });
         // Làm mới danh sách nhân viên
         queryClient.invalidateQueries({ queryKey: ['staffs'] });
         queryClient.invalidateQueries({ queryKey: ['staffStats'] });
