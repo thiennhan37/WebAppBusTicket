@@ -22,19 +22,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CancelForOrderService {
-    private final BookingOrderRepository bookingOrderRepository;
-    private final SeatReservationService seatReservationService;
-    private final CustomerRepository customerRepository;
     private final TripSeatRepository tripSeatRepository;
     private final TripRepository tripRepository;
     private final CompanyUserRepository companyUserRepository;
     private final TicketRepository ticketRepository;
-    private final BookingOrderMapper orderMapper;
-    private final HistoryBookingRepository historyBookingRepository;
-    private final HistoryDetailRepository historyDetailRepository;
     private final PaymentRepository paymentRepository;
-    private final MomoService momoService;
     private final PaymentService paymentService;
+    private final SendMailService sendMailService;
 
 
     @Value("${booking.holdingSeatTime}")
@@ -79,15 +73,16 @@ public class CancelForOrderService {
         Payment payment = paymentRepository.findByBookingOrderIdAndType(bookingOrderId, MomoEnum.PAYMENT.name());
         if(payment == null) throw new MyAppException(ErrorCode.NOT_EXISTED);
         // nếu đã thanh toán thì refund
+        Long refundAmount = 0L;
         if(payment.getStatus().equals(PaymentEnum.SUCCESSFUL.name())){
-            Long amount = ticketList.stream().mapToLong(Ticket::getPrice).sum();
+            refundAmount = ticketList.stream().mapToLong(Ticket::getPrice).sum();
             Long parentTransId = payment.getTransId();
             String description = "Hoàn trả tiền vé hủy cho đơn hàng #" + bookingOrderId;
 
-            boolean refundResult = paymentService.refundPayment(parentTransId, bookingOrderId, amount, description);
+            boolean refundResult = paymentService.refundPayment(parentTransId, bookingOrderId, refundAmount, description);
             if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
         }
-
+        sendMailService.sendBookingCancelledEmail(bookingOrder, refundAmount);
         // chưa lưu lịch sửa
 
         return true;

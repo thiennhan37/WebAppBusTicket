@@ -4,6 +4,7 @@ package com.example.BusTicket.controller.company;
 import com.example.BusTicket.dto.request.CompanyUpRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.CompanyRatingResponse;
+import com.example.BusTicket.dto.response.CustomerInfoResponse;
 import com.example.BusTicket.dto.response.DetailRatingResponse;
 import com.example.BusTicket.entity.BusCompany;
 import com.example.BusTicket.service.BusCompanyService;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -43,5 +46,10 @@ public class BusCompanyController {
         Page<DetailRatingResponse> responsePage = busCompanyService.getDetailRatings(avgStars, pageable);
         return ApiResponse.success(new PagedModel<>(responsePage));
     }
-
+    @GetMapping("/customer-info-chat")
+    public ApiResponse<List<CustomerInfoResponse>> getCustomerForChat(@RequestParam(required = false) String phone,
+                                                                    Pageable pageable) {
+        List<CustomerInfoResponse> responseList = busCompanyService.getCustomerForChat(phone, pageable);
+        return ApiResponse.success(responseList);
+    }
 }

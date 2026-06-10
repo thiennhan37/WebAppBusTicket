@@ -1,6 +1,7 @@
 package com.example.BusTicket.controller.company;
 
 import com.example.BusTicket.dto.request.CompanyRegisterRequest;
+import com.example.BusTicket.dto.request.EmailLoginRequest;
 import com.example.BusTicket.dto.request.LoginRequest;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.AuthenticationResponse;
@@ -51,5 +52,11 @@ public class CompanyAuthController {
     @PostMapping("nhaxe/auth/register")
     ApiResponse<CompanyRegister> register(@RequestBody CompanyRegisterRequest request) throws JOSEException, ParseException {
         return ApiResponse.success(authenticationService.registerCompany(request));
+    }
+
+    @PostMapping("nhaxe/auth/forgot-password")
+    ApiResponse<Boolean> forgotPassword(@RequestBody EmailLoginRequest request) {
+        authenticationService.forgotPasswordCompany(request.getEmail());
+        return ApiResponse.success(true);
     }
 }

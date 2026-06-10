@@ -2,11 +2,15 @@ package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
 import com.example.BusTicket.dto.request.CompanyUpRequest;
+import com.example.BusTicket.dto.response.BusCompanyResponse;
 import com.example.BusTicket.dto.response.CompanyRatingResponse;
+import com.example.BusTicket.dto.response.CustomerInfoResponse;
 import com.example.BusTicket.dto.response.DetailRatingResponse;
 import com.example.BusTicket.entity.*;
 import com.example.BusTicket.exception.ErrorCode;
 import com.example.BusTicket.exception.MyAppException;
+import com.example.BusTicket.mapper.BusCompanyMapper;
+import com.example.BusTicket.mapper.CustomerMapper;
 import com.example.BusTicket.repository.jpa.*;
 import com.example.BusTicket.specification.BusCompanySpecification;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +30,9 @@ import java.util.List;
 public class BusCompanyService {
     private final CompanyUserRepository companyUserRepository;
     private final BusCompanyRepository busCompanyRepository;
+    private final BusCompanyMapper busCompanyMapper;
     private final S3Service s3Service;
+    private final CustomerMapper customerMapper;
 
 
     public BusCompany getBusCompany(String busCompanyId) {
@@ -97,5 +103,25 @@ public class BusCompanyService {
         Page<DetailRatingResponse> detailRatingResponses =
                 busCompanyRepository.getDetailRatings(busCompany.getId(), avgStars, fixedPageable);
         return detailRatingResponses;
+    }
+
+    public Page<BusCompanyResponse> getCompanyForCustomerChat(String name, Pageable pageable) {
+//        int size = pageable.getPageSize() > 0 ? pageable.getPageSize() : 10;
+        int size = 10;
+        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), size);
+        Specification<BusCompany> spec = BusCompanySpecification.containsKeyword(name);
+        Page<BusCompany> busCompanyPage = busCompanyRepository.findAll(spec, fixedPageable);
+        return busCompanyPage.map(busCompanyMapper::toBusCompanyResponse);
+    }
+
+    public List<CustomerInfoResponse> getCustomerForChat(String phone, Pageable pageable) {
+//        int size = pageable.getPageSize() > 0 ? pageable.getPageSize() : 10;
+        int size = 10;
+        CompanyUser companyUser = companyUserRepository.findById(JwtHelper.getJwt().getSubject())
+                .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
+        String busCompanyId = companyUser.getBusCompany().getId();
+        Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), size);
+        List<Customer> customerList = busCompanyRepository.getCustomerForChat(busCompanyId, phone, fixedPageable);
+        return customerMapper.toCustomerInfoResponseList(customerList);
     }
 }

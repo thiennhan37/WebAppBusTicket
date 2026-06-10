@@ -10,8 +10,9 @@ plugins {
 
 android {
     namespace = "com.example.bus_ticket_app"
+    ndkVersion = "28.2.13676358"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

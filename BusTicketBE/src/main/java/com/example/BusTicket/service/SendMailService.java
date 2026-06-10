@@ -132,6 +132,36 @@ public class SendMailService {
         );
     }
 
+    public void sendForgotPasswordEmail(String companyEmail, String companyName, String password) {
+        if (companyName == null || companyName.isBlank()) companyName = "Nhà xe";
+
+        String htmlBody = """
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+            <h2>Yêu cầu đặt lại mật khẩu</h2>
+            <p>Xin chào,</p>
+            <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản nhà xe <b>%s</b>.</p>
+            <p>Mật khẩu mới của bạn:</p>
+
+            <div style="
+                background-color:#f4f4f4;
+                padding:12px;
+                border-radius:8px;
+                width:fit-content;
+            ">
+                <p><b>Email:</b> %s</p>
+                <p><b>Mật khẩu mới:</b> %s</p>
+            </div>
+
+            <p>Vui lòng đăng nhập và đổi mật khẩu ngay để đảm bảo an toàn.</p>
+            <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng liên hệ bộ phận hỗ trợ.</p>
+        </body>
+        </html>
+        """.formatted(companyName, companyEmail, password);
+
+        mailService.sendHtmlMail(companyEmail, "Đặt lại mật khẩu tài khoản nhà xe", htmlBody, null, null);
+    }
+
     public void sendCompanyAccountCreatedEmail(String companyEmail, String companyName, String username, String password) {
         if (companyName == null || companyName.isBlank()) companyName = "Nhà xe";
 
@@ -271,6 +301,99 @@ public class SendMailService {
         mailService.sendHtmlMail(
                 bookingOrder.getCustomerEmail(),
                 "[" + companyName + "] Xác nhận thanh toán thành công #" + bookingOrder.getId(),
+                htmlBody,
+                null,
+                null
+        );
+    }
+
+    public void sendBookingCancelledEmail(BookingOrder bookingOrder, Long refundAmount) {
+        BusCompany busCompany = bookingOrder.getTrip().getBusCompany();
+        String companyName = (busCompany != null ? busCompany.getCompanyName() : "VEXEDAT");
+
+        String[] time = bookingOrder.getTrip()
+                .getDepartureTime()
+                .toString()
+                .split("T");
+
+        String refundMessage;
+
+        if (refundAmount != null && refundAmount > 0) {
+            refundMessage = """
+        <div style="background: #e8f8f0; border-left: 4px solid #27ae60; padding: 15px; margin: 20px 0;">
+            <p style="margin: 5px 0; color: #27ae60;">
+                <b>✓ Đơn hàng đã được hoàn tiền thành công.</b>
+            </p>
+            <p style="margin: 5px 0;">
+                <b>Số tiền hoàn:</b> <span style="font-size: 1.1em; font-weight: bold;"> %,d VNĐ </span>
+            </p>
+        </div>
+        """.formatted(refundAmount);
+        } else {
+            refundMessage = """
+        <div style="background: #fff3cd; border-left: 4px solid #f39c12; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; color: #856404;"> Đơn hàng này không thuộc diện được hoàn tiền. </p>
+        </div>
+        """;
+        }
+
+        String htmlBody = """
+        <html>
+        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                     line-height: 1.6; color: #333;
+                     background-color: #f4f4f4; padding: 20px;">
+
+            <div style="max-width: 500px; margin: 0 auto;
+                        background: #ffffff; padding: 30px;
+                        border-radius: 10px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+                <h2 style="color: #e74c3c; text-align: center; margin-top: 0;"> Hủy Vé Thành Công </h2>
+                <p>Chào <b>%s</b>,</p>
+                <p> Đơn đặt vé của bạn tại <b>%s</b> đã được hủy thành công. </p>
+                <div style="background: #f9f9f9;border-left: 4px solid #e74c3c;padding: 15px;margin: 20px 0;">
+                    <p style="margin: 5px 0;">
+                        <b>Mã đơn hàng:</b> #%s
+                    </p>
+                    <p style="margin: 5px 0;">
+                        <b>Lộ trình:</b> %s &rarr; %s
+                    </p>
+                    <p style="margin: 5px 0;">
+                        <b>Thời gian khởi hành:</b> %s
+                    </p>
+                    <p style="margin: 5px 0;">
+                        <b>Giá trị đơn hàng:</b>
+                        <span style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">
+                            %d VNĐ
+                        </span>
+                    </p>
+                </div>
+                %s
+                <p style="margin-top: 25px;">
+                    Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với nhà xe để được hỗ trợ.
+                </p>
+                <p>
+                    Trân trọng,<br>
+                    <b>%s</b>
+                </p>
+            </div>
+        </body>
+        </html>
+        """.formatted(
+                bookingOrder.getCustomerName(),
+                companyName,
+                bookingOrder.getId(),
+                bookingOrder.getTrip().getRoute().getArrivalProvince().getName(),
+                bookingOrder.getTrip().getRoute().getDestinationProvince().getName(),
+                time[1] + " " + time[0],
+                bookingOrder.getTotalCost(),
+                refundMessage,
+                companyName
+        );
+
+        mailService.sendHtmlMail(
+                bookingOrder.getCustomerEmail(),
+                "[" + companyName + "] Thông báo hủy đơn hàng #" + bookingOrder.getId(),
                 htmlBody,
                 null,
                 null

@@ -16,7 +16,16 @@ const BusCompanyService = {
         return api.put(`/nhaxe/bus-company/${companyId}`, formData,
             { headers:{"Content-Type":"multipart/form-data"}}
         ); 
-    }
+    },
+    getCustomersForChat({ phone = "", page = 0, size = 10 } = {}) {
+        return api.get("/nhaxe/customer-info-chat", {
+            params: {
+                phone: phone || "",
+                page,
+                size,
+            },
+        });
+    },
 }
 
 export default BusCompanyService;

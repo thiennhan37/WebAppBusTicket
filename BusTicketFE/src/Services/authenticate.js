@@ -14,7 +14,10 @@ const AuthenticateService = {
     }, 
     registerCompany({email, hostName, companyName, hotline}){
         return publicApi.post("/nhaxe/auth/register", {email, hostName, companyName, hotline});
-    }, 
+    },
+    forgotPassword({email}){
+        return publicApi.post("/nhaxe/auth/forgot-password", {email});
+    },
     changePassword({oldPassword, newPassword}){
         return api.put("/auth/change-password", {oldPassword, newPassword});
     },

@@ -118,13 +118,25 @@ public class ChatService {
 
     public ConversationResponse createOrGetConversation(CreateConversationRequest request) {
         Jwt jwt = JwtHelper.getJwt();
-        if (!RoleEnum.CUSTOMER.name().equals(jwt.getClaimAsString("role")))
-            throw new MyAppException(ErrorCode.ACCESS_DENIED);
-        if (request.getBusCompanyId() == null || request.getBusCompanyId().isBlank())
-            throw new MyAppException(ErrorCode.MISSING_REQUIRED_FIELD);
+        String role = jwt.getClaimAsString("role");
+        String customerId;
+        String busCompanyId;
 
-        String customerId = jwt.getSubject();
-        String busCompanyId = request.getBusCompanyId();
+        if (RoleEnum.CUSTOMER.name().equals(role)) {
+            if (request.getBusCompanyId() == null || request.getBusCompanyId().isBlank())
+                throw new MyAppException(ErrorCode.MISSING_REQUIRED_FIELD);
+            customerId = jwt.getSubject();
+            busCompanyId = request.getBusCompanyId();
+        } else if (RoleEnum.STAFF.name().equals(role) || RoleEnum.MANAGER.name().equals(role)) {
+            if (request.getCustomerId() == null || request.getCustomerId().isBlank())
+                throw new MyAppException(ErrorCode.MISSING_REQUIRED_FIELD);
+            ChatAccount account = getChatAccount(jwt);
+            customerId = request.getCustomerId();
+            busCompanyId = account.busCompanyId();
+        } else {
+            throw new MyAppException(ErrorCode.ACCESS_DENIED);
+        }
+
         Conversation conversation = conversationRepository
                 .findByCustomerIdAndBusCompanyId(customerId, busCompanyId)
                 .orElseGet(() -> createConversation(customerId, busCompanyId));

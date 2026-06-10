@@ -3,6 +3,7 @@ package com.example.BusTicket.repository.jpa;
 import com.example.BusTicket.dto.response.DetailRatingResponse;
 import com.example.BusTicket.dto.response.companyReport.RevenueByDate;
 import com.example.BusTicket.entity.BusCompany;
+import com.example.BusTicket.entity.Customer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -112,4 +113,16 @@ public interface BusCompanyRepository extends JpaRepository<BusCompany, String> 
           AND (r.arrivalProvince.id = :provinceId OR r.destinationProvince.id = :provinceId)
     """)
     List<BusCompany> findActiveCompaniesByProvinceId(@Param("provinceId") String provinceId);
+
+    @Query("""
+    SELECT DISTINCT bo.bookingUser
+    FROM BookingOrder bo
+    WHERE bo.trip.busCompany.id = :busCompanyId
+      AND bo.bookingUser.phone LIKE CONCAT('%', :phone, '%')
+""")
+    List<Customer> getCustomerForChat(
+            String busCompanyId,
+            String phone,
+            Pageable pageable
+    );
 }

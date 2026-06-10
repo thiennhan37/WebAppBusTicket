@@ -30,7 +30,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final String[] AUTH_ENDPOINTS = {"/nhaxe/auth/login", "/nhaxe/auth/logout", "/auth/refresh-token",
-        "/nhaxe/auth/register", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
+        "/nhaxe/auth/register", "/nhaxe/auth/forgot-password", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
             "/register/verify", "/auth/log-out", "/admin/auth/login", "/auth/google/mobile", "/auth/google/mobile/register"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type", "/customer/companies/{companyId}/rating",
             "/provinces/{provinceId}/pickup-stops", "/provinces/{provinceId}/dropoff-stops", "/trips/get-companies-info" , "/ws/**"
@@ -48,14 +48,15 @@ public class SecurityConfig {
     private final String[] MANAGER_UPDATE_ENDPOINTS = {"/nhaxe/member/**", "/nhaxe/routes/**", "/nhaxe/trips/**", "/nhaxe/trips/open",
             "/nhaxe/trips/cancel", "/nhaxe/companyReport", "/nhaxe/rating", "/nhaxe/rating-page", "/nhaxe/member-list"};
 
-    private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes", "/nhaxe/bus-company"};
+    private final String[] COMPANY_VIEW_ENDPOINTS = {"/nhaxe/trips", "/nhaxe/routes", "/nhaxe/bus-company",
+            "/nhaxe/customer-info-chat"};
     private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
             "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order", "/auth/change-password"};
 
     private final String[] CUSTOMER_ENDPOINTS = {"/trips/search", "/trips/stops", "/trips/bus-diagram"};
     private final String[] CUSTOMER_POST_ENDPOINTS = {"/customer/orders/hold-seats/**", "/customer/orders/payment/**", "/customer/orders/{orderId}/rating"};
     private final String[] CUSTOMER_GET_ENDPOINTS = {"/customer/orders/payment-status", "/customer/orders/recent",
-    "/customer/orders/unhold-seats/*", "/customer/order/detail/*"};
+    "/customer/orders/unhold-seats/*", "/customer/order/detail/*", "/customer/companies-list"};
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
