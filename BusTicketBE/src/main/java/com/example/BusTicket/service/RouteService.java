@@ -58,6 +58,8 @@ public class RouteService {
 
         Province arrivalProvince = provinceRepository.getReferenceById(request.getArrivalId());
         Province destinationProvince = provinceRepository.getReferenceById(request.getDestinationId());
+        Route existingRoute = routeRepository.findByName(request.getName());
+        if(existingRoute != null) throw new MyAppException(ErrorCode.ROUTE_NAME_EXISTED);
         Route route = Route.builder()
                 .name(request.getName())
                 .arrivalProvince(arrivalProvince)

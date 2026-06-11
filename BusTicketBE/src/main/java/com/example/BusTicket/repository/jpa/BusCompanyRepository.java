@@ -31,41 +31,42 @@ public interface BusCompanyRepository extends JpaRepository<BusCompany, String> 
                           @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("""
-        SELECT SUM(ts.price) FROM Trip t
-        JOIN TripSeat ts ON t.id = ts.trip.id
-        WHERE t.status != 'CANCELLED' 
-        AND ts.status = 'BOOKED'
-        AND departureTime >= :start AND departureTime < :end
+        SELECT SUM(t.price) FROM Ticket t
+        WHERE t.status = 'PAID'
+        AND t.updatedAt >= :start AND t.updatedAt < :end
        """)
     Long getSystemRevenueInMonth(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query(value = """
-        SELECT bc.company_name as companyName,
-               COUNT(ts.id) as ticketCount,
-               CAST(SUM(ts.price) AS SIGNED) as amount
-        FROM bus_company bc
-        JOIN trip t ON bc.id = t.bus_company_id
-        JOIN trip_seat ts ON t.id = ts.trip_id
-        WHERE t.status != 'CANCELLED'
-          AND ts.status = 'BOOKED'
-        GROUP BY bc.id, bc.company_name
-        ORDER BY amount DESC
-        LIMIT 7
-    """, nativeQuery = true)
+    SELECT bc.company_name as companyName,
+           COUNT(ts.id) as ticketCount,
+           CAST(SUM(CASE
+                    WHEN ts.status = 'BOOKED' THEN ts.price
+                    ELSE 0
+                    END) AS SIGNED) as amount
+    FROM bus_company bc
+    JOIN trip t ON bc.id = t.bus_company_id
+    JOIN trip_seat ts ON t.id = ts.trip_id
+    WHERE t.status != 'CANCELLED'
+      AND ts.status != 'AVAILABLE'
+    GROUP BY bc.id, bc.company_name
+    ORDER BY amount DESC
+    LIMIT 7
+""", nativeQuery = true)
     List<Object[]> getTop7CompaniesByRevenue();
 
     @Query(value = """
-            SELECT  DATE(t.departure_time) as date,\s
-                    CAST(SUM(ts.price) AS SIGNED) as revenue
-            FROM trip t
-            JOIN trip_seat ts ON t.id = ts.trip_id
+            SELECT  DATE(p.updated_at) as date,\s
+                    CAST(SUM(p.amount) AS SIGNED) as revenue
+            FROM payment p
+            JOIN booking_order bo ON p.booking_order_id = bo.id
+            JOIN trip t ON bo.trip_id = t.id
             WHERE t.bus_company_id = :busCompanyId
-                AND t.departure_time >= :startWeek
-                AND t.departure_time < :endWeek
-                AND t.status = 'CLOSED'
-                AND ts.status = 'BOOKED'
-            GROUP BY DATE(t.departure_time)
-            ORDER BY DATE(t.departure_time)
+                AND p.updated_at >= :startWeek
+                AND p.updated_at < :endWeek
+                AND p.status = 'SUCCESSFUL'
+            GROUP BY DATE(p.updated_at)
+            ORDER BY DATE(p.updated_at)
        \s""", nativeQuery = true)
     List<RevenueByDate> getRevenueWeekList(@Param("busCompanyId") String busCompanyId,
                                            @Param("startWeek") LocalDateTime startWeek, @Param("endWeek") LocalDateTime endWeek);

@@ -1,7 +1,6 @@
 package com.example.BusTicket.service;
 
 import com.example.BusTicket.dto.JwtObject.JwtHelper;
-import com.example.BusTicket.dto.general.InfoAccount;
 import com.example.BusTicket.dto.request.CompanyUserCrRequest;
 import com.example.BusTicket.dto.request.CompanyUserUpRequest;
 import com.example.BusTicket.dto.response.CompanyUserResponse;
@@ -149,7 +148,7 @@ public class CompanyUserService {
                 String email = row.getCell(2).getStringCellValue();
                 if(emailInFile.contains(email))
                     return CustomResponse.builder()
-                            .message(ErrorCode.EMAIL_EXISTED_In_FILE.getMessage()).line(i)
+                            .message(ErrorCode.EMAIL_EXISTED_IN_FILE.getMessage()).line(i)
                             .build();
                 emailInFile.add(email);
 
