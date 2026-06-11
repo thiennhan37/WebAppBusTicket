@@ -334,7 +334,7 @@ public class TripService {
         return tripSimpleResponseList;
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 8 * * *")
     public void updateClosedTrip(){
         System.out.println("update closed trip");
         LocalDateTime now = LocalDateTime.now();

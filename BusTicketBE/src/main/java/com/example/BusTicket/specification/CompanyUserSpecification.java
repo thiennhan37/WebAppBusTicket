@@ -30,8 +30,7 @@ public class CompanyUserSpecification {
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("fullName")), pattern),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("id")), pattern),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("phone")), pattern),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("busCompany").get("companyName")), pattern)
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern)
                     );
         };
     }

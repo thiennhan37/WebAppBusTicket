@@ -54,7 +54,7 @@ const StaffListHeader = ({setRightPanelMode, filterParams, setFilterParams, hand
         {/* Ô Search */}
         <div className="flex-1 relative min-w-[100px] max-w-[300px]">
           {/* <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} /> */}
-          <InputGroup label="Họ và Tên" placeholder="Tìm kiếm" icon={Search} value={filterParams.keyword}
+          <InputGroup label="Thông tin" placeholder="Tìm kiếm" icon={Search} value={filterParams.keyword}
             onChange={(e) => onChangeKeyword(e)}/>
         </div>
         
