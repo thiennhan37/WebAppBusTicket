@@ -43,8 +43,7 @@ public enum ErrorCode {
     INVALID_DEPARTURE_TIME(4008, "Thời gian khởi hành phải sớm ít nhất 1 tiếng", HttpStatus.BAD_REQUEST),
     BOOKING_TRIP_INVALID(4008, "Đặt chuyến xe không hợp lệ", HttpStatus.BAD_REQUEST),
     BOOKING_LATE(4008, "Xe sẽ khởi hành trong 1 giờ tới", HttpStatus.BAD_REQUEST),
-    PAYMENT_INVALID(4008, "Không thể thanh toán", HttpStatus.BAD_REQUEST),
-    PAYMENT_COMPLETED(4009, "Đơn hàng đã được thanh toán", HttpStatus.BAD_REQUEST),
+
     CANCEL_MULTI_ORDER(4010, "Chỉ được hủy các vé thuộc 1 đơn hàng", HttpStatus.BAD_REQUEST),
     TRIP_NOT_OPEN(4011, "Chuyến xe đang không hoạt động", HttpStatus.BAD_REQUEST),
     TRIP_HAS_ARRIVED(4011, "Chuyến xe đã xuất phát, không thể hủy", HttpStatus.BAD_REQUEST),
@@ -55,6 +54,8 @@ public enum ErrorCode {
     RATED_ORDER(4015, "Đơn hàng đã được đánh giá", HttpStatus.BAD_REQUEST),
     COMPANY_BLOCKED(4016, "Công ty đã bị vô hiệu hóa", HttpStatus.UNAUTHORIZED),
 
+    PAYMENT_INVALID(7006, "Không thể thanh toán", HttpStatus.BAD_REQUEST),
+    PAYMENT_COMPLETED(7007, "Đơn hàng đã được thanh toán", HttpStatus.BAD_REQUEST),
     WS_ACCESS_DENIED(4017, "Web socket - không có quyền truy cập", HttpStatus.FORBIDDEN),
 
     INVALID_GMAIL(4021, "Không tìm thấy gmail này trong hệ thống", HttpStatus.BAD_REQUEST),
