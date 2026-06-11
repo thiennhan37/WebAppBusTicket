@@ -92,6 +92,7 @@ public class TripService {
         }
         return tripMapper.toTripResponse(trip);
     }
+    @Transactional
     public TripResponse getTripById(String tripId){
         Jwt jwt = JwtHelper.getJwt();
         CompanyUser companyUser = companyUserRepository.findById(jwt.getSubject())
@@ -107,60 +108,55 @@ public class TripService {
 
         TripResponse tripResponse = tripMapper.toTripResponse(trip);
 
-        // đếm số lượng ghế đang giữ và đã đặt (thanh toán)
         Object[] result = tripSeatRepository.countHeldAndBooked(trip.getId());
         Object[] firstRow = (Object[]) result[0];
-        Long heldSeats = firstRow[0] == null ? 0 : ((Number) firstRow[0]).longValue();
-        Long bookedSeats = firstRow[1] == null ? 0 : ((Number) firstRow[1]).longValue();
+        long heldSeats = firstRow[0] == null ? 0 : ((Number) firstRow[0]).longValue();
+        long bookedSeats = firstRow[1] == null ? 0 : ((Number) firstRow[1]).longValue();
 
+        List<TripSeat> tripSeats = tripSeatRepository.findAllByTripId(trip.getId());
+        Map<String, Ticket> ticketBySeatId = ticketRepository
+                .findLatestActiveTicketsByTripIdWithDetails(trip.getId())
+                .stream()
+                .collect(Collectors.toMap(t -> t.getTripSeat().getId(), t -> t, (a, b) -> a));
 
-        // load lịch sử đặt vé(toàn bộ danh sách vé)
-        List<Ticket> ticketList = ticketRepository.findAllByTripId(trip.getId());
-        List<TicketResponse> historyBooking = ticketList.stream().map(ticketMapper::toTicketResponse).toList();
-        tripResponse.setHistoryBooking(historyBooking);
+        List<String> availableSeatIds = tripSeats.stream()
+                .filter(ts -> TripSeatEnum.AVAILABLE.name().equals(ts.getStatus()))
+                .map(TripSeat::getId)
+                .toList();
+        Map<String, Boolean> heldSeatInRedisMap = checkHeldSeatsInRedis(availableSeatIds);
 
-        // load trạng thái ghế và vé đang giữ ghế
-        List<Object[]> tripSeatList = tripSeatRepository.findSeatsWithLatestTicket(trip.getId());
-        List<String> tripSeatIds = new ArrayList<>();
-        for (Object[] obj : tripSeatList) {
-            if (obj[0] != null) {
-                TripSeat ts = (TripSeat) obj[0];
-                if (ts.getId() != null && ts.getStatus().equals(TripSeatEnum.AVAILABLE.name()) ){
-                    tripSeatIds.add(ts.getId());
-                }
+        List<TripSeatResponse> seatMap = new ArrayList<>(tripSeats.size());
+        for (TripSeat ts : tripSeats) {
+            if (TripSeatEnum.AVAILABLE.name().equals(ts.getStatus())
+                    && Boolean.TRUE.equals(heldSeatInRedisMap.get(ts.getId()))) {
+                ts.setStatus(TripSeatEnum.HELD.name());
+                heldSeats++;
             }
-        }
-        // load ghế đang giữ trong redis
-        Map<String, Boolean> heldSeatInRedisMap = checkHeldSeatsInRedis(tripSeatIds);
-
-        List<TripSeatResponse> seatMap = new ArrayList<>();
-        for(var object :tripSeatList){
-            TripSeat ts = object[0] != null ? (TripSeat)object[0] : null;
-            Ticket tk = object[1] != null ? (Ticket)object[1] : null;
-            // check ghế đang bị giữ trong redis
-            if(ts != null && ts.getStatus().equals(TripSeatEnum.AVAILABLE.name())){
-                if(Boolean.TRUE.equals(heldSeatInRedisMap.get(ts.getId())) ){
-                    ts.setStatus(TripSeatEnum.HELD.name());
-                    heldSeats++;
-                }
-            }
-
-            // lưu thông tin vé hiện tại cho ghế.
             TripSeatResponse tripSeatResponse = tripSeatMapper.toTripSeatResponse(ts);
-            tripSeatResponse.setTicket(ticketMapper.toTicketResponse(tk));
+            Ticket ticket = ticketBySeatId.get(ts.getId());
+            if (ticket != null) {
+                tripSeatResponse.setTicket(ticketMapper.toTicketResponse(ticket));
+            }
             seatMap.add(tripSeatResponse);
         }
-        tripResponse.setHeldSeats(heldSeats);
 
+        tripResponse.setHeldSeats(heldSeats);
         tripResponse.setBookedSeats(bookedSeats);
         tripResponse.setSeatMap(seatMap);
         return tripResponse;
     }
+
     private Map<String, Boolean> checkHeldSeatsInRedis(List<String> tripSeatIds) {
+        if (tripSeatIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
         List<String> keys = tripSeatIds.stream()
                 .map(id -> holdingSeatPrefixKey + id).toList();
 
         List<String> values = redisTemplate.opsForValue().multiGet(keys);
+        if (values == null) {
+            return Collections.emptyMap();
+        }
 
         Map<String, Boolean> result = new HashMap<>();
         for (int i = 0; i < tripSeatIds.size(); i++) {
