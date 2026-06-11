@@ -112,6 +112,8 @@ const Ticket = () => {
 
   const [selectedTripId, setSelectedTripId] = useState("");
   const [selectedTrip, setSelectedTrip] = useState({});
+  const isOpenTrip = selectedTrip.status === "OPEN";
+
   const {data: dataSelectedTrip, isLoading: isLoadingSelectedTrip} = useQuery({
     queryKey: ["selectedTrip", selectedTripId],
     queryFn: async () => {
@@ -119,11 +121,15 @@ const Ticket = () => {
       const res = await TripService.getTripById(selectedTripId);
       return res.data;
     }, 
+    enabled: !!selectedTripId,
     placeholderData: keepPreviousData,
-    // refetchOnWindowFocus: false,
-    // refetchOnReconnect: false,
-    staleTime: 0, 
-    refetchInterval: 5000, 
+    staleTime: 10_000,
+    refetchInterval: (query) => {
+      const trip = query.state.data?.result;
+      if (!selectedTripId || !trip || trip.status !== "OPEN" || isBookingModalOpen) return false;
+      return 15_000;
+    },
+    refetchIntervalInBackground: false,
   })
   useEffect(() => {
     if (dataSelectedTrip) {
@@ -131,9 +137,6 @@ const Ticket = () => {
       if(!isBookingModalOpen) setSelectedSeatsList([]);
     }
   }, [dataSelectedTrip]);
-
-  // const selectedTrip = dataSelectedTrip?.result || {};
-  const isOpenTrip = selectedTrip.status === "OPEN";
 
   const {mutate: holdSeats, data} = useMutation({
     mutationFn: async () => {
@@ -146,6 +149,7 @@ const Ticket = () => {
       if(bookingOrderId){
          setBookingOrderId(bookingOrderId);
          setIsBookingModalOpen(true);
+         queryClient.invalidateQueries({ queryKey: ['selectedTrip', selectedTripId] });
       }
     },
     onError: (error) => {
@@ -157,7 +161,7 @@ const Ticket = () => {
       const tripSeatIdList = selectedSeatsList.map(seat => seat.id);
       const res = await OrderService.unHoldSeats({tripId: selectedTripId, bookingOrderId, tripSeatIdList});
       setSelectedSeatsList([]);
-      queryClient.invalidateQueries({ queryKey: ['selectedTrip'] })
+      queryClient.invalidateQueries({ queryKey: ['selectedTrip', selectedTripId] });
       return res.data;
     },
     onSuccess: () => {
@@ -178,6 +182,7 @@ const Ticket = () => {
       setIsBookingModalOpen(false);
       setMode("normal");
       setSelectedSeatsList([]);
+      queryClient.invalidateQueries({ queryKey: ['selectedTrip', selectedTripId] });
     },
     onError: (error) => {
       setReport("error:"+ error.response?.data?.message);
@@ -193,6 +198,9 @@ const Ticket = () => {
     },
     onSuccess: () => {
       setReport("success:Hủy đặt vé thành công");
+      setMode("normal");
+      setSelectedSeatsList([]);
+      queryClient.invalidateQueries({ queryKey: ['selectedTrip', selectedTripId] });
     },
     onError: (error) => {
       setReport("error:"+ error.response?.data?.message);
@@ -206,6 +214,7 @@ const Ticket = () => {
     },
     onSuccess: () => {
       setReport("success:Cập nhật vé thành công");
+      queryClient.invalidateQueries({ queryKey: ['selectedTrip', selectedTripId] });
     },
     onError: (error) => {
       setReport("error:"+ error.response?.data?.message);

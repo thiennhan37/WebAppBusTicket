@@ -34,21 +34,6 @@ public interface TripSeatRepository extends JpaRepository<TripSeat, String> {
     List<TripSeat> findAllByTripId(String tripId);
 
     @Query("""
-        SELECT ts, t
-        FROM TripSeat ts
-        LEFT JOIN Ticket t ON ts.status <> 'AVAILABLE'
-         AND t.tripSeat.id = ts.id
-         AND t.updatedAt = (
-             SELECT MAX(t2.updatedAt)
-             FROM Ticket t2
-             WHERE t2.tripSeat.id = ts.id
-               AND t2.status IN ('HOLDING','PAID')
-         )
-        WHERE ts.trip.id = :tripId
-        """)
-    List<Object[]> findSeatsWithLatestTicket(@Param("tripId") String tripId);
-
-    @Query("""
         SELECT ts
         FROM TripSeat ts
         JOIN Ticket t ON t.tripSeat.id = ts.id

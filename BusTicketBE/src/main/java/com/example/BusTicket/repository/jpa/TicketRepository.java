@@ -19,6 +19,25 @@ public interface TicketRepository extends JpaRepository<Ticket, String> {
     """)
     List<Ticket> findAllByTripId(@Param("tripId") String tripId);
 
+    @Query("""
+        SELECT t FROM Ticket t
+        JOIN FETCH t.tripSeat ts
+        JOIN FETCH t.arrival arr
+        JOIN FETCH arr.stop
+        JOIN FETCH t.destination dest
+        JOIN FETCH dest.stop
+        LEFT JOIN FETCH t.bookingOrder
+        WHERE ts.trip.id = :tripId
+        AND t.status IN ('HOLDING', 'PAID')
+        AND NOT EXISTS (
+            SELECT 1 FROM Ticket t2
+            WHERE t2.tripSeat.id = ts.id
+            AND t2.status IN ('HOLDING', 'PAID')
+            AND t2.updatedAt > t.updatedAt
+        )
+    """)
+    List<Ticket> findLatestActiveTicketsByTripIdWithDetails(@Param("tripId") String tripId);
+
     @Modifying
     @Query("""
             UPDATE Ticket t SET t.status = :status
