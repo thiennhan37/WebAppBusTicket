@@ -7,6 +7,7 @@ import AuthContext from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import StatusModal from "../../components/other/StatusModal";
+import { toast } from "sonner";
 
 const FormLogin = ({setShowModal, setAuthMode}) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +39,8 @@ const FormLogin = ({setShowModal, setAuthMode}) => {
         },
         onSuccess: (response) => {
             login(response.data.result);
-            navigate("/nhaxe/overview"); 
+            navigate("/nhaxe/overview");
+            toast.success("Đăng nhập thành công!");
         },
         onError: (error) => {
             const statusCode = error.response?.status;
