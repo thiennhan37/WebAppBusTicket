@@ -10,26 +10,7 @@ import AuthContext from '../../context/AuthContext';
 import BusCompanyService from '../../services/BusCompanyService';
 import { toast } from 'sonner';
 import LoadingOverlay from '../../components/other/LoadingOverlay';
-// const initialBusCompany = {
-//   id: "BC001",
-//   host_Name: "Nguyễn Văn A",
-//   company_name: "Nhà xe Hoàng Long",
-//   hotline: "0909123456",
-//   avatar_url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop", // Ảnh ví dụ thật, không dùng placeholder mờ
-//   email: "contact@hoanglong.vn",
-//   policy: "Hủy vé trước 24h hoàn 100% tiền vé. Hủy trước 12h hoàn 50%. Không hoàn tiền nếu hủy sát giờ khởi hành.",
-//   created_at: "2026-05-09T10:00:00"
-// };
 
-// Dữ liệu thống kê mô phỏng (doanh nghiệp)
-const statsData = [
-  { label: "Tổng chuyến xe", value: "1,245", icon: Bus, color: "text-blue-600", bg: "bg-blue-50", over_bg: "bg-blue-500" },
-  { label: "Tổng nhân viên", value: "48", icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", over_bg: "bg-emerald-500" },
-  { label: "Vé đã bán (tháng)", value: "8,920", icon: Ticket, color: "text-violet-600", bg: "bg-violet-50", over_bg: "bg-violet-500" },
-  { label: "Đánh giá", value: "4.8/5", icon: Star, color: "text-amber-500", bg: "bg-amber-50", over_bg: "bg-amber-500" }
-];
-
-  
 
 const Overview = () => {
     console.log("reload overview");
@@ -113,8 +94,9 @@ const Overview = () => {
       setReport("");
       setIsEditing(false);
     },
-    onError: () => {
+    onError: (error) => {
       toast.error('Cập nhật thông tin thất bại!');
+      console.log(error.message);
       setReport("");
     }, 
     onMutate: () => {

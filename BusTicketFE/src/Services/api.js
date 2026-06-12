@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const appURL = "http://localhost:8080/vexedat";
-const timeout = 5000;
+const timeout = 20000;
 export const publicApi = axios.create({
 	baseURL: appURL, 
 	timeout: timeout, 
