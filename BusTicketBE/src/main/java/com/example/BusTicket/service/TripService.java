@@ -127,12 +127,12 @@ public class TripService {
 
         List<TripSeatResponse> seatMap = new ArrayList<>(tripSeats.size());
         for (TripSeat ts : tripSeats) {
+            TripSeatResponse tripSeatResponse = tripSeatMapper.toTripSeatResponse(ts);
             if (TripSeatEnum.AVAILABLE.name().equals(ts.getStatus())
                     && Boolean.TRUE.equals(heldSeatInRedisMap.get(ts.getId()))) {
-                ts.setStatus(TripSeatEnum.HELD.name());
+                tripSeatResponse.setStatus(TripSeatEnum.HELD.name());
                 heldSeats++;
             }
-            TripSeatResponse tripSeatResponse = tripSeatMapper.toTripSeatResponse(ts);
             Ticket ticket = ticketBySeatId.get(ts.getId());
             if (ticket != null) {
                 tripSeatResponse.setTicket(ticketMapper.toTicketResponse(ticket));

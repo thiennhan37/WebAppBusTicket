@@ -56,17 +56,17 @@ public interface BusCompanyRepository extends JpaRepository<BusCompany, String> 
     List<Object[]> getTop7CompaniesByRevenue();
 
     @Query(value = """
-            SELECT  DATE(p.updated_at) as date,\s
-                    CAST(SUM(p.amount) AS SIGNED) as revenue
-            FROM payment p
-            JOIN booking_order bo ON p.booking_order_id = bo.id
+            SELECT  DATE(tk.updated_at) as date,\s
+                    CAST(SUM(tk.price) AS SIGNED) as revenue
+            FROM ticket tk
+            JOIN booking_order bo ON tk.booking_order_id = bo.id
             JOIN trip t ON bo.trip_id = t.id
             WHERE t.bus_company_id = :busCompanyId
-                AND p.updated_at >= :startWeek
-                AND p.updated_at < :endWeek
-                AND p.status = 'SUCCESSFUL'
-            GROUP BY DATE(p.updated_at)
-            ORDER BY DATE(p.updated_at)
+                AND tk.updated_at >= :startWeek
+                AND tk.updated_at < :endWeek
+                AND tk.status = 'PAID'
+            GROUP BY DATE(tk.updated_at)
+            ORDER BY DATE(tk.updated_at)
        \s""", nativeQuery = true)
     List<RevenueByDate> getRevenueWeekList(@Param("busCompanyId") String busCompanyId,
                                            @Param("startWeek") LocalDateTime startWeek, @Param("endWeek") LocalDateTime endWeek);

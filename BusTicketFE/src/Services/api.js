@@ -1,11 +1,11 @@
 import axios from "axios";
 
 const appURL = "http://localhost:8080/vexedat";
-const timeout = 10000;
+const timeout = 20000;
 export const publicApi = axios.create({
-	baseURL: appURL,
-	timeout: timeout,
-	withCredentials: true,
+	baseURL: appURL, 
+	timeout: timeout, 
+	withCredentials: true, 
 	headers: {
 		"Content-Type": "application/json"
 	}
@@ -13,8 +13,8 @@ export const publicApi = axios.create({
 publicApi.interceptors.response.use(
 	(config) => {
 		return config;
-	},
-	(error) => {
+	}, 
+	(error) =>{
 		return Promise.reject(error);
 	}
 )
@@ -31,12 +31,12 @@ const api = axios.create({
 api.interceptors.request.use(
 	(config) => {
 		const accessToken = localStorage.getItem("accessToken");
-		if (accessToken) {
+		if(accessToken){
 			config.headers.Authorization = `Bearer ${accessToken}`
 		}
 		return config;
-	},
-	(error) => {
+	}, 
+	(error) =>{
 		console.log("loi request api", error);
 		return Promise.reject(error);
 	}
@@ -47,32 +47,32 @@ api.interceptors.request.use(
 let isRefreshing = false;
 let requestRunningList = [];
 const pushRequestIntoQueue = (resolve, reject) => {
-	requestRunningList.push({ resolve, reject });
+	requestRunningList.push({resolve, reject});
 };
 // Hàm để chạy lại các request trong hàng đợi sau khi đã có token mới
 const onSuccess = (token) => {
-	requestRunningList.forEach(({ resolve }) => resolve(token));
+	requestRunningList.forEach(({resolve}) => resolve(token));
 	requestRunningList = [];
 };
-const onFailed = (error) => {
-	requestRunningList.forEach(({ reject }) => reject(error));
+const onFailed = (error) =>{
+	requestRunningList.forEach(({reject}) => reject(error));
 	requestRunningList = [];
 }
 
 api.interceptors.response.use(
 	(response) => response,
 	async (error) => {
-		const { config, response } = error;
+		const { config, response } = error; 
 		const originalRequest = config;
 		// console.log(response);
 		if (response?.status === 401 && !originalRequest._retry) {
 			console.log("Refresh token...")
-			originalRequest._retry = true;
+			originalRequest._retry = true; 
 			if (!isRefreshing) {
 				isRefreshing = true;
-
+				
 				try {
-					// 1. Gọi API lấy token mới (thường dùng Refresh Token lưu trong Cookie hoặc LocalStorage)
+				// 1. Gọi API lấy token mới (thường dùng Refresh Token lưu trong Cookie hoặc LocalStorage)
 					const res = await publicApi.post("/auth/refresh-token", {})
 					// console.log(res);
 					const { accessToken } = res.data.result;
@@ -80,7 +80,7 @@ api.interceptors.response.use(
 
 					isRefreshing = false;
 					onSuccess(accessToken); // Thông báo cho các request đang đợi
-
+					
 					// 2. Thực hiện lại request bị lỗi ban đầu với token mới
 					originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 					return api(originalRequest);
@@ -90,8 +90,8 @@ api.interceptors.response.use(
 					let homeLink;
 					const user = JSON.parse(localStorage.getItem("user"));
 					const role = user.role;
-					if (role === "CUSTOMER") homeLink = "/customer";
-					else if (role === "ADMIN") homeLink = "/admin";
+					if(role === "CUSTOMER") homeLink = "/customer";
+					else if(role === "ADMIN") homeLink = "/admin";
 					else homeLink = "/nhaxe";
 					window.location.href = homeLink;
 					localStorage.clear();
@@ -106,14 +106,14 @@ api.interceptors.response.use(
 					(token) => {
 						originalRequest.headers.Authorization = `Bearer ${token}`;
 						resolve(api(originalRequest));
-					},
+					}, 
 					(error) => {
 						reject(error);
 					}
 				);
 			});
 		}
-
+	
 
 		return Promise.reject(error);
 	}
