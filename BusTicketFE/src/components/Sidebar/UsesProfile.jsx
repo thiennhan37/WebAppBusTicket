@@ -12,7 +12,7 @@ const UserProfile = ({ isOpen, onClose }) => {
   const [tab, setTab] = useState('profile'); // 'profile' | 'password'
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', role: '', dob: '', gender: ''});
   const [isEditing, setIsEditing] = useState(false);
-
+  const isStaff = user?.role?.toUpperCase() === 'STAFF';
   useEffect(() => {
     if (user) {
       setForm({
@@ -98,7 +98,7 @@ const UserProfile = ({ isOpen, onClose }) => {
                       <p className="text-sm text-slate-500">Quản lý và cập nhật thông tin tài khoản</p>
                     </div>
                   </div>
-                  {!isEditing ? (
+                  {!isStaff && !isEditing ? (
                     <button 
                       onClick={() => setIsEditing(true)}
                       className="flex items-center gap-1 px-2.5 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-semibold"
@@ -106,7 +106,7 @@ const UserProfile = ({ isOpen, onClose }) => {
                       <Edit2 size={16} /> Chỉnh sửa
                     </button>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${isStaff ? 'hidden' : ''}`}>
                       <button 
                         onClick={handleCancelEdit}
                         disabled={saving}
