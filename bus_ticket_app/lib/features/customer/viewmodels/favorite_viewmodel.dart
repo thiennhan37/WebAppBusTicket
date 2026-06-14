@@ -116,6 +116,7 @@ class FavoriteViewModel extends ChangeNotifier {
           startProvince: favorite.departureProvinceId, // ID tỉnh (VD: DLK)
           endProvince: favorite.destinationProvinceId, // ID tỉnh (VD: HCM)
           date: formattedDate,
+          busCompanyId: favorite.busCompanyId.isNotEmpty ? favorite.busCompanyId : null,
           busCompanyIds: favorite.busCompanyId.isNotEmpty ? [favorite.busCompanyId] : null,
           pickupStopIds: favorite.pickupStopId != null ? [favorite.pickupStopId!] : null,
           dropoffStopIds: favorite.dropoffStopId != null ? [favorite.dropoffStopId!] : null,

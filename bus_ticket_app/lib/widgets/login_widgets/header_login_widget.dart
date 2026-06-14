@@ -23,10 +23,6 @@ class HeaderLoginWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(

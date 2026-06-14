@@ -24,7 +24,7 @@ class ChatEntryCard extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   primary,
-                  primary.withValues(alpha: 0.85),
+                  primary.withOpacity( 0.85),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -32,7 +32,7 @@ class ChatEntryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: primary.withValues(alpha: 0.25),
+                  color: primary.withOpacity(0.25),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -45,7 +45,7 @@ class ChatEntryCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(
