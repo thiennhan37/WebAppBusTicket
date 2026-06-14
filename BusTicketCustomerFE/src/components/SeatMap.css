@@ -1,0 +1,114 @@
+.seat-map {
+  border: var(--border);
+  padding: var(--space-6);
+  background-color: var(--color-white);
+  box-shadow: var(--shadow);
+}
+
+.seat-map__title {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border);
+}
+
+.seat-map__bus-type {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  margin-bottom: var(--space-6);
+  text-transform: uppercase;
+}
+
+.seat-map__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 56px);
+  gap: var(--space-3);
+  justify-content: center;
+  margin-bottom: var(--space-6);
+}
+
+.seat-map__seat {
+  width: 56px;
+  height: 56px;
+  border: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  text-transform: uppercase;
+}
+
+.seat-map__seat--available {
+  background-color: var(--color-white);
+  color: var(--color-black);
+}
+
+.seat-map__seat--available:hover {
+  background-color: var(--color-yellow-light);
+  transform: scale(1.05);
+}
+
+.seat-map__seat--selected {
+  background-color: var(--color-yellow);
+  color: var(--color-black);
+  box-shadow: var(--shadow);
+  transform: translate(-2px, -2px);
+}
+
+.seat-map__seat--booked {
+  background-color: var(--color-black);
+  color: var(--color-gray-500);
+  cursor: not-allowed;
+}
+
+.seat-map__seat--held {
+  background-color: var(--color-gray-300);
+  color: var(--color-gray-600);
+  cursor: not-allowed;
+}
+
+.seat-map__legend {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding-top: var(--space-4);
+  border-top: var(--border);
+}
+
+.seat-map__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.seat-map__legend-box {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-black);
+}
+
+.seat-map__legend-box--available {
+  background-color: var(--color-white);
+}
+
+.seat-map__legend-box--selected {
+  background-color: var(--color-yellow);
+}
+
+.seat-map__legend-box--booked {
+  background-color: var(--color-black);
+}
