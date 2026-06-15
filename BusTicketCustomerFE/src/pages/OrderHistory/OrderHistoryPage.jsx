@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getRecentOrders } from "../../services/orderService";
+import { useAuth } from "../../context/AuthContext";
 import BrutalCard from "../../components/BrutalCard";
 import BrutalButton from "../../components/BrutalButton";
-import { ClipboardList, ArrowRight, Calendar, Info, Clock } from "lucide-react";
+import { ClipboardList, ArrowRight, Calendar, Info, Clock, User } from "lucide-react";
 import "./OrderHistoryPage.css";
 
 export default function OrderHistoryPage() {
+  const { isAuthenticated } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     const fetchOrders = async () => {
       setLoading(true);
       setError(null);
@@ -27,7 +33,35 @@ export default function OrderHistoryPage() {
     };
 
     fetchOrders();
-  }, []);
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="order-history-page">
+        <div className="container">
+          <div className="breadcrumb text-mono">
+            <Link to="/khachhang">Trang chủ</Link> &gt; <span>Đơn hàng của tôi</span>
+          </div>
+
+          <BrutalCard className="unauth-orders-card text-center" noHover>
+            <div className="unauth-icon-container">
+              <div className="unauth-avatar-icon">
+                <User size={48} />
+              </div>
+            </div>
+            <h3 className="unauth-title">Bạn chưa đăng nhập</h3>
+            <p className="unauth-subtitle">Đăng nhập để xem lịch sử vé 3 tháng gần nhất</p>
+            <Link
+              to="/khachhang/dang-nhap?redirect=/khachhang/don-hang"
+              className="brutal-btn brutal-btn--primary unauth-login-btn text-mono"
+            >
+              Đăng nhập
+            </Link>
+          </BrutalCard>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusBadge = (status) => {
     const s = (status || "").toUpperCase();

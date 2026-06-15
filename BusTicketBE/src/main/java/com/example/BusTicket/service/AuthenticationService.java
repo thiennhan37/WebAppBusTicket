@@ -72,7 +72,7 @@ public class AuthenticationService {
     private String googleClientId;
     @Value("${google.oauth.client-secret:}")
     private String googleClientSecret;
-    @Value("${google.oauth.redirect-uri:http://localhost:8080/auth/google/callback}")
+    @Value("${google.oauth.redirect-uri:http://localhost:5174/khachhang/dang-nhap}")
     private String googleRedirectUri;
     @Value("${google.oauth.mobile-client-ids:}")
     private String googleMobileClientIds;

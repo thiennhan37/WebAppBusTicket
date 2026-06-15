@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { sendOtp, verifyOtp, getGoogleLoginUrl, googleCallback } from "../../services/authService";
@@ -23,9 +23,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
 
+  const callbackCalled = useRef(false);
+
   // Handle OAuth Google Redirect callback
   useEffect(() => {
-    if (oauthCode) {
+    if (oauthCode && !callbackCalled.current) {
+      callbackCalled.current = true;
       const handleGoogleCallback = async () => {
         setOauthLoading(true);
         try {
