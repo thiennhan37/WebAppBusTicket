@@ -12,14 +12,15 @@ COPY mvnw .
 RUN chmod +x mvnw
 
 # Download dependencies
-RUN ./mvnw dependency:go-offline
+# RUN ./mvnw dependency:go-offline
+RUN mvn dependency:go-offline
 
 # Copy source code
 COPY src src
 
 # Build jar
-RUN ./mvnw clean package -DskipTests
-
+# RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 # ==========================
 # Stage 2: Run Application
 # ==========================
