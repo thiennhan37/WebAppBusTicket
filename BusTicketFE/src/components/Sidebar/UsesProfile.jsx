@@ -7,51 +7,28 @@ import { toVN } from '../../utils/translate';
 import StaffService from '../../Services/StaffService';
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
-
 const UserProfile = ({ isOpen, onClose }) => {
   const { user, setUser, company, refreshUser } = useContext(AuthContext) || {};
-  const isStaff = user?.role === 'STAFF';
   const [tab, setTab] = useState('profile'); // 'profile' | 'password'
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', role: '', dob: '', gender: ''});
   const [isEditing, setIsEditing] = useState(false);
-
+  const isStaff = user?.role?.toUpperCase() === 'STAFF';
   useEffect(() => {
-    if (!user) return;
-    const newForm = {
-      id: user.id || '',
-      busCompanyId: company?.id || '',
-      fullName: user.fullName || '',
-      email: user.email || '',
-      phone: user.phone || '',
-      role: user.role || '', 
-      dob: user.dob || '',
-      gender: user.gender || ''
-    };
-
-    // If user is staff, ensure editing mode is disabled (defer to avoid sync setState in effect)
-    if (isStaff) {
-      const clear = window.setTimeout(() => setIsEditing(false), 0);
-      // ensure we clear if effect re-runs
-      return () => window.clearTimeout(clear);
+    if (user) {
+      setForm({
+        id: user.id || '',
+        busCompanyId: company?.id || '',
+        fullName: user.fullName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        role: user.role || '', 
+        dob: user.dob || '',
+        gender: user.gender || ''
+      })
     }
+  }, [user, isOpen]);
 
-    // Only update local form if it differs to avoid unnecessary re-renders.
-    const needsUpdate =
-      String(newForm.id) !== String(form.id) ||
-      newForm.fullName !== form.fullName ||
-      newForm.email !== form.email ||
-      newForm.phone !== form.phone ||
-      newForm.role !== form.role ||
-      newForm.dob !== form.dob ||
-      newForm.gender !== form.gender ||
-      isOpen;
-
-    if (needsUpdate) {
-      const t = window.setTimeout(() => setForm(newForm), 0);
-      return () => window.clearTimeout(t);
-    }
-    return undefined;
-  }, [user, isOpen, company?.id, isStaff, form.id, form.fullName, form.email, form.phone, form.role, form.dob, form.gender]);
+  if (!isOpen) return null;
 
   const { mutate: handleSaveProfile, isPending: saving } = useMutation({
     mutationFn: async () => {
@@ -90,8 +67,6 @@ const UserProfile = ({ isOpen, onClose }) => {
     setIsEditing(false);
   };
 
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60" onClick={onClose}></div>
@@ -123,7 +98,7 @@ const UserProfile = ({ isOpen, onClose }) => {
                       <p className="text-sm text-slate-500">Quản lý và cập nhật thông tin tài khoản</p>
                     </div>
                   </div>
-                  {!isEditing && !isStaff ? (
+                  {!isStaff && !isEditing ? (
                     <button 
                       onClick={() => setIsEditing(true)}
                       className="flex items-center gap-1 px-2.5 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-semibold"
@@ -131,22 +106,22 @@ const UserProfile = ({ isOpen, onClose }) => {
                       <Edit2 size={16} /> Chỉnh sửa
                     </button>
                   ) : (
-                   <div className="flex items-center gap-2">
-                     <button 
-                       onClick={handleCancelEdit}
-                       disabled={saving}
-                       className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-sm font-semibold disabled:opacity-50"
-                     >
-                       Hủy
-                     </button>
-                     <button 
-                       onClick={handleSaveProfile}
-                       disabled={saving}
-                       className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-semibold disabled:opacity-50"
-                     >
-                       <Save size={16} /> {saving ? 'Đang lưu...' : 'Lưu'}
-                     </button>
-                   </div>
+                    <div className={`flex items-center gap-2 ${isStaff ? 'hidden' : ''}`}>
+                      <button 
+                        onClick={handleCancelEdit}
+                        disabled={saving}
+                        className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors text-sm font-semibold disabled:opacity-50"
+                      >
+                        Hủy
+                      </button>
+                      <button 
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-semibold disabled:opacity-50"
+                      >
+                        <Save size={16} /> {saving ? 'Đang lưu...' : 'Lưu'}
+                      </button>
+                    </div>
                   )}
                 </div>
 
@@ -177,7 +152,7 @@ const UserProfile = ({ isOpen, onClose }) => {
                         </div>
                         
                         <div className="flex-1 flex justify-end">
-                          {isEditing && item.editable && !isStaff ? (
+                          {isEditing && item.editable ? (
                             item.type === 'select' ? (
                               <select
                                 value={form[item.key]}
