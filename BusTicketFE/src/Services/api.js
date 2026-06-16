@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const appURL = "http://47.129.116.239:8080/vexedat";
+const appURL = import.meta.env.VITE_API_URL;
 const timeout = 20000;
 export const publicApi = axios.create({
 	baseURL: appURL, 
