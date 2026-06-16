@@ -130,7 +130,8 @@ public class SecurityConfig {
         // Cách mới trong Spring Boot 3
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://localhost:5174"
+                "http://localhost:5174",
+                "https://bus-ticket-chw9s2a3f-thiennhan37s-projects.vercel.app"
         )); // FE
         configuration.addAllowedMethod("GET");
         configuration.addAllowedMethod("POST");

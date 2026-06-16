@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const appURL = import.meta.env.VITE_API_URL;
+const appURL = import.meta.env.ENDPOINT_API_URL;
 const timeout = 20000;
 export const publicApi = axios.create({
 	baseURL: appURL, 
