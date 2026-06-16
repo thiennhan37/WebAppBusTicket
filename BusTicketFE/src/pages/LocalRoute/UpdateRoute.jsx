@@ -4,7 +4,7 @@ import InputGroup from '../../components/other/InputGroup';
 import ProvinceService from '../../Services/ProvinceService';
 import {useQuery} from '@tanstack/react-query'
 import { useMemo } from 'react';
-import RouteService from '../../Services/routeService';
+import RouteService from '../../Services/RouteService';
 
 const UpdateRoute = ({ selectedRoute, setSelectedRoute, handleViewUpdate, handleUpdateRoute,
   upStopList, setUpStopList,
