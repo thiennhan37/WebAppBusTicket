@@ -2,12 +2,12 @@ import React, { useState, useRef, useContext, useEffect } from 'react';
 import { 
   Star, Ticket, Users, Bus
 } from 'lucide-react';
-import OverviewHeader from './OverviewHeader';
+import OverviewHeader from './OverViewHeader';
 import CompanyAvatar from './CompanyAvatar';
 import DetailedForm from './DetailedForm';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AuthContext from '../../context/AuthContext';
-import BusCompanyService from '../../services/BusCompanyService';
+import BusCompanyService from '../../Services/BusCompanyService';
 import { toast } from 'sonner';
 import LoadingOverlay from '../../components/other/LoadingOverlay';
 

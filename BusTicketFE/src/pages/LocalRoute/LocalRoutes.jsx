@@ -2,7 +2,7 @@ import { useQuery, keepPreviousData, useMutation, useQueryClient } from "@tansta
 import { useState, useContext } from "react";
 import AuthContext from "../../context/AuthContext";
 import { useSearchParams } from 'react-router-dom';
-import RouteService from "../../Services/routeService";
+import RouteService from "../../Services/RouteService";
 import Pagination from "../../components/other/Pagination";
 import { Search, Settings } from "lucide-react";
 import RouteStops from "./RouteStops";
