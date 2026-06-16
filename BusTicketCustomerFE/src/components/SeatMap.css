@@ -1,88 +1,187 @@
-.seat-map {
-  border: var(--border);
+/* Wrapper for the entire seat map component, including title and legend */
+.seat-map-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: var(--space-6);
+  border: var(--border);
   background-color: var(--color-white);
   box-shadow: var(--shadow);
 }
 
 .seat-map__title {
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-lg);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
   padding-bottom: var(--space-3);
   border-bottom: var(--border);
+  width: 100%;
+  text-align: center;
 }
 
-.seat-map__bus-type {
+/* General container for the two decks */
+.bus-container {
+  display: flex;
+  gap: 40px;
+  padding: 20px 0; /* Adjust padding as bus-container is now inside seat-map-wrapper */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  justify-content: center;
+}
+
+/* Styling for each deck (lower/upper) */
+.deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.deck-title {
+  font-size: var(--font-size-md);
+  color: var(--color-gray-700);
+  margin-bottom: 15px;
+  font-weight: 700;
   font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
-  margin-bottom: var(--space-6);
   text-transform: uppercase;
 }
 
-.seat-map__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 56px);
-  gap: var(--space-3);
-  justify-content: center;
-  margin-bottom: var(--space-6);
+/* Body of the deck, containing seats */
+.deck-body {
+  background-color: var(--color-gray-100);
+  border-radius: 24px;
+  padding: 20px;
+  width: 140px; /* Fixed width for the bus body */
+  min-height: 480px; /* Minimum height to accommodate seats */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  border: var(--border); /* Brutalism border */
+  box-shadow: var(--shadow); /* Brutalism shadow */
 }
 
-.seat-map__seat {
-  width: 56px;
-  height: 56px;
-  border: var(--border);
+/* Driver row for steering wheel */
+.driver-row {
   display: flex;
-  align-items: center;
+  justify-content: flex-start;
+  padding-left: 5px;
+  margin-bottom: 5px;
+}
+
+.steering-wheel {
+  width: 32px;
+  height: 32px;
+  opacity: 0.5;
+  color: var(--color-black); /* Brutalism color */
+}
+
+/* Grid for arranging seats in 2 columns */
+.seats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px 25px; /* Vertical and horizontal gap for aisle */
+}
+
+/* Base seat styling */
+.seat {
+  width: 40px;
+  height: 55px;
+  border-radius: 8px;
+  border: 2px solid var(--color-black); /* Brutalism border */
+  box-sizing: border-box;
+  position: relative;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex; /* To center seat code */
   justify-content: center;
+  align-items: center;
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  color: var(--color-black); /* Default text color for seat code */
   user-select: none;
-  text-transform: uppercase;
 }
 
-.seat-map__seat--available {
-  background-color: var(--color-white);
-  color: var(--color-black);
+/* Headrest part of the seat */
+.seat::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 8px;
+  border-radius: 3px;
+  border: 2px solid inherit; /* Inherits border color from parent */
 }
 
-.seat-map__seat--available:hover {
-  background-color: var(--color-yellow-light);
-  transform: scale(1.05);
-}
-
-.seat-map__seat--selected {
-  background-color: var(--color-yellow);
-  color: var(--color-black);
-  box-shadow: var(--shadow);
-  transform: translate(-2px, -2px);
-}
-
-.seat-map__seat--booked {
-  background-color: var(--color-black);
-  color: var(--color-gray-500);
-  cursor: not-allowed;
-}
-
-.seat-map__seat--held {
+/* Seat status: Booked (Gray with X) */
+.seat.booked {
+  border-color: var(--color-gray-300);
   background-color: var(--color-gray-300);
-  color: var(--color-gray-600);
+  color: var(--color-gray-500); /* Seat code color */
   cursor: not-allowed;
 }
+.seat.booked::after {
+  border-color: var(--color-gray-500);
+}
+/* No 'x' content for booked seats, just grayed out */
 
+/* Seat status: Held (Darker Gray) */
+.seat.held {
+  border-color: var(--color-gray-500);
+  background-color: var(--color-gray-500);
+  color: var(--color-white); /* Seat code color */
+  cursor: not-allowed;
+}
+.seat.held::after {
+  border-color: var(--color-gray-700);
+}
+
+/* Seat status: Available (Green) */
+.seat.available {
+  border-color: var(--color-green);
+}
+.seat.available::after {
+  border-color: var(--color-green);
+}
+.seat.available:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 2px 2px 0 0 var(--color-black);
+}
+
+/* Seat status: Selecting (Purple) */
+.seat.selecting {
+  border-color: var(--color-purple);
+  background-color: var(--color-purple);
+  color: var(--color-white); /* Seat code color */
+}
+.seat.selecting::after {
+  border-color: var(--color-purple);
+}
+.seat.selecting:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 2px 2px 0 0 var(--color-black);
+}
+
+/* Empty space for layout adjustments */
+.empty-space {
+  width: 40px;
+  height: 55px;
+}
+
+/* Legend styling */
 .seat-map__legend {
   display: flex;
-  gap: var(--space-6);
   flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
   padding-top: var(--space-4);
   border-top: var(--border);
+  width: 100%; /* Ensure legend takes full width */
+  justify-content: center;
 }
 
 .seat-map__legend-item {
@@ -93,22 +192,58 @@
   font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
+  color: var(--color-gray-700);
 }
 
 .seat-map__legend-box {
   width: 24px;
   height: 24px;
   border: 2px solid var(--color-black);
+  border-radius: 4px; /* Slightly rounded corners for legend boxes */
+  box-sizing: border-box;
+  position: relative;
 }
 
+.seat-map__legend-box::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 5px;
+  border-radius: 2px;
+  border: 2px solid inherit;
+}
+
+/* Legend box colors */
 .seat-map__legend-box--available {
-  background-color: var(--color-white);
+  border-color: var(--color-green);
+}
+.seat-map__legend-box--available::after {
+  border-color: var(--color-green);
 }
 
-.seat-map__legend-box--selected {
-  background-color: var(--color-yellow);
+.seat-map__legend-box--selecting {
+  border-color: var(--color-purple);
+  background-color: var(--color-purple);
+}
+.seat-map__legend-box--selecting::after {
+  border-color: var(--color-purple);
 }
 
 .seat-map__legend-box--booked {
-  background-color: var(--color-black);
+  border-color: var(--color-gray-300);
+  background-color: var(--color-gray-300);
+}
+.seat-map__legend-box--booked::after {
+  border-color: var(--color-gray-500);
+}
+
+.seat-map__legend-box--held {
+  border-color: var(--color-gray-500);
+  background-color: var(--color-gray-500);
+}
+.seat-map__legend-box--held::after {
+  border-color: var(--color-gray-700);
 }

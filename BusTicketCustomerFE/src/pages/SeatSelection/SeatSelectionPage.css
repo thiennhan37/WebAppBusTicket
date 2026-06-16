@@ -18,7 +18,9 @@
 
 .seat-selection-map-container {
   display: flex;
-  flex-direction: column;
+  justify-content: center; /* Center the bus-container */
+  align-items: flex-start; /* Align to the top */
+  /* Removed padding: var(--space-4); as SeatMap now has its own wrapper with styling */
 }
 
 .seat-selection-summary {

@@ -12,6 +12,7 @@ export default function OrderHistoryPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("current"); // 'current', 'departed', 'cancelled'
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -63,15 +64,22 @@ export default function OrderHistoryPage() {
     );
   }
 
-  const getStatusBadge = (status) => {
-    const s = (status || "").toUpperCase();
+  const getStatusBadge = (orderStatus) => {
+    const s = (orderStatus || "").toUpperCase();
+
+    if (s === "EXPIRED") {
+      return <span className="brutal-tag brutal-tag--red">HẾT HẠN</span>;
+    }
+    if (s === "CANCELLED") {
+      return <span className="brutal-tag brutal-tag--red">ĐÃ HỦY</span>;
+    }
+    if (s === "HOLDING" || s === "PENDING") {
+      return <span className="brutal-tag">CHỜ THANH TOÁN</span>;
+    }
     if (s === "PAID" || s === "SUCCESS" || s === "SUCCESSFUL" || s === "COMPLETED") {
       return <span className="brutal-tag brutal-tag--green">ĐÃ THANH TOÁN</span>;
     }
-    if (s === "PENDING" || s === "HOLDING") {
-      return <span className="brutal-tag">CHỜ THANH TOÁN</span>;
-    }
-    return <span className="brutal-tag brutal-tag--red">ĐÃ HỦY</span>;
+    return <span className="brutal-tag brutal-tag--red">KHÔNG XÁC ĐỊNH</span>;
   };
 
   const formatDate = (dateString) => {
@@ -93,6 +101,26 @@ export default function OrderHistoryPage() {
     });
   };
 
+  const filteredOrders = orders.filter(order => {
+    const status = (order.orderStatus || "").toUpperCase();
+    const now = new Date();
+    const departureDate = new Date(order.departureTime);
+
+    if (activeFilter === "current") {
+      // "Hiện tại": HOLDING/PAID (or similar) and future departureTime
+      return (status === "HOLDING" || status === "PAID" || status === "SUCCESS" || status === "SUCCESSFUL" || status === "COMPLETED") && departureDate > now;
+    }
+    if (activeFilter === "departed") {
+      // "Đã đi": ONLY PAID (or similar) and past departureTime
+      return (status === "PAID" || status === "SUCCESS" || status === "SUCCESSFUL" || status === "COMPLETED") && departureDate < now;
+    }
+    if (activeFilter === "cancelled") {
+      // "Đã hủy": EXPIRED or CANCELLED
+      return status === "EXPIRED" || status === "CANCELLED";
+    }
+    return false; // Should not happen if activeFilter is always one of the above
+  });
+
   return (
     <div className="order-history-page">
       <div className="container">
@@ -100,6 +128,30 @@ export default function OrderHistoryPage() {
           <h2 className="section-title" style={{ left: 0, transform: "none", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <ClipboardList size={28} /> Lịch sử đơn hàng
           </h2>
+        </div>
+
+        <div className="order-filters">
+          <BrutalButton
+            variant={activeFilter === "current" ? "primary" : "secondary"}
+            onClick={() => setActiveFilter("current")}
+            size="small"
+          >
+            Hiện tại
+          </BrutalButton>
+          <BrutalButton
+            variant={activeFilter === "departed" ? "primary" : "secondary"}
+            onClick={() => setActiveFilter("departed")}
+            size="small"
+          >
+            Đã đi
+          </BrutalButton>
+          <BrutalButton
+            variant={activeFilter === "cancelled" ? "primary" : "secondary"}
+            onClick={() => setActiveFilter("cancelled")}
+            size="small"
+          >
+            Đã hủy
+          </BrutalButton>
         </div>
 
         {loading ? (
@@ -112,21 +164,21 @@ export default function OrderHistoryPage() {
             <h3>Đã xảy ra lỗi</h3>
             <p>{error}</p>
           </BrutalCard>
-        ) : orders.length === 0 ? (
+        ) : filteredOrders.length === 0 ? (
           <BrutalCard className="empty-orders-card text-center" noHover>
-            <h3>Bạn chưa đặt vé nào!</h3>
-            <p>Hãy bắt đầu tìm kiếm chuyến đi và trải nghiệm dịch vụ của chúng tôi.</p>
+            <h3>Không có đơn hàng nào trong mục này!</h3>
+            <p>Hãy thử chọn một bộ lọc khác hoặc đặt vé ngay.</p>
             <Link to="/khachhang" className="brutal-btn brutal-btn--primary" style={{ marginTop: "1.5rem", display: "inline-block" }}>
               ĐẶT VÉ NGAY
             </Link>
           </BrutalCard>
         ) : (
           <div className="orders-list">
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <BrutalCard key={order.orderId} className="history-order-card">
                 <div className="order-card-header">
                   <span className="order-id text-mono">Mã đơn: #{order.orderId}</span>
-                  {getStatusBadge(order.orderStatus)}
+                  {getStatusBadge(order.orderStatus)} {/* Pass only orderStatus */}
                 </div>
 
                 <div className="order-card-body">

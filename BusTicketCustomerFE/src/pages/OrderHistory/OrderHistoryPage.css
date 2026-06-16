@@ -180,3 +180,18 @@
   font-family: var(--font-mono);
   min-width: 180px;
 }
+
+/* Order Filters */
+.order-filters {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.order-filters .brutal-btn {
+  min-width: 120px;
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-4);
+}

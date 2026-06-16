@@ -28,6 +28,7 @@ export default function RegisterPage() {
   const [step, setStep] = useState(1); // 1: Info Form, 2: OTP verify
   const [loading, setLoading] = useState(false);
   const [isGoogleRegister, setIsGoogleRegister] = useState(false);
+  const [resendOtpTimer, setResendOtpTimer] = useState(0); // New state for OTP resend timer
 
   // Xử lý khi nhận được callback từ Google
   useEffect(() => {
@@ -61,6 +62,17 @@ export default function RegisterPage() {
     }
   }, [oauthCode]);
 
+  // OTP Resend Timer Effect
+  useEffect(() => {
+    let timer;
+    if (resendOtpTimer > 0) {
+      timer = setInterval(() => {
+        setResendOtpTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendOtpTimer]);
+
   // Format date from yyyy-mm-dd to dd/mm/yyyy for backend JsonFormat
   const formatDateForBackend = (dateString) => {
     if (!dateString) return "";
@@ -87,10 +99,35 @@ export default function RegisterPage() {
       });
       toast.success("Mã OTP đã được gửi đến email đăng ký.");
       setStep(2);
+      setResendOtpTimer(30); // Start 30-second timer
     } catch (err) {
       console.error("Register init error:", err);
       const errMsg = err.response?.data?.message || "Đăng ký thất bại. Email hoặc Số điện thoại có thể đã tồn tại!";
       toast.error(errMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email || resendOtpTimer > 0) return;
+
+    setLoading(true);
+    try {
+      await initiateRegistration({
+        fullName,
+        email,
+        phone,
+        idRegion,
+        gender,
+        dob: formatDateForBackend(dob),
+      });
+      toast.success("Mã OTP mới đã được gửi đến email của bạn.");
+      setResendOtpTimer(30); // Reset and start 30-second timer
+    } catch (err) {
+      console.error("Resend OTP error:", err);
+      const msg = err.response?.data?.message || "Không thể gửi lại OTP. Vui lòng thử lại!";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -122,7 +159,7 @@ export default function RegisterPage() {
       const googleUrl = res.data.result || res.data;
       if (googleUrl) {
         // Chuyển hướng sang Google, sau khi xong Google sẽ redirect về lại trang này với ?code=...
-        window.location.href = googleUrl; 
+        window.location.href = googleUrl;
       } else {
         throw new Error("Không lấy được link đăng nhập Google");
       }
@@ -141,6 +178,16 @@ export default function RegisterPage() {
     navigate("/khachhang/dang-ky", { replace: true });
     callbackCalled.current = false;
   };
+
+  const countries = [
+    { value: "+84", label: "🇻🇳 +84 (VN)" },
+    { value: "+1", label: "🇺🇸 +1 (US)" },
+    { value: "+44", label: "🇬🇧 +44 (UK)" },
+    { value: "+81", label: "🇯🇵 +81 (JP)" },
+    { value: "+82", label: "🇰🇷 +82 (KR)" },
+    { value: "+66", label: "🇹🇭 +66 (TH)" },
+    { value: "+65", label: "🇸🇬 +65 (SG)" },
+  ];
 
   return (
     <div className="register-page">
@@ -184,15 +231,11 @@ export default function RegisterPage() {
               />
 
               <div className="phone-row">
-                <div style={{ width: "100px" }}>
+                <div style={{ width: "130px" }}> {/* Changed from 100px to 130px */}
                   <BrutalSelect
                     label="Mã vùng"
                     id="register-region"
-                    options={[
-                      { value: "+84", label: "+84 (VN)" },
-                      { value: "+1", label: "+1 (US)" },
-                      { value: "+44", label: "+44 (UK)" },
-                    ]}
+                    options={countries}
                     value={idRegion}
                     onChange={(e) => setIdRegion(e.target.value)}
                   />
@@ -293,6 +336,14 @@ export default function RegisterPage() {
                   disabled={loading}
                 >
                   Quay lại chỉnh sửa thông tin
+                </button>
+                <button
+                  type="button"
+                  className="resend-otp-btn text-mono"
+                  onClick={handleResendOtp}
+                  disabled={loading || resendOtpTimer > 0}
+                >
+                  {resendOtpTimer > 0 ? `Gửi lại OTP (${resendOtpTimer}s)` : "Gửi lại OTP"}
                 </button>
               </div>
 

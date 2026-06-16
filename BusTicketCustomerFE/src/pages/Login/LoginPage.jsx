@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [step, setStep] = useState(1); // 1: Email Input, 2: OTP Input
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [resendOtpTimer, setResendOtpTimer] = useState(0); // New state for OTP resend timer
 
   const callbackCalled = useRef(false);
 
@@ -39,7 +40,8 @@ export default function LoginPage() {
           navigate(redirectUrl);
         } catch (err) {
           console.error("Google login callback error:", err);
-          toast.error("Đăng nhập bằng Google thất bại. Vui lòng thử lại!");
+          const errorMessage = err.response?.data?.message || "Đăng nhập bằng Google thất bại. Vui lòng thử lại!";
+          toast.error(errorMessage);
         } finally {
           setOauthLoading(false);
         }
@@ -54,6 +56,17 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, navigate, redirectUrl, oauthCode]);
 
+  // OTP Resend Timer Effect
+  useEffect(() => {
+    let timer;
+    if (resendOtpTimer > 0) {
+      timer = setInterval(() => {
+        setResendOtpTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendOtpTimer]);
+
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!email) return;
@@ -63,9 +76,27 @@ export default function LoginPage() {
       await sendOtp(email);
       toast.success("Mã OTP đã được gửi đến email của bạn.");
       setStep(2);
+      setResendOtpTimer(30); // Start 30-second timer
     } catch (err) {
       console.error("Send OTP error:", err);
       const msg = err.response?.data?.message || "Không thể gửi OTP. Vui lòng kiểm tra lại email!";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!email || resendOtpTimer > 0) return;
+
+    setLoading(true);
+    try {
+      await sendOtp(email);
+      toast.success("Mã OTP mới đã được gửi đến email của bạn.");
+      setResendOtpTimer(30); // Reset and start 30-second timer
+    } catch (err) {
+      console.error("Resend OTP error:", err);
+      const msg = err.response?.data?.message || "Không thể gửi lại OTP. Vui lòng thử lại!";
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -168,15 +199,25 @@ export default function LoginPage() {
                 required
               />
 
-              <div className="otp-actions-row">
-                <button
+              <div className="otp-actions-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', marginBottom: '20px' }}>
+                <BrutalButton
                   type="button"
-                  className="back-step-btn text-mono"
+                  variant="text"
+                  size="small"
                   onClick={() => setStep(1)}
                   disabled={loading}
                 >
                   Thay đổi Email
-                </button>
+                </BrutalButton>
+                <BrutalButton
+                  type="button"
+                  variant="text"
+                  size="small"
+                  onClick={handleResendOtp}
+                  disabled={loading || resendOtpTimer > 0}
+                >
+                  {resendOtpTimer > 0 ? `Gửi lại OTP (${resendOtpTimer}s)` : "Gửi lại OTP"}
+                </BrutalButton>
               </div>
 
               <BrutalButton
