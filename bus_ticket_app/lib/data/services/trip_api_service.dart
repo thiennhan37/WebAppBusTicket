@@ -13,6 +13,7 @@ class TripApiService {
     required String date,
     int? minPrice,
     int? maxPrice,
+    String? busCompanyId,
     List<String>? busCompanyIds,
     String? departureTimeFrom,
     String? departureTimeTo,
@@ -32,6 +33,7 @@ class TripApiService {
 
     if (minPrice != null) queryParams['minPrice'] = minPrice;
     if (maxPrice != null) queryParams['maxPrice'] = maxPrice;
+    if (busCompanyId != null) queryParams['busCompanyId'] = busCompanyId;
     if (departureTimeFrom != null) queryParams['departureTimeFrom'] = departureTimeFrom;
     if (departureTimeTo != null) queryParams['departureTimeTo'] = departureTimeTo;
     if (busType != null) queryParams['busType'] = busType;

@@ -1,0 +1,68 @@
+.profile-page {
+  padding-top: var(--space-12);
+  padding-bottom: var(--space-16);
+  background-color: var(--color-gray-100);
+  min-height: calc(100vh - var(--header-height) - 150px);
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+/* Sidebar Profile Avatar */
+.user-avatar-card {
+  padding: var(--space-8) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  background-color: var(--color-yellow-light);
+  border: var(--border);
+  box-shadow: 3px 3px 0 var(--color-black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
+.user-displayName {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-2);
+}
+
+.user-email-badge {
+  font-size: var(--font-size-xs);
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-white);
+  border-width: 2px;
+}
+
+/* Profile Form card */
+.profile-form-card {
+  padding: var(--space-8) var(--space-6);
+}
+
+.profile-form-title {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--color-black);
+}
+
+.gender-dob-row {
+  display: flex;
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+}

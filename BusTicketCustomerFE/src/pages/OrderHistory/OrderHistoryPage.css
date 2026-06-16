@@ -1,0 +1,115 @@
+.order-history-page {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-16);
+  background-color: var(--color-gray-100);
+  min-height: 100vh;
+}
+
+.order-history-header {
+  margin-bottom: var(--space-8);
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.history-order-card {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px dashed var(--color-gray-300);
+  padding-bottom: var(--space-2);
+}
+
+.order-id {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+}
+
+.order-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.order-route {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.route-province {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xl);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.order-meta {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.order-meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+}
+
+.order-company {
+  font-size: var(--font-size-xs);
+  padding: 1px var(--space-2);
+  background-color: var(--color-white);
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-3);
+  border-top: 2px solid var(--color-black);
+}
+
+.order-price {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.price-label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.price-value {
+  font-size: var(--font-size-lg);
+  font-weight: 900;
+  color: var(--color-orange-dark);
+}
+
+.empty-orders-card {
+  padding: var(--space-16) var(--space-8);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.empty-orders-card p {
+  color: var(--color-gray-600);
+  margin-top: var(--space-2);
+}

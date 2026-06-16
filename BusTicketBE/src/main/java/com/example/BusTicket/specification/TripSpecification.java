@@ -77,14 +77,11 @@ public class TripSpecification {
         };
     }
 
-    public static Specification<Trip> hasDepartureTimeRange(LocalTime from, LocalTime to) {
-        return (root, query, cb) -> {
-            if (from == null && to == null) return cb.conjunction();
-            var departureTimeExpr = cb.function("TIME", LocalTime.class, root.get("departureTime"));
-            if (from != null && to != null) return cb.between(departureTimeExpr, from, to);
-            if (from != null) return cb.greaterThanOrEqualTo(departureTimeExpr, from);
-            return cb.lessThanOrEqualTo(departureTimeExpr, to);
-        };
+    public static Specification<Trip> hasDepartureTimeRange(
+            LocalTime from,
+            LocalTime to) {
+
+        return (root, query, cb) -> cb.conjunction();
     }
 
     public static Specification<Trip> hasDepartureTimeAfter(LocalDateTime minDepartureTime) {
