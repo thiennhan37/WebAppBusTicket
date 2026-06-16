@@ -27,7 +27,7 @@ const mapConversations = (conversations = []) =>
     unreadCompanyCount: conv.unreadCompanyCount ?? conv.lastMessage?.unreadCompanyCount ?? 0,
   }));
 
-const API_HTTP_URL = "http://localhost:8080/vexedat";
+const API_HTTP_URL = import.meta.env.VITE_API_URL;
 const API_WS_URL = API_HTTP_URL.replace(/^http/, "ws");
 const WEBSOCKET_PATH = "/ws";
 const SEND_DESTINATION = "/app/chat.send";

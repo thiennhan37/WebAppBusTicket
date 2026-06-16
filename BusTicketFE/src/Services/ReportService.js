@@ -1,6 +1,6 @@
 
 
-import api from "../services/api"
+import api from "../Services/api"
 
 const ReportService = {
     getStaffReport(){
