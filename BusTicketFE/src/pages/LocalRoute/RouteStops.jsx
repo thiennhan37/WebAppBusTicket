@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin } from 'lucide-react';
-import RouteService from '../../Services/routeService';
+import RouteService from '../../Services/RouteService';
 import { useQuery } from '@tanstack/react-query';
 
 const RouteStops = ({ routeId }) => {
