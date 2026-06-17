@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import validator from 'validator';
 import { X, MapPin} from 'lucide-react'; 
-import RouteService from '../../Services/routeService';
+import RouteService from '../../Services/RouteService';
 
 const BookingModal = ({selectedTrip,  seat, onClose, onSubmit}) => {
   const [phoneError, setPhoneError] = useState('');

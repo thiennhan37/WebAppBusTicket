@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Phone, Mail, MapPin, Banknote, CreditCard, Timer } from 'lucide-react'; 
 import { useQuery } from '@tanstack/react-query';
-import RouteService from '../../Services/routeService';
+import RouteService from '../../Services/RouteService';
 import ConfirmModal from "../../components/other/ConfirmModal"
 
 const BookingModal = ({bookingOrderId, selectedTrip, selectedSeatsList, onClose, onConfirm }) => {
