@@ -66,10 +66,10 @@ class TripApiService {
     );
   }
 
-  Future<Response> getStops(String provinceId) async {
+  Future<Response> getStops(String tripId) async {
     return await _apiClient.get(
       ApiConstants.getStop,
-      queryParameters: {'provinceID': provinceId},
+      queryParameters: {'tripId': tripId},
       requiresToken: false,
     );
   }

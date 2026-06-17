@@ -96,6 +96,16 @@ export default function ProfilePage() {
     }
   };
 
+  const countries = [
+    { value: "+84", label: "🇻🇳 +84 (VN)" },
+    { value: "+1", label: "🇺🇸 +1 (US)" },
+    { value: "+44", label: "🇬🇧 +44 (UK)" },
+    { value: "+81", label: "🇯🇵 +81 (JP)" },
+    { value: "+82", label: "🇰🇷 +82 (KR)" },
+    { value: "+66", label: "🇹🇭 +66 (TH)" },
+    { value: "+65", label: "🇸🇬 +65 (SG)" },
+  ];
+
   return (
     <div className="profile-page">
       <div className="container">
@@ -135,15 +145,11 @@ export default function ProfilePage() {
                 />
 
                 <div className="phone-row">
-                  <div style={{ width: "100px" }}>
+                  <div style={{ width: "150px" }}> {/* Adjusted width */}
                     <BrutalSelect
                       label="Mã vùng"
                       id="profile-region"
-                      options={[
-                        { value: "+84", label: "+84" },
-                        { value: "+1", label: "+1" },
-                        { value: "+44", label: "+44" },
-                      ]}
+                      options={countries}
                       value={idRegion}
                       onChange={(e) => setIdRegion(e.target.value)}
                     />

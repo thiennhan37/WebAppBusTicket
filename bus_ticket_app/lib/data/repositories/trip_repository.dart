@@ -145,6 +145,24 @@ class TripRepository {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getStopsForTrip(String tripId) async {
+    try {
+      final response = await _tripApiService.getStops(tripId);
+      final data = response.data['result'] as List?;
+      if (data != null) {
+        // Trả về danh sách chứa cả type (UP/DOWN) và StopModel
+        return data.map((json) => {
+          'type': json['type'],
+          'stop': StopModel.fromJson(json['stop']),
+        }).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      // ... giữ nguyên phần catch lỗi
+      throw Exception(e.response?.data['message'] ?? 'Có lỗi khi lấy điểm đón/trả');
+    }
+  }
+
   Future<List<StopModel>> getDropoffStops(String provinceId) async {
     try {
       final response = await _tripApiService.getDropoffStops(provinceId);

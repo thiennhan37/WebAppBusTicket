@@ -72,7 +72,7 @@ public class AuthenticationService {
     private String googleClientId;
     @Value("${google.oauth.client-secret:}")
     private String googleClientSecret;
-    @Value("${google.oauth.redirect-uri:http://localhost:8080/auth/google/callback}")
+    @Value("${google.oauth.redirect-uri:http://localhost:5174/khachhang/dang-nhap}")
     private String googleRedirectUri;
     @Value("${google.oauth.mobile-client-ids:}")
     private String googleMobileClientIds;
@@ -340,14 +340,9 @@ public class AuthenticationService {
             throw new MyAppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        Customer customer = customerRepository.findByEmail(email).orElseGet(() -> customerRepository.save(Customer.builder()
-                .id(com.example.BusTicket.util.IdUtil.generateID())
-                .email(email)
-                .fullName((String) userInfo.get("name"))
-                .status(StatusEnum.ACTIVE)
-                .createdAt(LocalDateTime.now())
-                .role("CUSTOMER")
-                .build()));
+        Customer customer = customerRepository.findByEmail(email).orElseThrow(
+                () -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED)
+        );
 
         if (customer.getStatus().equals(StatusEnum.BLOCKED.name())) {
             throw new MyAppException(ErrorCode.ACCOUNT_BLOCKED);
