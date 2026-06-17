@@ -3,6 +3,7 @@ package com.example.BusTicket.controller.customer;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.CustomerTripSearchRespone;
 import com.example.BusTicket.dto.response.CustomerSearchBusDiagramRespone;
+import com.example.BusTicket.dto.response.RouteStopResponse;
 import com.example.BusTicket.entity.Stop;
 import com.example.BusTicket.service.ProvinceService;
 import com.example.BusTicket.service.SearchTripService;
@@ -71,13 +72,13 @@ public class CustomerTripSearchController {
         return ApiResponse.success(new PagedModel<>(trips));
     }
 
-    @GetMapping("/stops")
-    public ApiResponse<?> searchStops(
-            @RequestParam String provinceID) {
-
-        List<Stop> stops = provinceService.findAllStopsByIdProvince(provinceID);
-         return ApiResponse.success(stops);
-    }
+//    @GetMapping("/stops")
+//    public ApiResponse<?> searchStops(
+//            @RequestParam String provinceID) {
+//
+//        List<Stop> stops = provinceService.findAllStopsByIdProvince(provinceID);
+//         return ApiResponse.success(stops);
+//    }
 
     @GetMapping("/bus-diagram")
     public ApiResponse<?> searchBusDiagram(
@@ -91,5 +92,12 @@ public class CustomerTripSearchController {
             @RequestParam String provinceID
     ){
         return  ApiResponse.success(searchTripService.getCompaniesInfo(provinceID));
+    }
+
+    @GetMapping("/stops")
+    public ApiResponse<List<RouteStopResponse>> getRouteStopList(
+            @RequestParam String tripId,
+            @RequestParam(required = false) String type) {
+        return ApiResponse.success(searchTripService.getRouteStopList(tripId, type));
     }
 }

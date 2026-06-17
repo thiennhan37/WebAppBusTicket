@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getRecentOrders } from "../../services/orderService";
+import { getRecentOrders, unholdSeats } from "../../services/orderService"; // Import unholdSeats
 import { useAuth } from "../../context/AuthContext";
 import BrutalCard from "../../components/BrutalCard";
 import BrutalButton from "../../components/BrutalButton";
-import { ClipboardList, ArrowRight, Calendar, Info, Clock, User } from "lucide-react";
+import { ClipboardList, ArrowRight, Calendar, Info, Clock, User, XCircle } from "lucide-react"; // Import XCircle for cancel icon
 import "./OrderHistoryPage.css";
+import { toast } from "react-toastify"; // Assuming toast for notifications
 
 export default function OrderHistoryPage() {
   const { isAuthenticated } = useAuth();
@@ -14,27 +15,41 @@ export default function OrderHistoryPage() {
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("current"); // 'current', 'departed', 'cancelled'
 
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getRecentOrders();
+      setOrders(res.data.result || res.data || []);
+    } catch (err) {
+      console.error("Fetch recent orders error:", err);
+      setError("Không thể tải danh sách đơn hàng. Vui lòng đăng nhập lại!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       setLoading(false);
       return;
     }
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getRecentOrders();
-        setOrders(res.data.result || res.data || []);
-      } catch (err) {
-        console.error("Fetch recent orders error:", err);
-        setError("Không thể tải danh sách đơn hàng. Vui lòng đăng nhập lại!");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, [isAuthenticated]);
+
+  const handleCancelOrder = async (orderId) => {
+    if (window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) {
+      try {
+        await unholdSeats(orderId);
+        toast.success("Đơn hàng đã được hủy thành công!");
+        // Refresh orders after successful cancellation
+        fetchOrders();
+      } catch (err) {
+        console.error("Cancel order error:", err);
+        toast.error("Không thể hủy đơn hàng. Vui lòng thử lại!");
+      }
+    }
+  };
 
   if (!isAuthenticated) {
     return (
@@ -178,7 +193,7 @@ export default function OrderHistoryPage() {
               <BrutalCard key={order.orderId} className="history-order-card">
                 <div className="order-card-header">
                   <span className="order-id text-mono">Mã đơn: #{order.orderId}</span>
-                  {getStatusBadge(order.orderStatus)} {/* Pass only orderStatus */}
+                  {getStatusBadge(order.orderStatus)}
                 </div>
 
                 <div className="order-card-body">
@@ -208,6 +223,17 @@ export default function OrderHistoryPage() {
                       {new Intl.NumberFormat("vi-VN").format(order.totalCost)}đ
                     </span>
                   </div>
+                  {/* Conditional Cancel Button */}
+                  {(order.orderStatus === "HOLDING" || order.orderStatus === "PENDING") && (
+                    <BrutalButton
+                      variant="danger"
+                      onClick={() => handleCancelOrder(order.orderId)}
+                      size="small"
+                      className="cancel-order-btn"
+                    >
+                      <XCircle size={14} /> HỦY ĐƠN HÀNG
+                    </BrutalButton>
+                  )}
                   <Link
                     to={`/khachhang/don-hang/${order.orderId}`}
                     className="brutal-btn"

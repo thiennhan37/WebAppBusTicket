@@ -18,6 +18,8 @@ public interface RouteStopRepository extends JpaRepository<RouteStop, Long> {
     
     List<RouteStop> findAllByRouteIdAndType(Long routeId, String type);
     
+    List<RouteStop> findAllByRouteId(Long routeId);
+    
     /**
      * Lấy bến khởi hành của một tuyến đường
      */
