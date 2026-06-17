@@ -131,7 +131,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:5174",
-                "https://bus-ticket-aatm3z6zy-thiennhan37s-projects.vercel.app"
+                "https://bus-ticket-q50cf1gzq-thiennhan37s-projects.vercel.app",
+                "https://bus-ticket.xyz"
         )); // FE
         configuration.addAllowedMethod("GET");
         configuration.addAllowedMethod("POST");
