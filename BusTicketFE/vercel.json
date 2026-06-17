@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/vexedat/:path*",
-      "destination": "http://47.129.116.239:8080/vexedat/:path*"
+      "destination": "https://api.bus-ticket.xyz/vexedat/:path*"
     },
     {
       "source": "/(.*)",

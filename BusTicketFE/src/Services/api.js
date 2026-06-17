@@ -6,7 +6,7 @@ const appURL = isProduction ? import.meta.env.VITE_ENDPOINT_API_URL : import.met
 const timeout = 20000;
 export const publicApi = axios.create({
 	baseURL: appURL, 
-	timeout: timeout, 
+	timeout: timeout,  
 	withCredentials: true, 
 	headers: {
 		"Content-Type": "application/json"

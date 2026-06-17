@@ -33,7 +33,11 @@ const isProduction = import.meta.env.PROD;
 const API_HTTP_URL = isProduction 
   ? `${window.location.protocol}//${window.location.host}/vexedat` // Kết quả trên Vercel: https://bus-ticket...vercel.app/vexedat
   : import.meta.env.VITE_FULL_API_URL;
-const API_WS_URL = API_HTTP_URL.replace(/^http/, "ws");
+
+const API_WS_URL = isProduction
+  ? "wss://api.bus-ticket.xyz/vexedat"
+  : import.meta.env.VITE_FULL_API_URL.replace(/^http/, "ws");
+  
 const WEBSOCKET_PATH = "/ws";
 const SEND_DESTINATION = "/app/chat.send";
 const TOPIC_PREFIX = "/topic/conversation/";
