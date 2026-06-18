@@ -66,10 +66,10 @@ class TripApiService {
     );
   }
 
-  Future<Response> getStops(String provinceId) async {
+  Future<Response> getStops(String tripId) async {
     return await _apiClient.get(
       ApiConstants.getStop,
-      queryParameters: {'provinceID': provinceId},
+      queryParameters: {'tripId': tripId},
       requiresToken: false,
     );
   }
@@ -96,11 +96,18 @@ class TripApiService {
     );
   }
 
-  Future<Response> holdSeats(String tripId, List<String> tripSeatIdList) async {
+  Future<Response> holdSeats({
+    required String tripId,
+    required List<String> tripSeatIdList,
+    required String arrivalId,
+    required String destinationId,
+  }) async {
     return await _apiClient.post(
       '${ApiConstants.holdSeats}$tripId',
       data: {
         'tripSeatIdList': tripSeatIdList,
+        'arrivalId': arrivalId,
+        'destinationId': destinationId,
       },
       requiresToken: true,
     );

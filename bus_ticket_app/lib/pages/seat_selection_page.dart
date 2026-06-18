@@ -1,7 +1,7 @@
 import 'package:bus_ticket_app/features/booking/viewmodel/seat_selection_viewmodel.dart';
-import 'package:bus_ticket_app/pages/home_pages.dart';
 import 'package:bus_ticket_app/widgets/seat_selection_widgets/contact_info_widget.dart';
-import 'package:bus_ticket_app/widgets/seat_selection_widgets/payment_selection_widget.dart';import 'package:bus_ticket_app/widgets/seat_selection_widgets/payment_success_widget.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/payment_selection_widget.dart';
+import 'package:bus_ticket_app/widgets/seat_selection_widgets/payment_success_widget.dart';
 import 'package:bus_ticket_app/widgets/seat_selection_widgets/seat_diagram_widget.dart';
 import 'package:bus_ticket_app/widgets/seat_selection_widgets/step_indicator_widget.dart';
 import 'package:bus_ticket_app/widgets/seat_selection_widgets/stop_selection_widget.dart';
@@ -9,6 +9,7 @@ import 'package:bus_ticket_app/widgets/seat_selection_widgets/trip_summary_widge
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import '../widgets/bottom_navigation.dart';
 
@@ -58,9 +59,8 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   @override
   void dispose() {
     _viewModel.removeListener(_onViewModelChanged);
-    _viewModel.stopStatusCheck(); // Dừng polling ngay lập tức
-    _viewModel.dispose(); // Hủy toàn bộ timer và dispose ViewModel (do ViewModel là factory)
-    super.dispose();
+    _viewModel.stopStatusCheck();
+   super.dispose();
   }
 
   void _onViewModelChanged() {
@@ -153,7 +153,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                   children: [
                     const TextSpan(text: 'Nhấn Chi tiết để xem hoặc đổi thông tin.\nNhấn Dừng thanh toán để trở về Trang chủ,\n'),
                     TextSpan(
-                      text: 'Vexere sẽ giữ chỗ cho bạn trong tối đa 10 phút.',
+                      text: 'Hệ thống sẽ giữ chỗ cho bạn trong tối đa 10 phút.',
                       style: TextStyle(color: Colors.red[400], fontWeight: FontWeight.w500),
                     ),
                   ],
@@ -165,7 +165,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        _viewModel.stopStatusCheck(); // Dừng check khi bấm dừng thanh toán
+                        _viewModel.stopStatusCheck();
                         Navigator.pop(context); 
                         _showHoldSuccessDialog();
                       },
@@ -415,13 +415,9 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text('Tổng tiền', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    Row(
-                      children: [
-                        Text(
-                          _formatPrice(viewModel.totalPrice),
-                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
-                        ),
-                      ],
+                    Text(
+                      _formatPrice(viewModel.totalPrice),
+                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                   ],
                 ),
@@ -438,11 +434,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                       }
                     }
                   } else if (viewModel.currentStep < 6) {
-                    if (viewModel.currentStep == 1) {
-                      viewModel.fetchDepartureStops(widget.departureProvinceId);
-                    } else if (viewModel.currentStep == 2) {
-                      viewModel.fetchArrivalStops(widget.destinationProvinceId);
-                    }
+                    // Đã bỏ fetchDepartureStops/fetchArrivalStops vì dữ liệu đã có sẵn
                     viewModel.nextStep();
                   } else {
                     _handlePayment(viewModel);
@@ -483,11 +475,10 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
   }
 
   void _handlePayment(SeatSelectionViewModel viewModel) {
-    // Gọi processPayment() để kích hoạt timer kiểm tra trạng thái
     viewModel.processPayment();
   }
 
   String _formatPrice(int price) {
-    return '${price.toString().replaceAllMapped(RegExp(r"(\d{1,3})(?=(\d{3})+(?!\d))"), (Match m) => "${m[1]}.")}đ';
+    return NumberFormat.currency(locale: 'vi_VN', symbol: 'đ', decimalDigits: 0).format(price);
   }
 }

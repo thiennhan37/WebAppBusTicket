@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import SeatMap from "../../components/SeatMap";
 import BrutalCard from "../../components/BrutalCard";
 import BrutalButton from "../../components/BrutalButton";
-import { ArrowLeft, Armchair, HelpCircle } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import "./SeatSelectionPage.css";
 
@@ -18,6 +18,7 @@ export default function SeatSelectionPage() {
 
   const [seats, setSeats] = useState([]);
   const [busTypeName, setBusTypeName] = useState("");
+  const [diagram, setDiagram] = useState(null); // Add diagram state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSeatIds, setSelectedSeatIds] = useState([]);
@@ -34,6 +35,8 @@ export default function SeatSelectionPage() {
         const data = res.data.result || res.data;
         setSeats(data.seats || []);
         setBusTypeName(data.busTypeName || "");
+        setDiagram(data.diagram || null); // Set diagram state
+        console.log("Fetched diagram data:", data.diagram); // Log the diagram data
       } catch (err) {
         console.error("Fetch bus diagram error:", err);
         setError("Không thể tải sơ đồ ghế ngồi. Vui lòng quay lại thử sau!");
@@ -100,6 +103,8 @@ export default function SeatSelectionPage() {
     }
   };
 
+  console.log("Diagram prop passed to SeatMap:", diagram); // Log the diagram prop before rendering SeatMap
+
   return (
     <div className="seat-selection-page">
       <div className="container">
@@ -126,6 +131,7 @@ export default function SeatSelectionPage() {
             <div className="seat-selection-map-container">
               <SeatMap
                 seats={seats}
+                diagram={diagram} // Pass diagram to SeatMap
                 busTypeName={busTypeName}
                 selectedSeats={selectedSeatIds}
                 onSeatSelect={handleSeatSelect}

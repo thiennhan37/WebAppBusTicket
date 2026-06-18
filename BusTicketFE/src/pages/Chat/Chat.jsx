@@ -27,8 +27,17 @@ const mapConversations = (conversations = []) =>
     unreadCompanyCount: conv.unreadCompanyCount ?? conv.lastMessage?.unreadCompanyCount ?? 0,
   }));
 
-const API_HTTP_URL = "http://localhost:8080/vexedat";
-const API_WS_URL = API_HTTP_URL.replace(/^http/, "ws");
+const isProduction = import.meta.env.PROD;
+
+// 2. Ép URL chạy qua Domain thay vì chạy qua IP trực tiếp khi lên Vercel
+const API_HTTP_URL = isProduction 
+  ? `${window.location.protocol}//${window.location.host}/vexedat` // Kết quả trên Vercel: https://bus-ticket...vercel.app/vexedat
+  : import.meta.env.VITE_FULL_API_URL;
+
+const API_WS_URL = isProduction
+  ? "wss://api.bus-ticket.xyz/vexedat"
+  : import.meta.env.VITE_FULL_API_URL.replace(/^http/, "ws");
+  
 const WEBSOCKET_PATH = "/ws";
 const SEND_DESTINATION = "/app/chat.send";
 const TOPIC_PREFIX = "/topic/conversation/";

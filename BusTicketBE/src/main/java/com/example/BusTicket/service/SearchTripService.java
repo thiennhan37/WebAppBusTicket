@@ -12,6 +12,8 @@ import com.example.BusTicket.repository.jpa.*;
 import com.example.BusTicket.specification.TripSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.example.BusTicket.dto.response.RouteStopResponse;
+import com.example.BusTicket.mapper.RouteStopMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -41,6 +43,7 @@ public class SearchTripService {
     private final TripRatingService tripRatingService;
     private final BusCompanyRepository busCompanyRepository;
     private final CustomerRepository customerRepository;
+    private final RouteStopMapper routeStopMapper;
 
     @Value("${booking.holdingSeatPrefixKey}")
     private String holdingSeatPrefixKey;
@@ -306,5 +309,19 @@ public class SearchTripService {
             .diagram(busType.getDiagram())
             .seats(seatInfos)
             .build();
+    }
+
+    public List<RouteStopResponse> getRouteStopList(String tripId, String type) {
+        List<RouteStop> routeStops;
+        Trip trip = tripRepository.findById(tripId).orElseThrow(
+                () -> new MyAppException(ErrorCode.NOT_EXISTED)
+        );
+        Long routeId = trip.getRoute().getId();
+        if (type == null || type.isBlank()) {
+            routeStops = routeStopRepository.findAllByRouteId(routeId);
+        } else {
+            routeStops = routeStopRepository.findAllByRouteIdAndType(routeId, type);
+        }
+        return routeStops.stream().map(routeStopMapper::toRouteStopResponse).toList();
     }
 }

@@ -31,7 +31,7 @@ public enum ErrorCode {
     COMPANY_NOT_EXISTED(4001, "Nhà xe không tồn tại", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(4002, "Email này đã được sử dụng", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED_IN_FILE(4002, "Email này đã trùng lặp trong file", HttpStatus.BAD_REQUEST),
-    ACCOUNT_NOT_EXISTED(4003, "Tài khoản không tồn tại", HttpStatus.BAD_REQUEST),
+    ACCOUNT_NOT_EXISTED(4003, "Tài khoản không tồn tại, hãy tạo tài khoản", HttpStatus.BAD_REQUEST),
     ACCOUNT_BLOCKED(4004, "Tài khoản đã bị khóa", HttpStatus.UNAUTHORIZED),
     HOTLINE_EXISTED(4004, "Số hotline đã tồn tại trên hệ thống", HttpStatus.BAD_REQUEST),
     INFO_EXISTED(4005, "Thông tin đã tồn tại", HttpStatus.BAD_REQUEST),

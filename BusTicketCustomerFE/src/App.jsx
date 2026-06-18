@@ -27,11 +27,7 @@ export default function App() {
             <Route path="dat-ve/:tripId" element={<BookingPage />} />
             <Route
               path="don-hang"
-              element={
-                <ProtectedRoute>
-                  <OrderHistoryPage />
-                </ProtectedRoute>
-              }
+              element={<OrderHistoryPage />}
             />
             <Route
               path="don-hang/:orderId"

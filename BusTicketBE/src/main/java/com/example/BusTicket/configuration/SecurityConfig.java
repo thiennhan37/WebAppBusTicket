@@ -54,7 +54,7 @@ public class SecurityConfig {
     private final String[] COMPANY_UPDATE_ENDPOINTS = {"/nhaxe/orders/hold-seats",
             "/nhaxe/orders/unhold-seats", "/nhaxe/orders/book-order", "/auth/change-password"};
 
-    private final String[] CUSTOMER_ENDPOINTS = {"/trips/search", "/trips/stops", "/trips/bus-diagram"};
+    private final String[] CUSTOMER_ENDPOINTS = {"/trips/search", "/trips/stops", "/trips/bus-diagram", };
     private final String[] CUSTOMER_POST_ENDPOINTS = {"/customer/orders/hold-seats/**", "/customer/orders/payment/**", "/customer/orders/{orderId}/rating"};
     private final String[] CUSTOMER_GET_ENDPOINTS = {"/customer/orders/payment-status", "/customer/orders/recent",
     "/customer/orders/unhold-seats/*", "/customer/order/detail/*", "/customer/companies-list"};
@@ -130,7 +130,9 @@ public class SecurityConfig {
         // Cách mới trong Spring Boot 3
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://localhost:5174"
+                "http://localhost:5174",
+                "https://bus-ticket-q50cf1gzq-thiennhan37s-projects.vercel.app",
+                "https://bus-ticket.xyz"
         )); // FE
         configuration.addAllowedMethod("GET");
         configuration.addAllowedMethod("POST");

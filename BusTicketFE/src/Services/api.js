@@ -1,10 +1,12 @@
 import axios from "axios";
 
-const appURL = "http://localhost:8080/vexedat";
+const isProduction = import.meta.env.PROD;
+const appURL = isProduction ? import.meta.env.VITE_ENDPOINT_API_URL : import.meta.env.VITE_FULL_API_URL;
+// const appURL = import.meta.env.VITE_FULL_API_URL;
 const timeout = 20000;
 export const publicApi = axios.create({
 	baseURL: appURL, 
-	timeout: timeout, 
+	timeout: timeout,  
 	withCredentials: true, 
 	headers: {
 		"Content-Type": "application/json"

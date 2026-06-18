@@ -151,12 +151,10 @@ class SeatSelectionViewModel extends ChangeNotifier {
 
   void startStatusCheck() {
     _statusCheckTimer?.cancel();
-    // Bắt đầu polling khi có mã đơn hàng và đã chọn phương thức thanh toán
     if ((_selectedPaymentMethod != 'momo' && _selectedPaymentMethod != 'vnpay') || _orderCode == null) return;
 
     _statusCheckTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
       if (_currentStep == 6 && (_selectedPaymentMethod == 'momo' || _selectedPaymentMethod == 'vnpay') && _orderCode != null && !_isPaymentSuccessful) {
-        print('Checking payment status for OrderId: $_orderCode');
         final isPaid = await _tripRepository.checkPaymentStatus(_orderCode!);
         if (isPaid) {
           _isPaymentSuccessful = true;
@@ -165,7 +163,6 @@ class SeatSelectionViewModel extends ChangeNotifier {
           notifyListeners();
         }
       } else {
-        print('Stopping payment status check timer');
         timer.cancel();
       }
     });
@@ -180,7 +177,6 @@ class SeatSelectionViewModel extends ChangeNotifier {
     _selectedPaymentMethod = method;
     if (method == 'momo' || method == 'vnpay') {
       startStatusCheck();
-      // Nếu là vnpay, tự động gọi processPayment để lấy URL và mở trình duyệt
       if (method == 'vnpay') {
         processPayment();
       }
@@ -217,6 +213,26 @@ class SeatSelectionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Lấy danh sách điểm dừng của chuyến xe (Gồm cả đón và trả)
+  Future<void> fetchTripStops(String tripId) async {
+    try {
+      final stopsData = await _tripRepository.getStopsForTrip(tripId);
+
+      _departureStops = stopsData
+          .where((item) => item['type'] == 'UP')
+          .map((item) => item['stop'] as StopModel)
+          .toList();
+
+      _arrivalStops = stopsData
+          .where((item) => item['type'] == 'DOWN')
+          .map((item) => item['stop'] as StopModel)
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching trip stops: $e');
+      rethrow;
+    }
+  }
+
   Future<void> fetchBusDiagram(String tripId) async {
     if (tripId.isEmpty) return;
     _isLoading = true;
@@ -230,11 +246,20 @@ class SeatSelectionViewModel extends ChangeNotifier {
     _paymentData = null;
     _isPaymentSuccessful = false;
     _manualTotalPrice = null;
+    _selectedDepartureStop = null;
+    _selectedArrivalStop = null;
     stopPaymentTimer();
     notifyListeners();
 
     try {
-      _busDiagramData = await _tripRepository.getBusDiagram(tripId);
+      // Gọi song song cả sơ đồ và điểm dừng để tối ưu thời gian
+      final results = await Future.wait([
+        _tripRepository.getBusDiagram(tripId),
+        fetchTripStops(tripId),
+      ]);
+      
+      _busDiagramData = results[0] as BusDiagramData;
+      
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -251,7 +276,6 @@ class SeatSelectionViewModel extends ChangeNotifier {
     _isPaymentSuccessful = false;
     _paymentData = null;
     _selectedPaymentMethod = null;
-    // Bắt đầu timer với số giây còn lại (nếu có), nếu không có thì mặc định 600s
     startPaymentTimer(initialSeconds: remainingSeconds ?? 600);
     notifyListeners();
   }
@@ -287,40 +311,6 @@ class SeatSelectionViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchDepartureStops(String provinceId) async {
-    _isLoading = true;
-    _errorMessage = null;
-    _searchQuery = '';
-    notifyListeners();
-
-    try {
-      _departureStops = await _tripRepository.getStops(provinceId);
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> fetchArrivalStops(String provinceId) async {
-    _isLoading = true;
-    _errorMessage = null;
-    _searchQuery = '';
-    notifyListeners();
-
-    try {
-      _arrivalStops = await _tripRepository.getStops(provinceId);
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
   Future<bool> holdSeats(String tripId) async {
     _isLoading = true;
     _errorMessage = null;
@@ -343,7 +333,19 @@ class SeatSelectionViewModel extends ChangeNotifier {
         return false;
       }
 
-      final response = await _tripRepository.holdSeats(tripId, tripSeatIdList);
+      if (_selectedDepartureStop == null || _selectedArrivalStop == null) {
+        _errorMessage = "Vui lòng chọn điểm đón và điểm trả";
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final response = await _tripRepository.holdSeats(
+        tripId: tripId,
+        tripSeatIdList: tripSeatIdList,
+        arrivalId: _selectedDepartureStop!.id.toString(),
+        destinationId: _selectedArrivalStop!.id.toString(),
+      );
       final data = response.data;
       final int code = data['code'];
       _lastErrorCode = code;
