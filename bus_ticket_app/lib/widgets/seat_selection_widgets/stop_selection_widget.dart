@@ -25,7 +25,7 @@ class StopSelectionWidget extends StatefulWidget {
 class _StopSelectionWidgetState extends State<StopSelectionWidget> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchTextController = TextEditingController();
-  static const double _itemExtent = 130.0;
+  static const double _itemExtent = 150.0;
 
   @override
   void dispose() {
