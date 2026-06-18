@@ -189,9 +189,19 @@ class TripRepository {
     }
   }
 
-  Future<Response> holdSeats(String tripId, List<String> tripSeatIdList) async {
+  Future<Response> holdSeats({
+    required String tripId,
+    required List<String> tripSeatIdList,
+    required String arrivalId,
+    required String destinationId,
+  }) async {
     try {
-      return await _tripApiService.holdSeats(tripId, tripSeatIdList);
+      return await _tripApiService.holdSeats(
+        tripId: tripId,
+        tripSeatIdList: tripSeatIdList,
+        arrivalId: arrivalId,
+        destinationId: destinationId,
+      );
     } on DioException catch (e) {
       if (e.response != null) {
         return e.response!;

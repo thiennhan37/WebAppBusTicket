@@ -1,9 +1,6 @@
 package com.example.BusTicket.controller.order;
 
-import com.example.BusTicket.dto.request.BookingOrderCrRequest;
-import com.example.BusTicket.dto.request.CompHoldSeatRequest;
-import com.example.BusTicket.dto.request.CustomerHoldAndPayRequest;
-import com.example.BusTicket.dto.request.CustomerPaymentRequest;
+import com.example.BusTicket.dto.request.*;
 import com.example.BusTicket.dto.response.ApiResponse;
 import com.example.BusTicket.dto.response.BookingOrderResponse;
 import com.example.BusTicket.dto.response.MomoPaymentResponse;
@@ -17,7 +14,7 @@ public class CustomerBookingOrderController {
     private final CustomerBookingForOrderService customerBookingForOrderService;
 
     @PostMapping("/customer/orders/hold-seats/{id}")
-    public ApiResponse<String> holdSeats(@RequestBody CompHoldSeatRequest request, @PathVariable("id") String tripId) {
+    public ApiResponse<String> holdSeats(@RequestBody CustomerHoldSeatRequest request, @PathVariable("id") String tripId) {
         // JWT validation tự động qua @PreAuthorize
         String orderId = customerBookingForOrderService.holdSeatsByCustomer(request, tripId);
         return ApiResponse.success(orderId);

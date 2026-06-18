@@ -333,7 +333,19 @@ class SeatSelectionViewModel extends ChangeNotifier {
         return false;
       }
 
-      final response = await _tripRepository.holdSeats(tripId, tripSeatIdList);
+      if (_selectedDepartureStop == null || _selectedArrivalStop == null) {
+        _errorMessage = "Vui lòng chọn điểm đón và điểm trả";
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      final response = await _tripRepository.holdSeats(
+        tripId: tripId,
+        tripSeatIdList: tripSeatIdList,
+        arrivalId: _selectedDepartureStop!.id.toString(),
+        destinationId: _selectedArrivalStop!.id.toString(),
+      );
       final data = response.data;
       final int code = data['code'];
       _lastErrorCode = code;

@@ -77,6 +77,56 @@
   box-shadow: 3px 3px 0 var(--color-black);
 }
 
+/* Stop Options Radio Buttons (reusing payment option styles) */
+.stop-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.stop-option-label {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-4);
+  cursor: pointer;
+  background-color: var(--color-white);
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.stop-option-label input[type="radio"] {
+  accent-color: var(--color-yellow);
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.stop-option-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stop-option-info strong {
+  font-size: var(--font-size-base);
+  margin-bottom: 4px;
+}
+
+.stop-option-info span {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-600);
+}
+
+.stop-option-label--selected {
+  background-color: var(--color-yellow-light);
+  border-color: var(--color-black);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-black);
+}
+
+
 .booking-submit-wrapper {
   margin-top: var(--space-6);
 }

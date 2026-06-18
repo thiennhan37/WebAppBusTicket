@@ -72,7 +72,7 @@ public class CustomerBookingForOrderService {
 
 
     @Transactional
-    public String holdSeatsByCustomer(CompHoldSeatRequest request, String tripId){
+    public String holdSeatsByCustomer(CustomerHoldSeatRequest request, String tripId){
         Jwt jwt = JwtHelper.getJwt();
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
@@ -88,6 +88,20 @@ public class CustomerBookingForOrderService {
 
         List<String> tripSeatIdList = request.getTripSeatIdList().stream().distinct().toList();
         if(tripSeatIdList.isEmpty()) throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+
+        Long currentTripRouteId = trip.getRoute().getId();
+
+        RouteStop arrival = routeStopRepository.findByRouteIdAndStopIdAndType(
+                currentTripRouteId,
+                request.getArrivalId(),
+                "UP"
+        ).orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
+
+        RouteStop destination = routeStopRepository.findByRouteIdAndStopIdAndType(
+                currentTripRouteId,
+                request.getDestinationId(),
+                "DOWN"
+        ).orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
 
         String orderId = IdUtil.generateID();
         boolean isHoldSeats = seatReservationService
@@ -110,6 +124,14 @@ public class CustomerBookingForOrderService {
             throw new MyAppException(ErrorCode.TRIP_SEAT_BOOKED);
         }
 
+//        RouteStop arrival = routeStopRepository.findById(request.getArrivalId())
+//                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
+//        RouteStop destination = routeStopRepository.findById(request.getDestinationId())
+//                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
+
+
+
+
         // Tính tổng tiền tại thời điểm giữ ghế
         Long totalCost = tripSeatList.stream()
                 .mapToLong(tripSeat -> tripSeat.getPrice() != null ? tripSeat.getPrice() : 0).sum();
@@ -128,17 +150,6 @@ public class CustomerBookingForOrderService {
                 .build();
         bookingOrderRepository.save(bookingOrder);
 
-        // Tạo ticket với trạng thái HOLDING để đảm bảo booking flow khi payment thành công
-        List<RouteStop> upStops = routeStopRepository.findAllByRouteIdAndType(trip.getRoute().getId(), "UP");
-        List<RouteStop> downStops = routeStopRepository.findAllByRouteIdAndType(trip.getRoute().getId(), "DOWN");
-        if (upStops.isEmpty() || downStops.isEmpty()) {
-            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
-        }
-
-        RouteStop arrival = upStops.stream().min(java.util.Comparator.comparing(RouteStop::getId))
-                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
-        RouteStop destination = downStops.stream().max(java.util.Comparator.comparing(RouteStop::getId))
-                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
 
         List<Ticket> ticketList = saveTicketList(tripSeatList, bookingOrder, arrival, destination);
 
@@ -215,15 +226,5 @@ public class CustomerBookingForOrderService {
             historyDetailList.add(HistoryDetail.builder().historyBooking(historyBooking).ticket(t).build());
         }
         historyDetailRepository.saveAll(historyDetailList);
-    }
-    private void checkRouteStop(RouteStop arrival, RouteStop destination, Trip trip){
-        Long routeId1 = arrival.getRoute().getId();
-        Long routeId2 = destination.getRoute().getId();
-        Long routeId = trip.getRoute().getId();
-        if(!Objects.equals(routeId, routeId1) || !Objects.equals(routeId, routeId2))
-            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
-        if( !arrival.getType().equals("UP") || !destination.getType().equals("DOWN"))
-            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
-
     }
 }
