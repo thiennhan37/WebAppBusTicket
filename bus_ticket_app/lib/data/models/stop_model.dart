@@ -37,3 +37,23 @@ class ProvinceInfo {
   factory ProvinceInfo.fromJson(Map<String, dynamic> json) => _$ProvinceInfoFromJson(json);
   Map<String, dynamic> toJson() => _$ProvinceInfoToJson(this);
 }
+
+class TripStop {
+  final int tripStopId;
+  final String type;
+  final StopModel stop;
+
+  TripStop({
+    required this.tripStopId,
+    required this.type,
+    required this.stop,
+  });
+
+  factory TripStop.fromJson(Map<String, dynamic> json) {
+    return TripStop(
+      tripStopId: json['id'] ?? json['tripStopId'],
+      type: json['type'],
+      stop: json['stop'] is StopModel ? json['stop'] : StopModel.fromJson(json['stop']),
+    );
+  }
+}

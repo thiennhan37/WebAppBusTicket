@@ -52,7 +52,7 @@ public class CustomerBookingForOrderService {
     @Value("${booking.customerHoldingSeatPrefixKey}")
     private String CUSTOMER_HOLD_INFO_PREFIX;
 
-    public boolean isOrderPaid(String bookingOrderId){
+    public boolean isOrderPaid(String bookingOrderId) {
         Jwt jwt = JwtHelper.getJwt();
         BookingOrder bookingOrder = bookingOrderRepository.findById(bookingOrderId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
@@ -72,44 +72,39 @@ public class CustomerBookingForOrderService {
 
 
     @Transactional
-    public String holdSeatsByCustomer(CustomerHoldSeatRequest request, String tripId){
+    public String holdSeatsByCustomer(CustomerHoldSeatRequest request, String tripId) {
         Jwt jwt = JwtHelper.getJwt();
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
-        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
+        if (!trip.getStatus().equals(TripStatusEnum.OPEN.name()))
             throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
 
         Customer customer = customerRepository.findById(jwt.getSubject())
                 .orElseThrow(() -> new MyAppException(ErrorCode.ACCOUNT_NOT_EXISTED));
 
         String holdInfoKey = getCustomerHoldInfoKey(customer.getId());
-        if(Boolean.TRUE.equals(redisTemplate.hasKey(holdInfoKey)))
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(holdInfoKey)))
             throw new MyAppException(ErrorCode.BOOKING_ANOTHER_ORDER);
 
         List<String> tripSeatIdList = request.getTripSeatIdList().stream().distinct().toList();
-        if(tripSeatIdList.isEmpty()) throw new MyAppException(ErrorCode.INVALID_PARAMETER);
+        if (tripSeatIdList.isEmpty()) throw new MyAppException(ErrorCode.INVALID_PARAMETER);
 
         Long currentTripRouteId = trip.getRoute().getId();
 
-        RouteStop arrival = routeStopRepository.findByRouteIdAndStopIdAndType(
-                currentTripRouteId,
-                request.getArrivalId(),
-                "UP"
-        ).orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
-
-        RouteStop destination = routeStopRepository.findByRouteIdAndStopIdAndType(
-                currentTripRouteId,
-                request.getDestinationId(),
-                "DOWN"
-        ).orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
+        RouteStop arrival = routeStopRepository.findById(request.getArrivalId())
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        RouteStop destination = routeStopRepository.findById(request.getDestinationId())
+                .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
+        // kiểm tra điểm đón/trả có cùng thuộc 1 tuyến đươờng?, có đúng loại đón/trả tương ứng
+        checkRouteStop(arrival, destination, trip);
 
         String orderId = IdUtil.generateID();
         boolean isHoldSeats = seatReservationService
                 .tryHoldSeats(null, customer.getId(), orderId, tripSeatIdList, holdingSeatTime);
-        if( !isHoldSeats) throw new MyAppException(ErrorCode.ERROR_SAVED);
+        if (!isHoldSeats) throw new MyAppException(ErrorCode.ERROR_SAVED);
 
         List<TripSeat> tripSeatList = tripSeatRepository.getValidTripSeatList(tripSeatIdList, trip.getId());
-        if(tripSeatIdList.size() != tripSeatList.size()){
+        if (tripSeatIdList.size() != tripSeatList.size()) {
             seatReservationService.deleteInvalidOrder(customer.getId(), orderId, tripSeatIdList);
             throw new MyAppException(ErrorCode.TRIP_SEAT_BOOKED);
         }
@@ -119,7 +114,7 @@ public class CustomerBookingForOrderService {
                 TripSeatEnum.HELD.name(),
                 List.of(TripSeatEnum.AVAILABLE.name())
         );
-        if(updatedSeats != tripSeatIdList.size()){
+        if (updatedSeats != tripSeatIdList.size()) {
             seatReservationService.deleteInvalidOrder(customer.getId(), orderId, tripSeatIdList);
             throw new MyAppException(ErrorCode.TRIP_SEAT_BOOKED);
         }
@@ -128,8 +123,6 @@ public class CustomerBookingForOrderService {
 //                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
 //        RouteStop destination = routeStopRepository.findById(request.getDestinationId())
 //                .orElseThrow(() -> new MyAppException(ErrorCode.ROUTE_STOP_INVALID));
-
-
 
 
         // Tính tổng tiền tại thời điểm giữ ghế
@@ -164,7 +157,7 @@ public class CustomerBookingForOrderService {
     }
 
 
-    private String getCustomerHoldInfoKey(String customerId){
+    private String getCustomerHoldInfoKey(String customerId) {
         return CUSTOMER_HOLD_INFO_PREFIX + customerId;
     }
 
@@ -206,10 +199,9 @@ public class CustomerBookingForOrderService {
     }
 
 
-
-    private List<Ticket> saveTicketList(List<TripSeat> tripSeatList, BookingOrder bookingOrder, RouteStop arrival, RouteStop destination){
+    private List<Ticket> saveTicketList(List<TripSeat> tripSeatList, BookingOrder bookingOrder, RouteStop arrival, RouteStop destination) {
         List<Ticket> ticketList = new ArrayList<>();
-        for (TripSeat ts : tripSeatList){
+        for (TripSeat ts : tripSeatList) {
             ticketList.add(Ticket.builder().id(IdUtil.generateID()).bookingOrder(bookingOrder).tripSeat(ts).price(ts.getPrice())
                     .arrival(arrival).destination(destination).status(TicketStatusEnum.HOLDING.name())
                     .updatedAt(bookingOrder.getCreatedAt()).build());
@@ -217,14 +209,25 @@ public class CustomerBookingForOrderService {
         return ticketRepository.saveAll(ticketList);
     }
 
-    private void saveHistoryForBooking(BookingOrder bookingOrder, Customer customer, List<Ticket> ticketList){
+    private void saveHistoryForBooking(BookingOrder bookingOrder, Customer customer, List<Ticket> ticketList) {
         HistoryBooking historyBooking = HistoryBooking.builder().type(HistoryStatusEnum.BOOKING.name())
                 .bookingOrder(bookingOrder).actor(null).customer(customer).createdAt(LocalDateTime.now()).build();
         historyBooking = historyBookingRepository.save(historyBooking);
         List<HistoryDetail> historyDetailList = new ArrayList<>();
-        for (Ticket t : ticketList){
+        for (Ticket t : ticketList) {
             historyDetailList.add(HistoryDetail.builder().historyBooking(historyBooking).ticket(t).build());
         }
         historyDetailRepository.saveAll(historyDetailList);
+    }
+
+    private void checkRouteStop(RouteStop arrival, RouteStop destination, Trip trip) {
+        Long routeId1 = arrival.getRoute().getId();
+        Long routeId2 = destination.getRoute().getId();
+        Long routeId = trip.getRoute().getId();
+        if (!Objects.equals(routeId, routeId1) || !Objects.equals(routeId, routeId2))
+            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
+        if (!arrival.getType().equals("UP") || !destination.getType().equals("DOWN"))
+            throw new MyAppException(ErrorCode.ROUTE_STOP_INVALID);
+
     }
 }

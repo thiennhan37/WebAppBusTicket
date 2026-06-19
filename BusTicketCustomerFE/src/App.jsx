@@ -1,15 +1,17 @@
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import HomePage from "./pages/HomePage/HomePage";
 import SearchResultsPage from "./pages/SearchResults/SearchResultsPage";
 import SeatSelectionPage from "./pages/SeatSelection/SeatSelectionPage";
+import StopSelectionPage from "./pages/StopSelection/StopSelectionPage";
 import BookingPage from "./pages/Booking/BookingPage";
+import PaymentPage from "./pages/Payment/PaymentPage";
 import OrderHistoryPage from "./pages/OrderHistory/OrderHistoryPage";
 import OrderDetailPage from "./pages/OrderDetail/OrderDetailPage";
 import LoginPage from "./pages/Login/LoginPage";
 import RegisterPage from "./pages/Register/RegisterPage";
 import ProfilePage from "./pages/Profile/ProfilePage";
+import FavoritesPage from "./pages/Favorites/FavoritesPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProvider from "./context/AuthContext";
 import { Toaster } from "sonner";
@@ -24,7 +26,9 @@ export default function App() {
             <Route index element={<HomePage />} />
             <Route path="ket-qua" element={<SearchResultsPage />} />
             <Route path="chon-ghe/:tripId" element={<SeatSelectionPage />} />
+            <Route path="chon-diem/:tripId" element={<StopSelectionPage />} />
             <Route path="dat-ve/:tripId" element={<BookingPage />} />
+            <Route path="thanh-toan/:tripId" element={<PaymentPage />} />
             <Route
               path="don-hang"
               element={<OrderHistoryPage />}
@@ -42,6 +46,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="yeu-thich"
+              element={
+                <ProtectedRoute>
+                  <FavoritesPage />
                 </ProtectedRoute>
               }
             />

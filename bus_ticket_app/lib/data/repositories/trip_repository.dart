@@ -150,15 +150,15 @@ class TripRepository {
       final response = await _tripApiService.getStops(tripId);
       final data = response.data['result'] as List?;
       if (data != null) {
-        // Trả về danh sách chứa cả type (UP/DOWN) và StopModel
+        // Trả về danh sách chứa tripStopId, type và thông tin điểm dừng
         return data.map((json) => {
+          'tripStopId': json['id'], // Đây là ID cùng cấp với type (VD: 42, 43, 44)
           'type': json['type'],
-          'stop': StopModel.fromJson(json['stop']),
+          'stop': StopModel.fromJson(json['stop']), // Đây chứa ID bên trong stop (VD: 20)
         }).toList();
       }
       return [];
     } on DioException catch (e) {
-      // ... giữ nguyên phần catch lỗi
       throw Exception(e.response?.data['message'] ?? 'Có lỗi khi lấy điểm đón/trả');
     }
   }

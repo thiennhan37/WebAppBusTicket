@@ -70,13 +70,13 @@ class TripSummaryWidget extends StatelessWidget {
                 
                 // Lộ trình
                 _buildTimelineItem(
-                  location: viewModel.selectedDepartureStop?.name ?? 'Điểm đón',
-                  address: viewModel.selectedDepartureStop?.address ?? '',
+                  location: viewModel.selectedDepartureStop?.stop.name ?? 'Điểm đón',
+                  address: viewModel.selectedDepartureStop?.stop.address ?? '',
                   isStart: true,
                 ),
                 _buildTimelineItem(
-                  location: viewModel.selectedArrivalStop?.name ?? 'Điểm trả',
-                  address: viewModel.selectedArrivalStop?.address ?? '',
+                  location: viewModel.selectedArrivalStop?.stop.name ?? 'Điểm trả',
+                  address: viewModel.selectedArrivalStop?.stop.address ?? '',
                   isStart: false,
                 ),
                 
