@@ -4,6 +4,7 @@ import com.example.BusTicket.entity.BookingOrder;
 import com.example.BusTicket.entity.BusCompany;
 import com.example.BusTicket.entity.Payment;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,9 @@ import com.example.BusTicket.entity.Ticket;
 public class SendMailService {
     private final MailService mailService; // Inject MailService bạn đã viết
     private final MomoService momoService;
+
+    @Value("${momo.go_url}")
+    private String momoGoUrl;
 
     @Async
     public void sendCredentials(String employeeEmail, String password, String companyName) {
@@ -48,7 +52,7 @@ public class SendMailService {
         String companyName = (busCompany != null ? busCompany.getCompanyName() : "VEXEDAT");
 
         // Tạo link dẫn tới trang thanh toán
-        String paymentUrl = "http://localhost:5173/redirect-momo/payment/" + payment.getId();
+        String paymentUrl = momoGoUrl + payment.getId();
         String[] time = bookingOrder.getTrip().getDepartureTime().toString().split("T");
         String htmlBody = """
         <html>
