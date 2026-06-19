@@ -32,3 +32,7 @@ export const logout = (accessToken, refreshToken) => {
 export const updateProfile = (data) => {
   return api.put("/customer/profile", data);
 };
+
+export const googleMobileRegister = (idToken, profile) => {
+  return publicApi.post("/auth/google/mobile/register", { idToken, profile });
+};

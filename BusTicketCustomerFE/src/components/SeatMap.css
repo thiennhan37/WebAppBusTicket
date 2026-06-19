@@ -1,249 +1,257 @@
-/* Wrapper for the entire seat map component, including title and legend */
+/* SeatMap.css */
+
+/* Tổng thể Wrapper */
 .seat-map-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--space-6);
-  border: var(--border);
-  background-color: var(--color-white);
-  box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: inherit;
+    margin-top: 16px;
 }
 
 .seat-map__title {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: var(--space-6);
-  padding-bottom: var(--space-3);
-  border-bottom: var(--border);
-  width: 100%;
-  text-align: center;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    display: none; /* Ẩn đi nếu trong design không có tiêu đề text này */
 }
 
-/* General container for the two decks */
-.bus-container {
-  display: flex;
-  gap: 40px;
-  padding: 20px 0; /* Adjust padding as bus-container is now inside seat-map-wrapper */
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
-  justify-content: center;
+.seat-map__bus-type {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
 }
 
-/* Styling for each deck (lower/upper) */
-.deck {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.deck-title {
-  font-size: var(--font-size-md);
-  color: var(--color-gray-700);
-  margin-bottom: 15px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-}
-
-/* Body of the deck, containing seats */
-.deck-body {
-  background-color: var(--color-gray-100);
-  border-radius: 24px;
-  padding: 20px;
-  width: 140px; /* Fixed width for the bus body */
-  min-height: 480px; /* Minimum height to accommodate seats */
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  border: var(--border); /* Brutalism border */
-  box-shadow: var(--shadow); /* Brutalism shadow */
-}
-
-/* Driver row for steering wheel */
-.driver-row {
-  display: flex;
-  justify-content: flex-start;
-  padding-left: 5px;
-  margin-bottom: 5px;
-}
-
-.steering-wheel {
-  width: 32px;
-  height: 32px;
-  opacity: 0.5;
-  color: var(--color-black); /* Brutalism color */
-}
-
-/* Grid for arranging seats in 2 columns */
-.seats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px 25px; /* Vertical and horizontal gap for aisle */
-}
-
-/* Base seat styling */
-.seat {
-  width: 40px;
-  height: 55px;
-  border-radius: 8px;
-  border: 2px solid var(--color-black); /* Brutalism border */
-  box-sizing: border-box;
-  position: relative;
-  background-color: transparent;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  display: flex; /* To center seat code */
-  justify-content: center;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  color: var(--color-black); /* Default text color for seat code */
-  user-select: none;
-}
-
-/* Headrest part of the seat */
-.seat::after {
-  content: "";
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 22px;
-  height: 8px;
-  border-radius: 3px;
-  border: 2px solid inherit; /* Inherits border color from parent */
-}
-
-/* Seat status: Booked (Gray with X) */
-.seat.booked {
-  border-color: var(--color-gray-300);
-  background-color: var(--color-gray-300);
-  color: var(--color-gray-500); /* Seat code color */
-  cursor: not-allowed;
-}
-.seat.booked::after {
-  border-color: var(--color-gray-500);
-}
-/* No 'x' content for booked seats, just grayed out */
-
-/* Seat status: Held (Darker Gray) */
-.seat.held {
-  border-color: var(--color-gray-500);
-  background-color: var(--color-gray-500);
-  color: var(--color-white); /* Seat code color */
-  cursor: not-allowed;
-}
-.seat.held::after {
-  border-color: var(--color-gray-700);
-}
-
-/* Seat status: Available (Green) */
-.seat.available {
-  border-color: var(--color-green);
-}
-.seat.available::after {
-  border-color: var(--color-green);
-}
-.seat.available:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 2px 2px 0 0 var(--color-black);
-}
-
-/* Seat status: Selecting (Purple) */
-.seat.selecting {
-  border-color: var(--color-purple);
-  background-color: var(--color-purple);
-  color: var(--color-white); /* Seat code color */
-}
-.seat.selecting::after {
-  border-color: var(--color-purple);
-}
-.seat.selecting:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 2px 2px 0 0 var(--color-black);
-}
-
-/* Empty space for layout adjustments */
-.empty-space {
-  width: 40px;
-  height: 55px;
-}
-
-/* Legend styling */
+/* 1. Phần Chú Thích (Legend) */
+/* Đưa chú thích lên đầu bằng order: -1 */
 .seat-map__legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin-top: var(--space-6);
-  padding-top: var(--space-4);
-  border-top: var(--border);
-  width: 100%; /* Ensure legend takes full width */
-  justify-content: center;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    order: -1;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
 }
 
 .seat-map__legend-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #555;
 }
 
 .seat-map__legend-box {
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--color-black);
-  border-radius: 4px; /* Slightly rounded corners for legend boxes */
-  box-sizing: border-box;
-  position: relative;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    position: relative;
 }
 
-.seat-map__legend-box::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 5px;
-  border-radius: 2px;
-  border: 2px solid inherit;
-}
-
-/* Legend box colors */
 .seat-map__legend-box--available {
-  border-color: var(--color-green);
-}
-.seat-map__legend-box--available::after {
-  border-color: var(--color-green);
-}
-
-.seat-map__legend-box--selecting {
-  border-color: var(--color-purple);
-  background-color: var(--color-purple);
-}
-.seat-map__legend-box--selecting::after {
-  border-color: var(--color-purple);
+    background-color: #fff;
+    border: 1px solid #ccc;
 }
 
 .seat-map__legend-box--booked {
-  border-color: var(--color-gray-300);
-  background-color: var(--color-gray-300);
+    background-color: #e0e0e0;
 }
+
 .seat-map__legend-box--booked::after {
-  border-color: var(--color-gray-500);
+    content: "×";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.seat-map__legend-box--selecting {
+    background-color: #e8f5e9;
+    border: 1px solid #4caf50;
+}
+
+.seat-map__legend-box--selecting::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #4caf50;
+    font-size: 10px;
+    font-weight: bold;
 }
 
 .seat-map__legend-box--held {
-  border-color: var(--color-gray-500);
-  background-color: var(--color-gray-500);
+    background-color: #fff9c4;
+    border: 1px solid #fbc02d;
 }
-.seat-map__legend-box--held::after {
-  border-color: var(--color-gray-700);
+
+/* 2. Khung Xe Bus (Bus Container) */
+.bus-container {
+    display: flex;
+    background-color: #f4f5f6; /* Màu nền xám nhạt */
+    border-radius: 16px;
+    padding: 24px 32px;
+    gap: 32px; /* Khoảng cách giữa 2 tầng, tạo không gian cho đường line */
+    justify-content: center;
+    margin: 0 auto;
+    max-width: fit-content;
+
+    /* Thêm hiệu ứng viền và đổ bóng để khối nổi bật hẳn lên */
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Các Tầng (Decks) */
+.deck {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Đường vạch chia giữa 2 tầng */
+.deck:first-child:not(:last-child) {
+    /* Tăng độ đậm của đường line để nhìn rõ hơn */
+    border-right: 1.5px solid #d1d5db;
+    padding-right: 32px; /* Đẩy nội dung tầng 1 ra xa đường line */
+}
+
+.deck-title {
+    text-align: center;
+    font-weight: 600;
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.deck-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Hàng vô lăng */
+.driver-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 8px;
+    padding-left: 4px;
+}
+
+.steering-wheel {
+    width: 24px;
+    height: 24px;
+    color: #888;
+}
+
+/* 3. Lưới Ghế (Seats Grid) */
+.seats-grid {
+    display: grid;
+    /* Mặc định chia 3 cột (ví dụ A1, trống, A2), tuỳ thuộc vào mảng layout truyền vào */
+    grid-template-columns: repeat(3, 44px);
+    gap: 12px;
+    justify-content: center;
+}
+
+/* Khoảng trống không có ghế (Hành lang đi lại) */
+.empty-space {
+    width: 44px;
+    height: 44px;
+}
+
+/* Style chung cho 1 ô Ghế */
+.seat {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    gap: 4px; /* Khoảng cách giữa icon nhỏ và tên ghế */
+}
+
+/* 4. Trạng thái của Ghế */
+
+/* Ghế trống */
+.seat.available {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    color: #555;
+}
+
+/* Icon đường gạch ngang nhỏ cho ghế trống */
+.seat.available::before {
+    content: "";
+    display: block;
+    width: 12px;
+    height: 3px;
+    background-color: #ccc;
+    border-radius: 2px;
+}
+
+.seat.available:hover {
+    border-color: #4caf50;
+    color: #4caf50;
+}
+
+.seat.available:hover::before {
+    background-color: #4caf50;
+}
+
+/* Ghế đã bán / không bán */
+.seat.booked {
+    background-color: #e0e0e0;
+    color: #fff;
+    cursor: not-allowed;
+}
+
+/* Icon dấu X cho ghế đã bán */
+.seat.booked::before {
+    content: "×";
+    display: block;
+    font-size: 16px;
+    line-height: 0.8;
+    font-weight: normal;
+}
+
+/* Ghế đang chọn */
+.seat.selecting {
+    background-color: #e8f5e9;
+    border: 1px solid #4caf50;
+    color: #4caf50;
+}
+
+/* Ghế đang giữ (tuỳ chọn) */
+.seat.held {
+    background-color: #fff9c4;
+    border: 1px solid #fbc02d;
+    color: #f57f17;
+    cursor: not-allowed;
+}
+
+/* 5. Responsive - Màn hình nhỏ thì đẩy 2 tầng xuống dọc */
+@media (max-width: 600px) {
+    .bus-container {
+        flex-direction: column;
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .deck:first-child:not(:last-child) {
+        border-right: none;
+        border-bottom: 1.5px solid #d1d5db; /* Chuyển thành vạch ngang */
+        padding-right: 0;
+        padding-bottom: 24px;
+    }
 }

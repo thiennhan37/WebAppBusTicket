@@ -1,138 +1,157 @@
 .search-form {
-  background-color: var(--color-white);
-  border: var(--border);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-8);
+    background-color: var(--color-white);
+    border: var(--border);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-8);
 }
 
 .search-form__title {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  margin-bottom: var(--space-6);
-  padding-bottom: var(--space-3);
-  border-bottom: var(--border);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-3);
+    border-bottom: var(--border);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
 }
 
 .search-form__title-icon {
-  width: 32px;
-  height: 32px;
-  background-color: var(--color-yellow);
-  border: 2px solid var(--color-black);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--color-yellow);
+    border: 2px solid var(--color-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+/* ĐÃ CẬP NHẬT GRID: Làm ô chọn to ra, nút tìm kiếm nhỏ lại */
 .search-form__fields {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr 1fr auto;
-  gap: var(--space-4);
-  align-items: end;
+    display: grid;
+    /* Cột 1 (Nơi đi): 1.2 phần | Nút đảo: 40px | Cột 2 (Nơi đến): 1.2 phần | Cột 3 (Ngày): 1 phần | Cột 4 (Nút): Vừa đủ nội dung */
+    grid-template-columns: 1.2fr 40px 1.2fr 1fr max-content;
+    gap: var(--space-4);
+    align-items: end;
 }
 
 .search-form__field {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Đảm bảo các ô input có chiều cao chuẩn */
+.search-form__field .brutal-input {
+    height: 48px;
+    width: 100%;
 }
 
 .search-form__swap-btn {
-  width: 40px;
-  height: 40px;
-  border: var(--border);
-  background-color: var(--color-gray-100);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-  align-self: end;
+    width: 40px;
+    height: 48px; /* Tăng height lên bằng với input để nút nằm cân đối hơn */
+    border: var(--border);
+    background-color: var(--color-gray-100);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    align-self: end;
 }
 
 .search-form__swap-btn:hover {
-  background-color: var(--color-yellow);
-  transform: rotate(180deg);
+    background-color: var(--color-yellow);
+    transform: rotate(180deg);
 }
 
+/* ĐÃ CẬP NHẬT NÚT TÌM KIẾM */
 .search-form__submit-btn {
-  align-self: end;
+    align-self: end;
+    height: 48px !important; /* Ép chiều cao bằng với input */
+    padding: 0 20px !important; /* Giảm padding ngang để nút nhỏ lại */
+    white-space: nowrap; /* Đảm bảo chữ "TÌM CHUYẾN" luôn nằm trên 1 dòng */
 }
 
 /* Province dropdown */
 .search-form__dropdown-wrapper {
-  position: relative;
+    position: relative;
 }
 
 .search-form__dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 200;
-  background-color: var(--color-white);
-  border: var(--border);
-  border-top: none;
-  box-shadow: var(--shadow);
-  max-height: 250px;
-  overflow-y: auto;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background-color: var(--color-white);
+    border: var(--border);
+    border-top: none;
+    box-shadow: var(--shadow);
+    max-height: 250px;
+    overflow-y: auto;
 }
 
 .search-form__dropdown-item {
-  padding: var(--space-3) var(--space-4);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  border-bottom: 1px solid var(--color-gray-200);
-  transition: background-color var(--transition-fast);
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    border-bottom: 1px solid var(--color-gray-200);
+    transition: background-color var(--transition-fast);
 }
 
 .search-form__dropdown-item:hover {
-  background-color: var(--color-yellow);
+    background-color: var(--color-yellow);
 }
 
 .search-form__dropdown-item:last-child {
-  border-bottom: none;
+    border-bottom: none;
 }
 
 .search-form__dropdown-empty {
-  padding: var(--space-4);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
-  text-align: center;
-  text-transform: uppercase;
+    padding: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    text-align: center;
+    text-transform: uppercase;
 }
 
 @media (max-width: 768px) {
-  .search-form__fields {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
+    .search-form__fields {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
 
-  .search-form__swap-btn {
-    justify-self: center;
-    transform: rotate(90deg);
-  }
+    .search-form__swap-btn {
+        justify-self: center;
+        transform: rotate(90deg);
+        height: 40px; /* Thu lại chiều cao trên mobile */
+    }
 
-  .search-form__swap-btn:hover {
-    transform: rotate(270deg);
-  }
+    .search-form__swap-btn:hover {
+        transform: rotate(270deg);
+    }
 
-  .search-form {
-    padding: var(--space-5);
-  }
+    .search-form {
+        padding: var(--space-5);
+    }
+
+    .search-form__submit-btn {
+        width: 100%; /* Nút tìm kiếm chiếm full width trên mobile */
+    }
 }
 
 /* Loading spinner trong nút tìm */
 .search-spin {
-  animation: search-spin 0.8s linear infinite;
+    animation: search-spin 0.8s linear infinite;
 }
 
 @keyframes search-spin {
-  to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }

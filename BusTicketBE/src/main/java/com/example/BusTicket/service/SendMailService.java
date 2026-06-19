@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.text.NumberFormat;
 import java.util.Locale;
+
 import com.example.BusTicket.entity.Ticket;
 
 @Service
@@ -21,17 +22,17 @@ public class SendMailService {
     @Async
     public void sendCredentials(String employeeEmail, String password, String companyName) {
         // 1. Tạo mật khẩu ngẫu nhiên (Lấy 8 ký tự đầu của UUID)
-        if(companyName == null) companyName = "VEXEDAT";
+        if (companyName == null) companyName = "VEXEDAT";
         String htmlBody = """
-            <html>
-            <body style="font-family: sans-serif;">
-                <h3>Thông tin tài khoản nhân viên</h3>
-                <p>Email: <b>%s</b></p>
-                <p>Mật khẩu tạm thời: <b>%s</b></p>
-                <p>Vui lòng đổi mật khẩu sau khi đăng nhập.</p>
-            </body>
-            </html>
-            """.formatted(employeeEmail, password);
+                <html>
+                <body style="font-family: sans-serif;">
+                    <h3>Thông tin tài khoản nhân viên</h3>
+                    <p>Email: <b>%s</b></p>
+                    <p>Mật khẩu tạm thời: <b>%s</b></p>
+                    <p>Vui lòng đổi mật khẩu sau khi đăng nhập.</p>
+                </body>
+                </html>
+                """.formatted(employeeEmail, password);
 
         // 3. Gửi mail sử dụng hàm sendHtmlMail bạn đã có
         mailService.sendHtmlMail(
@@ -51,31 +52,31 @@ public class SendMailService {
         String paymentUrl = "http://localhost:5173/redirect-momo/payment/" + payment.getId();
         String[] time = bookingOrder.getTrip().getDepartureTime().toString().split("T");
         String htmlBody = """
-        <html>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; padding: 20px;">
-            <div style="max-width: 500px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                <h2 style="color: #007bff; text-align: center; margin-top: 0;">Xác Nhận Đặt Vé</h2>
-                <p>Chào <b>%s</b>,</p>
-                <p>Cảm ơn bạn đã đặt vé tại <b>%s</b>. Dưới đây là thông tin thanh toán cho đơn hàng của bạn:</p>
+                <html>
+                <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; padding: 20px;">
+                    <div style="max-width: 500px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <h2 style="color: #007bff; text-align: center; margin-top: 0;">Xác Nhận Đặt Vé</h2>
+                        <p>Chào <b>%s</b>,</p>
+                        <p>Cảm ơn bạn đã đặt vé tại <b>%s</b>. Dưới đây là thông tin thanh toán cho đơn hàng của bạn:</p>
                 
-                <div style="background: #f9f9f9; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;">
-                    <p style="margin: 5px 0;"><b>Mã đơn hàng:</b> #%s</p>
-                    <p style="margin: 5px 0;"><b>Lộ trình:</b> %s &rarr; %s</p>
-                    <p style="margin: 5px 0;"><b>Thời gian:</b> %s </p>
-                    <p style="margin: 5px 0;"><b>Tổng tiền:</b> <span style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">%d VNĐ</span></p>
-                </div>
-
-                <div style="text-align: center; margin-top: 30px;">
-                    <a href="%s" style="background-color: #27ae60; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-                        THANH TOÁN NGAY
-                    </a>
-                </div>
+                        <div style="background: #f9f9f9; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;">
+                            <p style="margin: 5px 0;"><b>Mã đơn hàng:</b> #%s</p>
+                            <p style="margin: 5px 0;"><b>Lộ trình:</b> %s &rarr; %s</p>
+                            <p style="margin: 5px 0;"><b>Thời gian:</b> %s </p>
+                            <p style="margin: 5px 0;"><b>Tổng tiền:</b> <span style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">%d VNĐ</span></p>
+                        </div>
                 
-
-            </div>
-        </body>
-        </html>
-        """.formatted(
+                        <div style="text-align: center; margin-top: 30px;">
+                            <a href="%s" style="background-color: #27ae60; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                THANH TOÁN NGAY
+                            </a>
+                        </div>
+                
+                
+                    </div>
+                </body>
+                </html>
+                """.formatted(
                 bookingOrder.getCustomerName(),
                 companyName,
                 bookingOrder.getId(),
@@ -103,25 +104,25 @@ public class SendMailService {
         }
 
         String htmlBody = """
-        <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>Đăng ký nhà xe thành công</h2>
-
-            <p>Xin chào <b>%s</b>,</p>
-
-            <p>
-                Chúng tôi đã tiếp nhận thông tin đăng ký đối tác nhà xe của bạn.
-            </p>
-
-            <p>
-                Hồ sơ hiện đang trong quá trình xét duyệt.
-                Chúng tôi sẽ phản hồi trong thời gian sớm nhất.
-            </p>
-
-            <p>Cảm ơn bạn đã đồng hành cùng hệ thống VEXEDAT.</p>
-        </body>
-        </html>
-        """.formatted(companyName);
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <h2>Đăng ký nhà xe thành công</h2>
+                
+                    <p>Xin chào <b>%s</b>,</p>
+                
+                    <p>
+                        Chúng tôi đã tiếp nhận thông tin đăng ký đối tác nhà xe của bạn.
+                    </p>
+                
+                    <p>
+                        Hồ sơ hiện đang trong quá trình xét duyệt.
+                        Chúng tôi sẽ phản hồi trong thời gian sớm nhất.
+                    </p>
+                
+                    <p>Cảm ơn bạn đã đồng hành cùng hệ thống VEXEDAT.</p>
+                </body>
+                </html>
+                """.formatted(companyName);
 
         mailService.sendHtmlMail(
                 companyEmail,
@@ -136,28 +137,28 @@ public class SendMailService {
         if (companyName == null || companyName.isBlank()) companyName = "Nhà xe";
 
         String htmlBody = """
-        <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>Yêu cầu đặt lại mật khẩu</h2>
-            <p>Xin chào,</p>
-            <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản nhà xe <b>%s</b>.</p>
-            <p>Mật khẩu mới của bạn:</p>
-
-            <div style="
-                background-color:#f4f4f4;
-                padding:12px;
-                border-radius:8px;
-                width:fit-content;
-            ">
-                <p><b>Email:</b> %s</p>
-                <p><b>Mật khẩu mới:</b> %s</p>
-            </div>
-
-            <p>Vui lòng đăng nhập và đổi mật khẩu ngay để đảm bảo an toàn.</p>
-            <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng liên hệ bộ phận hỗ trợ.</p>
-        </body>
-        </html>
-        """.formatted(companyName, companyEmail, password);
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <h2>Yêu cầu đặt lại mật khẩu</h2>
+                    <p>Xin chào,</p>
+                    <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản nhà xe <b>%s</b>.</p>
+                    <p>Mật khẩu mới của bạn:</p>
+                
+                    <div style="
+                        background-color:#f4f4f4;
+                        padding:12px;
+                        border-radius:8px;
+                        width:fit-content;
+                    ">
+                        <p><b>Email:</b> %s</p>
+                        <p><b>Mật khẩu mới:</b> %s</p>
+                    </div>
+                
+                    <p>Vui lòng đăng nhập và đổi mật khẩu ngay để đảm bảo an toàn.</p>
+                    <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng liên hệ bộ phận hỗ trợ.</p>
+                </body>
+                </html>
+                """.formatted(companyName, companyEmail, password);
 
         mailService.sendHtmlMail(companyEmail, "Đặt lại mật khẩu tài khoản nhà xe", htmlBody, null, null);
     }
@@ -166,28 +167,28 @@ public class SendMailService {
         if (companyName == null || companyName.isBlank()) companyName = "Nhà xe";
 
         String htmlBody = """
-        <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>Tài khoản nhà xe đã được tạo thành công</h2>
-            <p>Xin chào <b>%s</b>,</p>
-            <p>Hồ sơ đăng ký của bạn đã được xét duyệt thành công.</p>
-            <p>Thông tin đăng nhập:</p>
-
-            <div style="
-                background-color:#f4f4f4;
-                padding:12px;
-                border-radius:8px;
-                width:fit-content;
-            ">
-                <p><b>Tài khoản:</b> %s</p>
-                <p><b>Mật khẩu tạm thời:</b> %s</p>
-            </div>
-
-            <p>Vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên để đảm bảo an toàn.</p>
-            <p>Chúc nhà xe hoạt động hiệu quả cùng nền tảng VEXEDAT.</p>
-        </body>
-        </html>
-        """.formatted(companyName, username, password);
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <h2>Tài khoản nhà xe đã được tạo thành công</h2>
+                    <p>Xin chào <b>%s</b>,</p>
+                    <p>Hồ sơ đăng ký của bạn đã được xét duyệt thành công.</p>
+                    <p>Thông tin đăng nhập:</p>
+                
+                    <div style="
+                        background-color:#f4f4f4;
+                        padding:12px;
+                        border-radius:8px;
+                        width:fit-content;
+                    ">
+                        <p><b>Tài khoản:</b> %s</p>
+                        <p><b>Mật khẩu tạm thời:</b> %s</p>
+                    </div>
+                
+                    <p>Vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên để đảm bảo an toàn.</p>
+                    <p>Chúc nhà xe hoạt động hiệu quả cùng nền tảng VEXEDAT.</p>
+                </body>
+                </html>
+                """.formatted(companyName, username, password);
 
         mailService.sendHtmlMail(companyEmail, "Tạo tài khoản nhà xe thành công", htmlBody, null, null);
     }
@@ -196,19 +197,19 @@ public class SendMailService {
         if (companyName == null || companyName.isBlank()) companyName = "Nhà xe";
 
         String htmlBody = """
-        <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>Thông báo kết quả đăng ký nhà xe</h2>
-            <p>Xin chào <b>%s</b>,</p>
-            <p>Rất tiếc, hồ sơ đăng ký nhà xe của bạn hiện chưa được phê duyệt.</p>
-
-            <p>Nếu cần hỗ trợ hoặc muốn biết thêm thông tin,
-                vui lòng liên hệ tổng đài để được giải đáp. </p>
-
-            <p>Xin cảm ơn bạn đã quan tâm đến hệ thống VEXEDAT.</p>
-        </body>
-        </html>
-        """.formatted(companyName);
+                <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+                    <h2>Thông báo kết quả đăng ký nhà xe</h2>
+                    <p>Xin chào <b>%s</b>,</p>
+                    <p>Rất tiếc, hồ sơ đăng ký nhà xe của bạn hiện chưa được phê duyệt.</p>
+                
+                    <p>Nếu cần hỗ trợ hoặc muốn biết thêm thông tin,
+                        vui lòng liên hệ tổng đài để được giải đáp. </p>
+                
+                    <p>Xin cảm ơn bạn đã quan tâm đến hệ thống VEXEDAT.</p>
+                </body>
+                </html>
+                """.formatted(companyName);
 
         mailService.sendHtmlMail(companyEmail, "Thông báo đăng ký nhà xe không thành công", htmlBody, null, null);
     }
@@ -241,45 +242,45 @@ public class SendMailService {
                 .orElse("Chưa xác định");
 
         String htmlBody = """
-        <html>
-        <body style="margin:0;padding:0;background:linear-gradient(135deg,#edf7ff 0%%,#f8faff 100%%);font-family:'Segoe UI',Tahoma,Verdana,sans-serif;color:#243447;">
-            <div style="max-width:620px;margin:28px auto;padding:0 14px;">
-                <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(31, 74, 140, 0.15);">
-                    <div style="background:linear-gradient(90deg,#1cbf73,#159957);padding:22px 28px;color:#fff;">
-                        <h2 style="margin:0;font-size:26px;">✅ Thanh toán thành công</h2>
-                        <p style="margin:8px 0 0;font-size:14px;opacity:0.95;">Cảm ơn bạn đã tin tưởng đặt vé tại <b>%s</b>.</p>
-                    </div>
-
-                    <div style="padding:24px 28px 6px;">
-                        <p style="margin:0 0 14px;font-size:15px;">Xin chào <b>%s</b>, hệ thống đã ghi nhận thanh toán thành công cho đơn hàng của bạn.</p>
-
-                        <table style="width:100%%;border-collapse:separate;border-spacing:0 10px;font-size:14px;">
-                            <tr><td style="width:42%%;color:#6b7785;">Mã đơn hàng</td><td style="font-weight:700;">#%s</td></tr>
-                            <tr><td style="color:#6b7785;">Khách hàng</td><td>%s</td></tr>
-                            <tr><td style="color:#6b7785;">Số điện thoại</td><td>%s</td></tr>
-                            <tr><td style="color:#6b7785;">Email</td><td>%s</td></tr>
-                            <tr><td style="color:#6b7785;">Lộ trình</td><td>%s → %s</td></tr>
-                            <tr><td style="color:#6b7785;">Điểm đón</td><td>%s</td></tr>
-                            <tr><td style="color:#6b7785;">Điểm trả</td><td>%s</td></tr>
-                            <tr><td style="color:#6b7785;">Thời gian khởi hành</td><td>%s %s</td></tr>
-                            <tr><td style="color:#6b7785;">Số ghế</td><td>%s</td></tr>
-                            <tr><td style="color:#6b7785;">Số lượng vé</td><td>%d</td></tr>
-                            <tr><td style="color:#6b7785;">Tổng tiền</td><td style="font-size:17px;font-weight:700;color:#d94727;">%s VNĐ</td></tr>
-                        </table>
-
-                        <div style="margin:16px 0 8px;padding:12px 14px;background:#f4f9ff;border-left:4px solid #4aa3ff;border-radius:8px;font-size:13px;color:#51606f;">
-                            Vui lòng có mặt tại điểm đón trước giờ khởi hành để chuyến đi thuận lợi.
+                <html>
+                <body style="margin:0;padding:0;background:linear-gradient(135deg,#edf7ff 0%%,#f8faff 100%%);font-family:'Segoe UI',Tahoma,Verdana,sans-serif;color:#243447;">
+                    <div style="max-width:620px;margin:28px auto;padding:0 14px;">
+                        <div style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(31, 74, 140, 0.15);">
+                            <div style="background:linear-gradient(90deg,#1cbf73,#159957);padding:22px 28px;color:#fff;">
+                                <h2 style="margin:0;font-size:26px;">✅ Thanh toán thành công</h2>
+                                <p style="margin:8px 0 0;font-size:14px;opacity:0.95;">Cảm ơn bạn đã tin tưởng đặt vé tại <b>%s</b>.</p>
+                            </div>
+                
+                            <div style="padding:24px 28px 6px;">
+                                <p style="margin:0 0 14px;font-size:15px;">Xin chào <b>%s</b>, hệ thống đã ghi nhận thanh toán thành công cho đơn hàng của bạn.</p>
+                
+                                <table style="width:100%%;border-collapse:separate;border-spacing:0 10px;font-size:14px;">
+                                    <tr><td style="width:42%%;color:#6b7785;">Mã đơn hàng</td><td style="font-weight:700;">#%s</td></tr>
+                                    <tr><td style="color:#6b7785;">Khách hàng</td><td>%s</td></tr>
+                                    <tr><td style="color:#6b7785;">Số điện thoại</td><td>%s</td></tr>
+                                    <tr><td style="color:#6b7785;">Email</td><td>%s</td></tr>
+                                    <tr><td style="color:#6b7785;">Lộ trình</td><td>%s → %s</td></tr>
+                                    <tr><td style="color:#6b7785;">Điểm đón</td><td>%s</td></tr>
+                                    <tr><td style="color:#6b7785;">Điểm trả</td><td>%s</td></tr>
+                                    <tr><td style="color:#6b7785;">Thời gian khởi hành</td><td>%s %s</td></tr>
+                                    <tr><td style="color:#6b7785;">Số ghế</td><td>%s</td></tr>
+                                    <tr><td style="color:#6b7785;">Số lượng vé</td><td>%d</td></tr>
+                                    <tr><td style="color:#6b7785;">Tổng tiền</td><td style="font-size:17px;font-weight:700;color:#d94727;">%s VNĐ</td></tr>
+                                </table>
+                
+                                <div style="margin:16px 0 8px;padding:12px 14px;background:#f4f9ff;border-left:4px solid #4aa3ff;border-radius:8px;font-size:13px;color:#51606f;">
+                                    Vui lòng có mặt tại điểm đón trước giờ khởi hành để chuyến đi thuận lợi.
+                                </div>
+                            </div>
+                
+                            <div style="padding:14px 28px 20px;color:#7b8794;font-size:12px;text-align:center;border-top:1px solid #eef2f7;">
+                                Chúc bạn có chuyến đi an toàn và thoải mái cùng %s 💚
+                            </div>
                         </div>
                     </div>
-
-                    <div style="padding:14px 28px 20px;color:#7b8794;font-size:12px;text-align:center;border-top:1px solid #eef2f7;">
-                        Chúc bạn có chuyến đi an toàn và thoải mái cùng %s 💚
-                    </div>
-                </div>
-            </div>
-        </body>
-        </html>
-        """.formatted(
+                </body>
+                </html>
+                """.formatted(
                 companyName,
                 bookingOrder.getCustomerName(),
                 bookingOrder.getId(),
@@ -315,71 +316,70 @@ public class SendMailService {
                 .getDepartureTime()
                 .toString()
                 .split("T");
-
         String refundMessage;
 
         if (refundAmount != null && refundAmount > 0) {
             refundMessage = """
-        <div style="background: #e8f8f0; border-left: 4px solid #27ae60; padding: 15px; margin: 20px 0;">
-            <p style="margin: 5px 0; color: #27ae60;">
-                <b>✓ Đơn hàng đã được hoàn tiền thành công.</b>
-            </p>
-            <p style="margin: 5px 0;">
-                <b>Số tiền hoàn:</b> <span style="font-size: 1.1em; font-weight: bold;"> %,d VNĐ </span>
-            </p>
-        </div>
-        """.formatted(refundAmount);
+                    <div style="background: #e8f8f0; border-left: 4px solid #27ae60; padding: 15px; margin: 20px 0;">
+                        <p style="margin: 5px 0; color: #27ae60;">
+                            <b>✓ Đơn hàng đã được hoàn tiền thành công.</b>
+                        </p>
+                        <p style="margin: 5px 0;">
+                            <b>Số tiền hoàn:</b> <span style="font-size: 1.1em; font-weight: bold;"> %,d VNĐ </span>
+                        </p>
+                    </div>
+                    """.formatted(refundAmount);
         } else {
             refundMessage = """
-        <div style="background: #fff3cd; border-left: 4px solid #f39c12; padding: 15px; margin: 20px 0;">
-            <p style="margin: 0; color: #856404;"> Đơn hàng này không thuộc diện được hoàn tiền. </p>
-        </div>
-        """;
+                    <div style="background: #fff3cd; border-left: 4px solid #f39c12; padding: 15px; margin: 20px 0;">
+                        <p style="margin: 0; color: #856404;"> Đơn hàng này không thuộc diện được hoàn tiền. </p>
+                    </div>
+                    """;
         }
 
         String htmlBody = """
-        <html>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                     line-height: 1.6; color: #333;
-                     background-color: #f4f4f4; padding: 20px;">
-
-            <div style="max-width: 500px; margin: 0 auto;
-                        background: #ffffff; padding: 30px;
-                        border-radius: 10px;
-                        box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-
-                <h2 style="color: #e74c3c; text-align: center; margin-top: 0;"> Hủy Vé Thành Công </h2>
-                <p>Chào <b>%s</b>,</p>
-                <p> Đơn đặt vé của bạn tại <b>%s</b> đã được hủy thành công. </p>
-                <div style="background: #f9f9f9;border-left: 4px solid #e74c3c;padding: 15px;margin: 20px 0;">
-                    <p style="margin: 5px 0;">
-                        <b>Mã đơn hàng:</b> #%s
-                    </p>
-                    <p style="margin: 5px 0;">
-                        <b>Lộ trình:</b> %s &rarr; %s
-                    </p>
-                    <p style="margin: 5px 0;">
-                        <b>Thời gian khởi hành:</b> %s
-                    </p>
-                    <p style="margin: 5px 0;">
-                        <b>Giá trị đơn hàng:</b>
-                        <span style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">
-                            %d VNĐ
-                        </span>
-                    </p>
-                </div>
-                %s
-                <p style="margin-top: 25px;">
-                    Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với nhà xe để được hỗ trợ.
-                </p>
-                <p>
-                    Trân trọng,<br>
-                    <b>%s</b>
-                </p>
-            </div>
-        </body>
-        </html>
-        """.formatted(
+                <html>
+                <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                             line-height: 1.6; color: #333;
+                             background-color: #f4f4f4; padding: 20px;">
+                
+                    <div style="max-width: 500px; margin: 0 auto;
+                                background: #ffffff; padding: 30px;
+                                border-radius: 10px;
+                                box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                
+                        <h2 style="color: #e74c3c; text-align: center; margin-top: 0;"> Hủy Vé Thành Công </h2>
+                        <p>Chào <b>%s</b>,</p>
+                        <p> Đơn đặt vé của bạn tại <b>%s</b> đã được hủy thành công. </p>
+                        <div style="background: #f9f9f9;border-left: 4px solid #e74c3c;padding: 15px;margin: 20px 0;">
+                            <p style="margin: 5px 0;">
+                                <b>Mã đơn hàng:</b> #%s
+                            </p>
+                            <p style="margin: 5px 0;">
+                                <b>Lộ trình:</b> %s &rarr; %s
+                            </p>
+                            <p style="margin: 5px 0;">
+                                <b>Thời gian khởi hành:</b> %s
+                            </p>
+                            <p style="margin: 5px 0;">
+                                <b>Giá trị đơn hàng:</b>
+                                <span style="color: #e74c3c; font-weight: bold; font-size: 1.2em;">
+                                    %d VNĐ
+                                </span>
+                            </p>
+                        </div>
+                        %s
+                        <p style="margin-top: 25px;">
+                            Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với nhà xe để được hỗ trợ.
+                        </p>
+                        <p>
+                            Trân trọng,<br>
+                            <b>%s</b>
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """.formatted(
                 bookingOrder.getCustomerName(),
                 companyName,
                 bookingOrder.getId(),
@@ -394,6 +394,67 @@ public class SendMailService {
         mailService.sendHtmlMail(
                 bookingOrder.getCustomerEmail(),
                 "[" + companyName + "] Thông báo hủy đơn hàng #" + bookingOrder.getId(),
+                htmlBody,
+                null,
+                null
+        );
+    }
+
+    public void sendCustomerRefundEmail(BookingOrder bookingOrder, Long refundAmount) {
+        sendCustomerRefundEmail(bookingOrder, refundAmount, null);
+    }
+
+    public void sendCustomerRefundEmail(BookingOrder bookingOrder, Long refundAmount, String paymentGateway) {
+        if (bookingOrder == null || bookingOrder.getCustomerEmail() == null || bookingOrder.getCustomerEmail().isBlank()) {
+            return;
+        }
+
+        BusCompany busCompany = bookingOrder.getTrip().getBusCompany();
+        String companyName = (busCompany != null ? busCompany.getCompanyName() : "VEXEDAT");
+        NumberFormat currencyFormatter = NumberFormat.getInstance(new Locale("vi", "VN"));
+        String[] time = bookingOrder.getTrip()
+                .getDepartureTime()
+                .toString()
+                .split("T");
+        String gatewayName = paymentGateway == null || paymentGateway.isBlank()
+                ? "CONG THANH TOAN"
+                : paymentGateway.trim().toUpperCase(Locale.ROOT);
+        companyName = companyName + " - Hoan tien qua " + gatewayName;
+
+        String htmlBody = """
+                <html>
+                <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; padding: 20px;">
+                    <div style="max-width: 520px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <h2 style="color: #27ae60; text-align: center; margin-top: 0;">Hoàn Tiền Thành Công</h2>
+                        <p>Chào <b>%s</b>,</p>
+                        <p>Hệ thống đã hoàn tiền thành công cho đơn hàng của bạn tại <b>%s</b>.</p>
+                
+                        <div style="background: #f9f9f9; border-left: 4px solid #27ae60; padding: 15px; margin: 20px 0;">
+                            <p style="margin: 5px 0;"><b>Mã đơn hàng:</b> #%s</p>
+                            <p style="margin: 5px 0;"><b>Lộ trình:</b> %s &rarr; %s</p>
+                            <p style="margin: 5px 0;"><b>Thời gian khởi hành:</b> %s</p>
+                            <p style="margin: 5px 0;"><b>Số tiền hoàn:</b> <span style="color: #27ae60; font-weight: bold; font-size: 1.2em;">%s VNĐ</span></p>
+                        </div>
+                
+                        <p>Nếu cần hỗ trợ thêm, vui lòng liên hệ với nhà xe hoặc bộ phận chăm sóc khách hàng.</p>
+                        <p>Trân trọng,<br><b>%s</b></p>
+                    </div>
+                </body>
+                </html>
+                """.formatted(
+                bookingOrder.getCustomerName(),
+                companyName,
+                bookingOrder.getId(),
+                bookingOrder.getTrip().getRoute().getArrivalProvince().getName(),
+                bookingOrder.getTrip().getRoute().getDestinationProvince().getName(),
+                time[1] + " " + time[0],
+                currencyFormatter.format(refundAmount != null ? refundAmount : 0L),
+                companyName
+        );
+
+        mailService.sendHtmlMail(
+                bookingOrder.getCustomerEmail(),
+                "[" + companyName + "] Thông báo hoàn tiền đơn hàng #" + bookingOrder.getId(),
                 htmlBody,
                 null,
                 null

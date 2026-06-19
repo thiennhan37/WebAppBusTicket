@@ -8,6 +8,10 @@ export const getBusDiagram = (tripId) => {
   return publicApi.get("/trips/bus-diagram", { params: { tripId } });
 };
 
+export const getTripStops = (tripId) => {
+  return publicApi.get("/trips/stops", { params: { tripId } });
+};
+
 export const getStops = (provinceID) => {
   return publicApi.get("/trips/stops", { params: { provinceID } });
 };

@@ -46,37 +46,37 @@ class SeatSelectionViewModel extends ChangeNotifier {
   Set<String> get selectedSeats => _selectedSeats;
 
   // --- Điểm đón/trả ---
-  List<StopModel> _departureStops = [];
-  List<StopModel> _arrivalStops = [];
+  List<TripStop> _departureStops = [];
+  List<TripStop> _arrivalStops = [];
 
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  List<StopModel> get filteredDepartureStops {
+  List<TripStop> get filteredDepartureStops {
     final query = normalize(_searchQuery);
     if (query.isEmpty) return _departureStops;
-    return _departureStops.where((stop) {
-      final name = normalize(stop.name);
-      final address = normalize(stop.address);
+    return _departureStops.where((tripStop) {
+      final name = normalize(tripStop.stop.name);
+      final address = normalize(tripStop.stop.address);
       return name.contains(query) || address.contains(query);
     }).toList();
   }
 
-  List<StopModel> get filteredArrivalStops {
+  List<TripStop> get filteredArrivalStops {
     final query = normalize(_searchQuery);
     if (query.isEmpty) return _arrivalStops;
-    return _arrivalStops.where((stop) {
-      final name = normalize(stop.name);
-      final address = normalize(stop.address);
+    return _arrivalStops.where((tripStop) {
+      final name = normalize(tripStop.stop.name);
+      final address = normalize(tripStop.stop.address);
       return name.contains(query) || address.contains(query);
     }).toList();
   }
 
-  StopModel? _selectedDepartureStop;
-  StopModel? get selectedDepartureStop => _selectedDepartureStop;
+  TripStop? _selectedDepartureStop;
+  TripStop? get selectedDepartureStop => _selectedDepartureStop;
 
-  StopModel? _selectedArrivalStop;
-  StopModel? get selectedArrivalStop => _selectedArrivalStop;
+  TripStop? _selectedArrivalStop;
+  TripStop? get selectedArrivalStop => _selectedArrivalStop;
 
   // --- Thông tin liên hệ ---
   String _contactName = '';
@@ -220,12 +220,12 @@ class SeatSelectionViewModel extends ChangeNotifier {
 
       _departureStops = stopsData
           .where((item) => item['type'] == 'UP')
-          .map((item) => item['stop'] as StopModel)
+          .map((item) => TripStop.fromJson(item))
           .toList();
 
       _arrivalStops = stopsData
           .where((item) => item['type'] == 'DOWN')
-          .map((item) => item['stop'] as StopModel)
+          .map((item) => TripStop.fromJson(item))
           .toList();
     } catch (e) {
       debugPrint('Error fetching trip stops: $e');
@@ -340,11 +340,12 @@ class SeatSelectionViewModel extends ChangeNotifier {
         return false;
       }
 
+      // Sử dụng tripStopId (ID ở cùng hàng với type) thay vì stop.id
       final response = await _tripRepository.holdSeats(
         tripId: tripId,
         tripSeatIdList: tripSeatIdList,
-        arrivalId: _selectedDepartureStop!.id.toString(),
-        destinationId: _selectedArrivalStop!.id.toString(),
+        arrivalId: _selectedDepartureStop!.tripStopId.toString(),
+        destinationId: _selectedArrivalStop!.tripStopId.toString(),
       );
       final data = response.data;
       final int code = data['code'];
@@ -503,12 +504,12 @@ class SeatSelectionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectDepartureStop(StopModel stop) {
+  void selectDepartureStop(TripStop stop) {
     _selectedDepartureStop = stop;
     notifyListeners();
   }
 
-  void selectArrivalStop(StopModel stop) {
+  void selectArrivalStop(TripStop stop) {
     _selectedArrivalStop = stop;
     notifyListeners();
   }

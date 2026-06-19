@@ -6,9 +6,9 @@ import 'package:string_normalizer/string_normalizer.dart';
 
 class StopSelectionWidget extends StatefulWidget {
   final bool isDeparture;
-  final List<StopModel> stops;
-  final StopModel? selectedStop;
-  final Function(StopModel) onStopSelected;
+  final List<TripStop> stops;
+  final TripStop? selectedStop;
+  final Function(TripStop) onStopSelected;
 
   const StopSelectionWidget({
     super.key,
@@ -34,14 +34,14 @@ class _StopSelectionWidgetState extends State<StopSelectionWidget> {
     super.dispose();
   }
 
-  void _scrollToFirstMatch(List<StopModel> stops, String query) {
+  void _scrollToFirstMatch(List<TripStop> stops, String query) {
     if (query.isEmpty) return;
 
     final normalizedQuery = normalize(query);
 
-    final index = stops.indexWhere((stop) {
-      return normalize(stop.name).contains(normalizedQuery) ||
-          normalize(stop.address).contains(normalizedQuery);
+    final index = stops.indexWhere((tripStop) {
+      return normalize(tripStop.stop.name).contains(normalizedQuery) ||
+          normalize(tripStop.stop.address).contains(normalizedQuery);
     });
 
     if (index != -1) {
@@ -102,11 +102,10 @@ class _StopSelectionWidgetState extends State<StopSelectionWidget> {
             itemCount: filteredStops.length,
             itemExtent: _itemExtent,
             itemBuilder: (context, index) {
-              final stop = filteredStops[index];
-              final isSelected = widget.selectedStop?.id == stop.id;
-              final query = viewModel.searchQuery;
-
-
+              final tripStop = filteredStops[index];
+              final stop = tripStop.stop;
+              final isSelected = widget.selectedStop?.tripStopId == tripStop.tripStopId;
+              
               final isHighlighted =
                   viewModel.searchQuery.isNotEmpty &&
                       (
@@ -117,7 +116,7 @@ class _StopSelectionWidgetState extends State<StopSelectionWidget> {
                       );
 
               return InkWell(
-                onTap: () => widget.onStopSelected(stop),
+                onTap: () => widget.onStopSelected(tripStop),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(

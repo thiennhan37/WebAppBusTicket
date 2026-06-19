@@ -59,6 +59,7 @@ public class PaymentService {
     private final VNPayConfig vnPayConfig;
     private final BookingOrderService bookingOrderService;
     private final BookingOrderRepository bookingOrderRepository;
+    private final SendMailService sendMailService;
 
     @Value("${booking.compMakeOrderPrefixKey}")
     private String compMakeOrderPrefixKey;
@@ -71,7 +72,7 @@ public class PaymentService {
     @Value("${booking.customerHoldingSeatPrefixKey}")
     private String customerHoldingSeatPrefixKey;
 
-    public Payment createPayment(PaymentRequest request){
+    public Payment createPayment(PaymentRequest request) {
         Payment payment = paymentMapper.toPayment(request);
         payment.setUpdatedAt(LocalDateTime.now());
         payment.setStatus(PaymentEnum.PENDING.name());
@@ -80,16 +81,18 @@ public class PaymentService {
         payment.setBookingOrder(bookingOrder);
         return paymentRepository.save(payment);
     }
-    public PaymentUrlResponse getPayUrlForCustomer(String paymentId){
+
+    public PaymentUrlResponse getPayUrlForCustomer(String paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
         // chặn khi customer yêu cầu thanh toán cho 1 payment đã thành công
-        if(payment.getStatus().equals(PaymentEnum.SUCCESSFUL.name())) throw new MyAppException(ErrorCode.PAYMENT_COMPLETED);
+        if (payment.getStatus().equals(PaymentEnum.SUCCESSFUL.name()))
+            throw new MyAppException(ErrorCode.PAYMENT_COMPLETED);
         Trip trip = payment.getBookingOrder().getTrip();
-        if( !trip.getStatus().equals(TripStatusEnum.OPEN.name()))
+        if (!trip.getStatus().equals(TripStatusEnum.OPEN.name()))
             throw new MyAppException(ErrorCode.TRIP_NOT_OPEN);
         String payUrl = redisTemplate.opsForValue().get(paymentPrefixKey + paymentId);
-        if(payUrl == null){
+        if (payUrl == null) {
             // nếu đã bị xóa trong redis -> query lại momo lấy link thanh toán
             String bookingOrderId = payment.getBookingOrder().getId();
             MomoPaymentRequest momoPaymentRequest = MomoPaymentRequest.builder()
@@ -102,25 +105,24 @@ public class PaymentService {
                     Duration.ofSeconds(paymentExpirationTime));
             payUrl = response.getPayUrl();
         }
-        if(payUrl == null) throw new MyAppException(ErrorCode.PAYMENT_INVALID);
+        if (payUrl == null) throw new MyAppException(ErrorCode.PAYMENT_INVALID);
         return PaymentUrlResponse.builder()
                 .payUrl(payUrl)
                 .build();
     }
 
     @Transactional
-    public Boolean handleMomoIpn(Map<String, Object> payload){
+    public Boolean handleMomoIpn(Map<String, Object> payload) {
         String resultCode = payload.get("resultCode").toString();
         String momoOrderId = payload.get("orderId").toString();
         ExtraDataDTO extraDataDTO = momoUtil.parseExtraData(payload.get("extraData").toString());
         boolean result = false;
-        if( !momoUtil.verifySignature(payload, momoConfiguration.getSecretKey()))
+        if (!momoUtil.verifySignature(payload, momoConfiguration.getSecretKey()))
             throw new MyAppException(ErrorCode.ERROR_SIGNATURE);
         if ("0".equals(resultCode)) {
             System.out.println("thanh cong");
             result = true;
-        }
-        else{
+        } else {
             throw new MyAppException(ErrorCode.ERROR_MOMO_IPN);
         }
         String type = extraDataDTO.getType();
@@ -128,35 +130,36 @@ public class PaymentService {
         String paymentId = extraDataDTO.getPaymentId();
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
-        if(type.equals(AccountType.COMPANY.name())){
+        if (type.equals(AccountType.COMPANY.name())) {
+            boolean refunded = false;
             // chưa lưu lịch sử khi thanh toán/refund thành công
             int updatedRow = paymentRepository.updateToSuccess(paymentId);
             // update payment thất bại
-            if(updatedRow != 1){
+            if (updatedRow != 1) {
                 String currentMomoOrderId = payment.getMomoOrderId();
                 // nếu momoOrderId khác với DB --> không phải retry payment --> refund
-                if( !momoOrderId.equals(currentMomoOrderId)){
+                if (!momoOrderId.equals(currentMomoOrderId)) {
                     Long amount = Long.valueOf(payload.get("amount").toString());
                     Long parentTransId = Long.valueOf(payload.get("transId").toString());
                     String description = "Hoàn tiền cho thanh toán hóa đơn #" + bookingOrderId;
 
                     boolean refundResult = refundPayment(parentTransId, bookingOrderId, amount, description);
-                    if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
-                }
-                else{
+                    if (!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
+                    refunded = true;
+                } else {
                     log.info("Lỗi ipn trùng cho cùng 1 đơn thanh toán và không có refund");
                 }
-            }
-            else{
+            } else {
                 payment.setMomoOrderId(momoOrderId);
                 payment.setTransId(Long.valueOf(payload.get("transId").toString()));
                 payment.setUpdatedAt(LocalDateTime.now());
                 payment.setStatus(PaymentEnum.SUCCESSFUL.name());
                 paymentRepository.save(payment);
             }
-            bookingOrderService.paymentSuccessfully(bookingOrderId);
-        }
-        else if(type.equals(AccountType.CUSTOMER.name())){
+            if (!refunded) {
+                bookingOrderService.paymentSuccessfully(bookingOrderId);
+            }
+        } else if (type.equals(AccountType.CUSTOMER.name())) {
             boolean refunded = false;
             String customerId = payment.getBookingOrder().getBookingUser() != null
                     ? payment.getBookingOrder().getBookingUser().getId()
@@ -176,11 +179,11 @@ public class PaymentService {
                         ? "Hoàn tiền do không tìm thấy mã đơn hàng trong redis #" + bookingOrderId
                         : "Hoàn tiền cho thanh toán quá hạn hóa đơn #" + bookingOrderId;
                 boolean refundResult = refundPayment(parentTransId, bookingOrderId, amount, description);
-                if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
+                if (!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
                 refunded = true;
             } else {
                 int updateRow = paymentRepository.updateToSuccess(paymentId);
-                if(updateRow != 1){
+                if (updateRow != 1) {
                     if (PaymentEnum.SUCCESSFUL.name().equals(payment.getStatus())) {
                         refunded = false;
                     } else {
@@ -189,7 +192,7 @@ public class PaymentService {
                         Long parentTransId = Long.valueOf(payload.get("transId").toString());
                         String description = "Hoàn tiền cho thanh toán hóa đơn #" + bookingOrderId;
                         boolean refundResult = refundPayment(parentTransId, bookingOrderId, amount, description);
-                        if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
+                        if (!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
                         refunded = true;
                     }
                 } else {
@@ -267,7 +270,7 @@ public class PaymentService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public boolean refundPayment(Long parentTransId, String bookingOrderId, Long amount, String description){
+    public boolean refundPayment(Long parentTransId, String bookingOrderId, Long amount, String description) {
         PaymentRequest paymentRequest = PaymentRequest.builder()
                 .parentTransId(parentTransId)
                 .bookingOrderId(bookingOrderId)
@@ -285,10 +288,14 @@ public class PaymentService {
         MomoRefundResponse momoRefundResponse = momoService.createMomoRefund(momoRefundRequest);
         refundPayment.setTransId(momoRefundResponse.getTransId());
         refundPayment.setMomoOrderId(momoRefundResponse.getMomoOrderId());
-        if(momoRefundResponse.getResultCode() == 0) refundPayment.setStatus(PaymentEnum.SUCCESSFUL.name());
+        if (momoRefundResponse.getResultCode() == 0) refundPayment.setStatus(PaymentEnum.SUCCESSFUL.name());
         else refundPayment.setStatus(PaymentEnum.FAILED.name());
         paymentRepository.save(refundPayment);
-        return refundPayment.getStatus().equals(PaymentEnum.SUCCESSFUL.name());
+        boolean refundSuccessful = refundPayment.getStatus().equals(PaymentEnum.SUCCESSFUL.name());
+        if (refundSuccessful) {
+            sendRefundEmailForCustomerAccount(refundPayment.getBookingOrder(), amount, "MOMO");
+        }
+        return refundSuccessful;
     }
 
     // ===========================
@@ -472,20 +479,20 @@ public class PaymentService {
                 refundPayment.setStatus(PaymentEnum.SUCCESSFUL.name());
             } else {
                 refundPayment.setStatus(PaymentEnum.FAILED.name());
-                log.error("VNPay refund failed: code={}, message={}", refundResponse.getResponseCode(), refundResponse.getMessage());
             }
             paymentRepository.save(refundPayment);
-            return refundPayment.getStatus().equals(PaymentEnum.SUCCESSFUL.name());
+            boolean refundSuccessful = refundPayment.getStatus().equals(PaymentEnum.SUCCESSFUL.name());
+            if (refundSuccessful) {
+                sendRefundEmailForCustomerAccount(refundPayment.getBookingOrder(), amount, "VNPAY");
+            }
+            return refundSuccessful;
         } catch (MyAppException e) {
-            // ensure refund record persisted with FAILED status and log root cause
             refundPayment.setStatus(PaymentEnum.FAILED.name());
             paymentRepository.save(refundPayment);
-            log.error("Exception while calling VNPay refund API for paymentId={}, bookingOrderId={}: {}", originalPaymentId, bookingOrderId, e.getMessage(), e);
             return false;
         } catch (Exception e) {
             refundPayment.setStatus(PaymentEnum.FAILED.name());
             paymentRepository.save(refundPayment);
-            log.error("Unexpected error while refunding VNPay paymentId={}, bookingOrderId={}: {}", originalPaymentId, bookingOrderId, e.getMessage(), e);
             return false;
         }
     }
@@ -504,5 +511,14 @@ public class PaymentService {
             return payDate;
         }
         return vnPayUtil.currentDateTimeGmt7();
+    }
+
+    private void sendRefundEmailForCustomerAccount(BookingOrder bookingOrder, Long refundAmount, String paymentGateway) {
+        if (bookingOrder == null
+                || bookingOrder.getCustomerEmail() == null
+                || bookingOrder.getCustomerEmail().isBlank()) {
+            return;
+        }
+        sendMailService.sendCustomerRefundEmail(bookingOrder, refundAmount, paymentGateway);
     }
 }

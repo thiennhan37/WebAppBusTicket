@@ -1,0 +1,104 @@
+.stop-selection-page {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-16);
+  background-color: var(--color-gray-100);
+}
+
+.stop-selection-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.stop-selection-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.stop-selection-card,
+.stop-selection-summary {
+  padding: var(--space-6);
+}
+
+.stop-selection-summary {
+  position: sticky;
+  top: 90px;
+}
+
+.stop-selection-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--color-black);
+}
+
+.stop-selection-muted {
+  margin: 0;
+  color: var(--color-gray-500);
+  font-style: italic;
+}
+
+.stop-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.stop-option-label {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-4);
+  cursor: pointer;
+  background-color: var(--color-white);
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.stop-option-label input[type="radio"] {
+  accent-color: var(--color-yellow);
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.stop-option-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.stop-option-info strong {
+  font-size: var(--font-size-base);
+  margin-bottom: 4px;
+}
+
+.stop-option-info span {
+  color: var(--color-gray-600);
+  font-size: var(--font-size-xs);
+  overflow-wrap: anywhere;
+}
+
+.stop-option-label--selected {
+  background-color: var(--color-yellow-light);
+  border-color: var(--color-black);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--color-black);
+}
+
+@media (max-width: 900px) {
+  .stop-selection-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stop-selection-summary {
+    position: static;
+  }
+}
