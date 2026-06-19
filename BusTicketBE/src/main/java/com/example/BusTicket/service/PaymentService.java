@@ -130,35 +130,33 @@ public class PaymentService {
         String paymentId = extraDataDTO.getPaymentId();
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new MyAppException(ErrorCode.NOT_EXISTED));
-        if (type.equals(AccountType.COMPANY.name())) {
-            boolean refunded = false;
+        if(type.equals(AccountType.COMPANY.name())){
             // chưa lưu lịch sử khi thanh toán/refund thành công
             int updatedRow = paymentRepository.updateToSuccess(paymentId);
             // update payment thất bại
-            if (updatedRow != 1) {
+            if(updatedRow != 1){
                 String currentMomoOrderId = payment.getMomoOrderId();
                 // nếu momoOrderId khác với DB --> không phải retry payment --> refund
-                if (!momoOrderId.equals(currentMomoOrderId)) {
+                if( !momoOrderId.equals(currentMomoOrderId)){
                     Long amount = Long.valueOf(payload.get("amount").toString());
                     Long parentTransId = Long.valueOf(payload.get("transId").toString());
                     String description = "Hoàn tiền cho thanh toán hóa đơn #" + bookingOrderId;
 
                     boolean refundResult = refundPayment(parentTransId, bookingOrderId, amount, description);
-                    if (!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
-                    refunded = true;
-                } else {
+                    if(!refundResult) throw new MyAppException(ErrorCode.ERROR_MOMO_REFUND);
+                }
+                else{
                     log.info("Lỗi ipn trùng cho cùng 1 đơn thanh toán và không có refund");
                 }
-            } else {
+            }
+            else{
                 payment.setMomoOrderId(momoOrderId);
                 payment.setTransId(Long.valueOf(payload.get("transId").toString()));
                 payment.setUpdatedAt(LocalDateTime.now());
                 payment.setStatus(PaymentEnum.SUCCESSFUL.name());
                 paymentRepository.save(payment);
             }
-            if (!refunded) {
-                bookingOrderService.paymentSuccessfully(bookingOrderId);
-            }
+            bookingOrderService.paymentSuccessfully(bookingOrderId);
         } else if (type.equals(AccountType.CUSTOMER.name())) {
             boolean refunded = false;
             String customerId = payment.getBookingOrder().getBookingUser() != null
