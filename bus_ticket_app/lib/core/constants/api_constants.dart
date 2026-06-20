@@ -1,6 +1,7 @@
 class ApiConstants {
   // Base URL
-  static const String baseUrl = 'http://localhost:8080/vexedat';
+  static const String baseUrl = 'http://47.129.116.239:8080/vexedat';
+  // static const String baseUrl = 'http://localhost:8080/vexedat';
   static const String notificationSocketUrl = '$baseUrl/ws/notifications';
 
   static const String sendOtp = '$baseUrl/auth/send-otp';
