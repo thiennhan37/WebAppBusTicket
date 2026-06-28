@@ -12,6 +12,9 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface BusCompanyMapper {
+    @Mapping(source = "companyName", target = "CompanyName")
+    @Mapping(target = "avgStars", ignore = true)
+    @Mapping(target = "ratingCount", ignore = true)
     BusCompanyResponse toBusCompanyResponse(BusCompany busCompany);
 
 }

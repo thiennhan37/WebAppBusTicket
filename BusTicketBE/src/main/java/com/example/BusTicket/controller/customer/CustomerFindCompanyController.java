@@ -19,4 +19,9 @@ public class CustomerFindCompanyController {
             Pageable pageable) {
         return ApiResponse.success(new PagedModel<>(busCompanyService.getCompanyForCustomerChat(name, pageable)));
     }
+
+    @GetMapping("/customer/companiesWithHighRating")
+    public ApiResponse<?> getCompanyWithHighRating(){
+        return ApiResponse.success(busCompanyService.getCompaniesWithHighRating());
+    }
 }

@@ -80,9 +80,10 @@ export default function OrderDetailPage() {
             const data = res.data.result || res.data;
             setOrderDetail(data);
 
-            // If paid, fetch existing rating
+            // If paid, fetch existing rating only if departure time has passed
             const isPaid = checkPaid(data.orderStatus);
-            if (isPaid) {
+            const hasDeparted = data.departureTime && new Date(data.departureTime) < new Date();
+            if (isPaid && hasDeparted) {
                 try {
                     const rateRes = await getTripRating(orderId);
                     if (rateRes.data.result) {
@@ -408,6 +409,13 @@ export default function OrderDetailPage() {
                                         <Award size={18}/> Đánh giá chuyến đi
                                     </h3>
 
+                                    {/* Not yet departed */}
+                                    {orderDetail?.departureTime && new Date(orderDetail.departureTime) > new Date() && (
+                                        <p className="widget-desc" style={{fontStyle: "italic"}}>
+                                            ⏳ Chuyến chưa khởi hành. Bạn có thể đánh giá sau khi chuyến đi đã diễn ra.
+                                        </p>
+                                    )}
+
                                     {showRatingForm && (
                                         <form onSubmit={handleRatingSubmit} className="rating-form">
                                             {renderStarSelector(serviceQuality, setServiceQuality, "Chất lượng dịch vụ")}
@@ -449,22 +457,25 @@ export default function OrderDetailPage() {
                                             </div>
 
                                             <div className="rating-breakdown">
-                                                <div className="breakdown-item">
-                                                    <span>Dịch vụ:</span>
-                                                    <strong>{ratingDetail.serviceQuality} ★</strong>
-                                                </div>
-                                                <div className="breakdown-item">
-                                                    <span>Đúng giờ:</span>
-                                                    <strong>{ratingDetail.punctuality} ★</strong>
-                                                </div>
-                                                <div className="breakdown-item">
-                                                    <span>An toàn:</span>
-                                                    <strong>{ratingDetail.safety} ★</strong>
-                                                </div>
-                                                <div className="breakdown-item">
-                                                    <span>Vệ sinh:</span>
-                                                    <strong>{ratingDetail.cleanliness} ★</strong>
-                                                </div>
+                                                {[
+                                                    { label: "🎯 Dịch vụ", val: ratingDetail.serviceQuality },
+                                                    { label: "⏱ Đúng giờ", val: ratingDetail.punctuality },
+                                                    { label: "🛡 An toàn", val: ratingDetail.safety },
+                                                    { label: "✨ Vệ sinh", val: ratingDetail.cleanliness },
+                                                ].map(({ label, val }) => (
+                                                    <div key={label} className="breakdown-item">
+                                                        <span>{label}:</span>
+                                                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                                            {[1,2,3,4,5].map(s => (
+                                                                <Star key={s} size={13}
+                                                                    fill={s <= val ? "var(--color-yellow)" : "none"}
+                                                                    color={s <= val ? "var(--color-yellow)" : "var(--color-gray-300)"}
+                                                                />
+                                                            ))}
+                                                            <strong style={{ marginLeft: 2 }}>{val}★</strong>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
 
                                             {ratingDetail.description && (
@@ -476,8 +487,14 @@ export default function OrderDetailPage() {
                                                     <p style={{
                                                         fontSize: "var(--font-size-sm)",
                                                         fontStyle: "italic"
-                                                    }}>"{ratingDetail.description}"</p>
+                                                    }}>"{ ratingDetail.description}"</p>
                                                 </div>
+                                            )}
+
+                                            {ratingDetail.createdAt && (
+                                                <p style={{ fontSize: "var(--font-size-xs)", color: "var(--color-gray-500)", textAlign: "center", marginTop: "0.5rem" }}>
+                                                    Đã đánh giá lúc {new Date(ratingDetail.createdAt).toLocaleString("vi-VN")}
+                                                </p>
                                             )}
                                         </div>
                                     )}

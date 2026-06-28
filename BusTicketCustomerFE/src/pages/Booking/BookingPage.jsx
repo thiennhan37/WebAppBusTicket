@@ -87,10 +87,19 @@ export default function BookingPage() {
       const errData = err.response?.data;
       const errMsg = errData?.message || err.message || "Không thể giữ ghế. Vui lòng thử lại.";
       
+      // Hiển thị thông báo lỗi chung từ hệ thống
       toast.error(errMsg);
 
+      // Nếu mã lỗi là 4010 (Ghế đã bị đặt)
       if (errData?.code === 4010) {
-        navigate(`/khachhang/chon-ghe/${tripId}`, { replace: true });
+        // Quay lại trang chọn ghế và đính kèm danh sách ghế đang xử lý qua state
+        navigate(`/khachhang/chon-ghe/${tripId}`, { 
+          replace: true, 
+          state: {
+            previouslySelectedSeatIds: selectedSeatIds,
+            previouslySelectedSeatCodes: selectedSeatCodes
+          }
+        });
       }
     } finally {
       setSubmitting(false);

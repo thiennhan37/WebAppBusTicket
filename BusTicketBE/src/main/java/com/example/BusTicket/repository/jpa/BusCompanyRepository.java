@@ -126,4 +126,14 @@ public interface BusCompanyRepository extends JpaRepository<BusCompany, String> 
             String phone,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT bc.id, bc.companyName, bc.avatarUrl, bc.email, bc.hotline, COALESCE(AVG(tr.averageStars), 0.0), COUNT(tr.id)
+        FROM BusCompany bc
+        LEFT JOIN TripRating tr ON tr.busCompany.id = bc.id
+        WHERE bc.status = 'ACTIVE'
+        GROUP BY bc.id, bc.companyName, bc.avatarUrl, bc.email, bc.hotline
+        ORDER BY COALESCE(AVG(tr.averageStars), 0.0) DESC, COUNT(tr.id) DESC
+    """)
+    List<Object[]> getCompaniesWithHighRatingRaw();
 }

@@ -10,5 +10,7 @@ public class BusCompanyResponse {
     private String CompanyName;
     private String email;
     private String hotline;
-
-}
+    private String avatarUrl;
+    private Double avgStars;
+    private Long ratingCount;
+}

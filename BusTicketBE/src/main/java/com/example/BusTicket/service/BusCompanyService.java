@@ -124,4 +124,27 @@ public class BusCompanyService {
         List<Customer> customerList = busCompanyRepository.getCustomerForChat(busCompanyId, phone, fixedPageable);
         return customerMapper.toCustomerInfoResponseList(customerList);
     }
+
+    public List<BusCompanyResponse> getCompaniesWithHighRating(){
+        List<Object[]> rawList = busCompanyRepository.getCompaniesWithHighRatingRaw();
+        return rawList.stream().map(row -> {
+            String id = row[0] != null ? row[0].toString() : null;
+            String companyName = row[1] != null ? row[1].toString() : null;
+            String avatarUrl = row[2] != null ? row[2].toString() : null;
+            String email = row[3] != null ? row[3].toString() : null;
+            String hotline = row[4] != null ? row[4].toString() : null;
+            Double avgStars = row[5] != null ? Math.round(Double.parseDouble(row[5].toString()) * 10.0) / 10.0 : 0.0;
+            Long ratingCount = row[6] != null ? Long.parseLong(row[6].toString()) : 0L;
+
+            return BusCompanyResponse.builder()
+                    .id(id)
+                    .CompanyName(companyName)
+                    .avatarUrl(avatarUrl)
+                    .email(email)
+                    .hotline(hotline)
+                    .avgStars(avgStars)
+                    .ratingCount(ratingCount)
+                    .build();
+        }).toList();
+    }
 }

@@ -34,7 +34,8 @@ public class SecurityConfig {
         "/nhaxe/auth/register", "/nhaxe/auth/forgot-password", "/auth/send-otp", "/auth/verify-otp", "/auth/logout", "/register/init",
             "/register/verify", "/auth/log-out", "/admin/auth/login", "/auth/google/mobile", "/auth/google/mobile/register"};
     private final String[] PUBLIC_ENDPOINTS = {"/provinces", "/stops", "/bus-type/**", "/bus-type", "/customer/companies/{companyId}/rating",
-            "/provinces/{provinceId}/pickup-stops", "/provinces/{provinceId}/dropoff-stops", "/trips/get-companies-info" , "/ws/**"
+            "/provinces/{provinceId}/pickup-stops", "/provinces/{provinceId}/dropoff-stops", "/trips/get-companies-info" , "/ws/**",
+            "/customer/companiesWithHighRating"
     };
     private final String[] AUTH_GET_ENDPOINTS = {"/auth/google/login", "/auth/google/callback"};
     private final String[] PUBLIC_GET_ENDPOINTS = {"/vnpay/ipn", "/vnpay/return"};
