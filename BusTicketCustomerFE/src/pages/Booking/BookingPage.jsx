@@ -47,48 +47,64 @@ export default function BookingPage() {
     }, [navigate, selectedDropoffStopId, selectedPickupStopId, selectedSeatCodes, selectedSeatIds, totalCost, tripId]);
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (!customerName || !customerPhone || !customerEmail) {
-            toast.error("Vui lòng điền đầy đủ thông tin liên hệ");
-            return;
-        }
+    if (!customerName || !customerPhone || !customerEmail) {
+      toast.error("Vui lòng điền đầy đủ thông tin liên hệ");
+      return;
+    }
 
-        setSubmitting(true);
-        try {
-            const holdRes = await holdSeats(tripId, {
-                tripSeatIdList: selectedSeatIds,
-                arrivalId: selectedPickupStopId,
-                destinationId: selectedDropoffStopId,
-            });
-            const orderId = holdRes.data.result || holdRes.data;
-            const holdStartedAt = Date.now();
+    setSubmitting(true);
+    try {
+      const holdRes = await holdSeats(tripId, {
+        tripSeatIdList: selectedSeatIds,
+        arrivalId: selectedPickupStopId,
+        destinationId: selectedDropoffStopId,
+      });
+      const orderId = holdRes.data.result || holdRes.data;
+      const holdStartedAt = Date.now();
 
-            toast.success("Giữ ghế thành công! Vui lòng thanh toán trong 10 phút.");
-            navigate(`/khachhang/thanh-toan/${tripId}?orderId=${orderId}`, {
-                state: {
-                    orderId,
-                    holdStartedAt,
-                    selectedSeatIds,
-                    selectedSeatCodes,
-                    selectedPickupStopId,
-                    selectedDropoffStopId,
-                    selectedPickupStop,
-                    selectedDropoffStop,
-                    totalCost,
-                    customerName,
-                    customerPhone,
-                    customerEmail,
-                },
-            });
-        } catch (err) {
-            console.error("Hold seats error:", err);
-            const errMsg = err.response?.data?.message || err.message || "Không thể giữ ghế. Vui lòng thử lại.";
-            toast.error(errMsg);
-        } finally {
-            setSubmitting(false);
-        }
-    };
+      toast.success("Giữ ghế thành công! Vui lòng thanh toán trong 10 phút.");
+      navigate(`/khachhang/thanh-toan/${tripId}?orderId=${orderId}`, {
+        state: {
+          orderId,
+          holdStartedAt,
+          selectedSeatIds,
+          selectedSeatCodes,
+          selectedPickupStopId,
+          selectedDropoffStopId,
+          selectedPickupStop,
+          selectedDropoffStop,
+          totalCost,
+          customerName,
+          customerPhone,
+          customerEmail,
+        },
+      });
+    } catch (err) {
+      console.error("Hold seats error:", err);
+      
+      const errData = err.response?.data;
+      const errMsg = errData?.message || err.message || "Không thể giữ ghế. Vui lòng thử lại.";
+      
+      // Hiển thị thông báo lỗi chung từ hệ thống
+      toast.error(errMsg);
+
+      // Nếu mã lỗi là 4010 (Ghế đã bị đặt)
+      if (errData?.code === 4010) {
+        // Quay lại trang chọn ghế và đính kèm danh sách ghế đang xử lý qua state
+        navigate(`/khachhang/chon-ghe/${tripId}`, { 
+          replace: true, 
+          state: {
+            previouslySelectedSeatIds: selectedSeatIds,
+            previouslySelectedSeatCodes: selectedSeatCodes
+          }
+        });
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
     return (
         <div className="booking-page">

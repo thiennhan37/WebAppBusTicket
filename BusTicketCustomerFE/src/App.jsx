@@ -14,6 +14,7 @@ import ProfilePage from "./pages/Profile/ProfilePage";
 import FavoritesPage from "./pages/Favorites/FavoritesPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthProvider from "./context/AuthContext";
+import PaymentSuccessPage from "./pages/PaymentSuccess/PaymentSuccessPage";
 import { Toaster } from "sonner";
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="chon-diem/:tripId" element={<StopSelectionPage />} />
             <Route path="dat-ve/:tripId" element={<BookingPage />} />
             <Route path="thanh-toan/:tripId" element={<PaymentPage />} />
+            <Route path="payment-success/:method" element={<PaymentSuccessPage />} />
             <Route
               path="don-hang"
               element={<OrderHistoryPage />}

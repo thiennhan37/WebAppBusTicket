@@ -43,23 +43,23 @@ let isRefreshing = false;
 let requestRunningList = [];
 
 const pushRequestIntoQueue = (resolve, reject) => {
-    requestRunningList.push({resolve, reject});
+    requestRunningList.push({ resolve, reject });
 };
 
 const onSuccess = (token) => {
-    requestRunningList.forEach(({resolve}) => resolve(token));
+    requestRunningList.forEach(({ resolve }) => resolve(token));
     requestRunningList = [];
 };
 
 const onFailed = (error) => {
-    requestRunningList.forEach(({reject}) => reject(error));
+    requestRunningList.forEach(({ reject }) => reject(error));
     requestRunningList = [];
 };
 
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
-        const {config, response} = error;
+        const { config, response } = error;
         const originalRequest = config;
 
         if (response?.status === 401 && !originalRequest._retry) {
@@ -70,7 +70,7 @@ api.interceptors.response.use(
 
                 try {
                     const res = await publicApi.post("/auth/refresh-token", {});
-                    const {accessToken} = res.data.result;
+                    const { accessToken } = res.data.result;
                     localStorage.setItem("accessToken", accessToken);
 
                     isRefreshing = false;

@@ -1,57 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import SearchForm from "../../components/SearchForm";
 import BrutalCard from "../../components/BrutalCard";
 import BrutalButton from "../../components/BrutalButton";
 import { ShieldCheck, Headphones, Zap, MapPin, Bus, Ticket, Star, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getCompaniesWithHighRating } from "../../services/companyService";
 import "./HomePage.css";
 
-const POPULAR_ROUTES = [
-  {
-    id: 1,
-    start: "Sài Gòn",
-    end: "Đà Lạt",
-    startId: "HCM",
-    endId: "LDO",
-    price: 300000,
-    distance: "310 km",
-    duration: "8 giờ",
-    image: "🏔️",
-  },
-  {
-    id: 2,
-    start: "Hà Nội",
-    end: "Sapa",
-    startId: "HNO",
-    endId: "LCA",
-    price: 350000,
-    distance: "320 km",
-    duration: "6 giờ",
-    image: "⛰️",
-  },
-  {
-    id: 3,
-    start: "Sài Gòn",
-    end: "Nha Trang",
-    startId: "HCM",
-    endId: "KHO",
-    price: 250000,
-    distance: "430 km",
-    duration: "9 giờ",
-    image: "🏖️",
-  },
-  {
-    id: 4,
-    start: "Đà Nẵng",
-    end: "Huế",
-    startId: "DNG",
-    endId: "TTH",
-    price: 120000,
-    distance: "100 km",
-    duration: "2 giờ 30 phút",
-    image: "🏰",
-  },
-];
+
 
 const PLATFORM_FEATURES = [
   {
@@ -86,31 +42,24 @@ const PLATFORM_FEATURES = [
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleRouteClick = (startId, endId, startName, endName) => {
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, "0");
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const yyyy = today.getFullYear();
-    const dateFormatted = `${dd}/${mm}/${yyyy}`;
-
-    // Store the province name mapping to ensure local storage lookup is set up properly
-    try {
-      const map = JSON.parse(localStorage.getItem("provincesMap") || "{}");
-      map[startId] = startName;
-      map[endId] = endName;
-      localStorage.setItem("provincesMap", JSON.stringify(map));
-    } catch (e) {
-      console.error(e);
-    }
-
-    const params = new URLSearchParams({
-      startProvince: startId,
-      endProvince: endId,
-      date: dateFormatted,
-    });
-    navigate(`/khachhang/ket-qua?${params.toString()}`);
-  };
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await getCompaniesWithHighRating();
+        setCompanies(response.data.result || []);
+      } catch (err) {
+        console.error("Failed to fetch high rated companies:", err);
+        setError("Không thể tải danh sách nhà xe đánh giá cao.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCompanies();
+  }, []);
 
   return (
     <div className="home-page">
@@ -138,40 +87,73 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Popular Routes */}
+      {/* High-Rated Companies */}
       <section className="home-routes section">
         <div className="container">
-          <h2 className="section-title text-center">Tuyến đường phổ biến</h2>
-          <div className="routes-grid">
-            {POPULAR_ROUTES.map((route) => (
-              <BrutalCard key={route.id} className="route-card">
-                <div className="route-card__media">{route.image}</div>
-                <div className="route-card__body">
-                  <h3 className="route-card__title">
-                    {route.start} ➔ {route.end}
-                  </h3>
-                  <div className="route-card__details text-mono">
-                    <span>Khoảng cách: {route.distance}</span>
-                    <span>Thời gian: {route.duration}</span>
+          <h2 className="section-title text-center">Nhà xe đánh giá cao</h2>
+          
+          {loading && (
+            <div className="page-loader text-center" style={{ padding: "2rem" }}>
+              <div className="brutal-spinner" style={{ margin: "0 auto 1rem" }}></div>
+              <p className="text-mono">Đang tải danh sách nhà xe...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="brutal-card text-center" style={{ padding: "2rem", backgroundColor: "var(--color-white)" }}>
+              <p className="text-mono" style={{ color: "var(--color-red)" }}>{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && companies.length === 0 && (
+            <div className="brutal-card text-center" style={{ padding: "2rem", backgroundColor: "var(--color-white)" }}>
+              <p className="text-mono">Chưa có đánh giá nào cho nhà xe.</p>
+            </div>
+          )}
+
+          {!loading && !error && companies.length > 0 && (
+            <div className="routes-grid">
+              {companies.map((company) => (
+                <BrutalCard key={company.id} className="company-card">
+                  <div className="company-card__media">
+                    {company.avatarUrl ? (
+                      <img src={company.avatarUrl} alt={company.CompanyName} className="company-card__img" />
+                    ) : (
+                      <div className="company-card__emoji">🚌</div>
+                    )}
                   </div>
-                  <div className="route-card__footer">
-                    <div className="route-card__price">
-                      <span className="route-card__price-label brutal-tag">Giá từ</span>
-                      <span className="route-card__price-value">
-                        {new Intl.NumberFormat("vi-VN").format(route.price)}đ
-                      </span>
+                  <div className="company-card__body">
+                    <h3 className="company-card__title">{company.CompanyName}</h3>
+                    
+                    <div className="company-card__rating">
+                      <Star size={16} className="company-card__star" fill="#FFE600" />
+                      <span className="company-card__stars-val">{company.avgStars.toFixed(1)}</span>
+                      <span className="company-card__count">({company.ratingCount} đánh giá)</span>
                     </div>
-                    <BrutalButton
-                      variant="primary"
-                      onClick={() => handleRouteClick(route.startId, route.endId, route.start, route.end)}
-                    >
-                      TÌM VÉ
-                    </BrutalButton>
+
+                    <div className="company-card__details text-mono">
+                      <span>Hotline: {company.hotline || "N/A"}</span>
+                      <span>Email: {company.email || "N/A"}</span>
+                    </div>
+
+                    <div className="company-card__footer">
+                      <BrutalButton
+                        variant="primary"
+                        onClick={() => {
+                          const searchSection = document.querySelector(".home-search-section");
+                          if (searchSection) {
+                            searchSection.scrollIntoView({ behavior: "smooth" });
+                          }
+                        }}
+                      >
+                        ĐẶT VÉ NGAY
+                      </BrutalButton>
+                    </div>
                   </div>
-                </div>
-              </BrutalCard>
-            ))}
-          </div>
+                </BrutalCard>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

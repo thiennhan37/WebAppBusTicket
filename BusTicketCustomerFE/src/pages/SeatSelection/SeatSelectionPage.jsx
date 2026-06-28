@@ -1,19 +1,19 @@
-import {useState, useEffect} from "react";
-import {useParams, useNavigate, useLocation} from "react-router-dom";
-import {getBusDiagram} from "../../services/tripService";
-import {useAuth} from "../../context/AuthContext";
+import { useState, useEffect, useRef } from "react"; // Thêm useRef ở đây
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { getBusDiagram } from "../../services/tripService";
+import { useAuth } from "../../context/AuthContext";
 import SeatMap from "../../components/SeatMap";
 import BrutalCard from "../../components/BrutalCard";
 import BrutalButton from "../../components/BrutalButton";
-import {ArrowLeft, HelpCircle} from "lucide-react";
-import {toast} from "sonner";
+import { ArrowLeft, HelpCircle } from "lucide-react";
+import { toast } from "sonner";
 import "./SeatSelectionPage.css";
 
 export default function SeatSelectionPage() {
-    const {tripId} = useParams();
+    const { tripId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const {isAuthenticated} = useAuth();
+    const { isAuthenticated } = useAuth();
 
     const [seats, setSeats] = useState([]);
     const [busTypeName, setBusTypeName] = useState("");
@@ -23,6 +23,9 @@ export default function SeatSelectionPage() {
     const [selectedSeatIds, setSelectedSeatIds] = useState([]);
     const [selectedSeatCodes, setSelectedSeatCodes] = useState([]);
 
+    // Dùng ref để đảm bảo logic so sánh ghế chỉ chạy 1 lần duy nhất khi render sơ đồ mới
+    const conflictProcessed = useRef(false);
+
     useEffect(() => {
         const fetchDiagram = async () => {
             setLoading(true);
@@ -30,9 +33,34 @@ export default function SeatSelectionPage() {
             try {
                 const res = await getBusDiagram(tripId);
                 const data = res.data.result || res.data;
-                setSeats(data.seats || []);
+                const freshSeats = data.seats || []; // Danh sách ghế mới nhất từ API
+                
+                setSeats(freshSeats);
                 setBusTypeName(data.busTypeName || "");
                 setDiagram(data.diagram || null);
+
+                // KIỂM TRA & SO SÁNH GHẾ KHI QUAY LẠI TỪ TRANG BOOKING (LỖI 4010)
+                if (location.state?.previouslySelectedSeatIds && !conflictProcessed.current) {
+                    conflictProcessed.current = true;
+                    const prevIds = location.state.previouslySelectedSeatIds;
+
+                    // 1. Lọc ra những ghế VẪN CÒN TRỐNG (AVAILABLE) -> Tiếp tục chọn (Sẽ hiển thị màu xanh)
+                    const stillAvailableSeats = freshSeats.filter(
+                        (s) => prevIds.includes(s.seatId) && s.status === "AVAILABLE"
+                    );
+                    setSelectedSeatIds(stillAvailableSeats.map((s) => s.seatId));
+                    setSelectedSeatCodes(stillAvailableSeats.map((s) => s.seatCode));
+
+                    // 2. Lọc ra những ghế ĐÃ BỊ ĐẶT MẤT (Trạng thái KHÁC AVAILABLE) -> Để thông báo đích danh
+                    const takenSeats = freshSeats.filter(
+                        (s) => prevIds.includes(s.seatId) && s.status !== "AVAILABLE"
+                    );
+
+                    if (takenSeats.length > 0) {
+                        const takenCodes = takenSeats.map((s) => s.seatCode).join(", ");
+                        toast.error(`Ghế [${takenCodes}] đã bị người khác nhanh tay đặt mất! Các ghế trống còn lại của bạn đã được giữ nguyên.`);
+                    }
+                }
             } catch (err) {
                 console.error("Fetch bus diagram error:", err);
                 setError("Không thể tải sơ đồ ghế ngồi. Vui lòng quay lại thử sau!");
@@ -42,7 +70,7 @@ export default function SeatSelectionPage() {
         };
 
         fetchDiagram();
-    }, [tripId]);
+    }, [tripId, location.state]); // Lắng nghe thêm cả sự thay đổi của location.state
 
     const handleSeatSelect = (seat) => {
         if (selectedSeatIds.includes(seat.seatId)) {

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { getRecentOrders, unholdSeats } from "../../services/orderService"; // Import unholdSeats
+import { getRecentOrders, unholdSeats, rateTrip, getTripRating } from "../../services/orderService";
 import { useAuth } from "../../context/AuthContext";
 import BrutalCard from "../../components/BrutalCard";
 import BrutalButton from "../../components/BrutalButton";
-import { ClipboardList, ArrowRight, Calendar, Info, Clock, User, XCircle } from "lucide-react"; // Import XCircle for cancel icon
+import { ClipboardList, ArrowRight, Calendar, Info, Clock, User, XCircle, Star, Award, X, Send } from "lucide-react";
 import "./OrderHistoryPage.css";
-import { toast } from "react-toastify"; // Assuming toast for notifications
+import { toast } from "react-toastify";
 
 export default function OrderHistoryPage() {
   const { isAuthenticated } = useAuth();
@@ -14,6 +14,17 @@ export default function OrderHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("current"); // 'current', 'departed', 'cancelled'
+
+  // Rating modal state
+  const [ratingModal, setRatingModal] = useState(null); // { orderId, routeInfo } or null
+  const [existingRating, setExistingRating] = useState(null); // fetched rating data
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [serviceQuality, setServiceQuality] = useState(5);
+  const [punctuality, setPunctuality] = useState(5);
+  const [safety, setSafety] = useState(5);
+  const [cleanliness, setCleanliness] = useState(5);
+  const [description, setDescription] = useState("");
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -42,7 +53,6 @@ export default function OrderHistoryPage() {
       try {
         await unholdSeats(orderId);
         toast.success("Đơn hàng đã được hủy thành công!");
-        // Refresh orders after successful cancellation
         fetchOrders();
       } catch (err) {
         console.error("Cancel order error:", err);
@@ -50,6 +60,83 @@ export default function OrderHistoryPage() {
       }
     }
   };
+
+  const openRatingModal = async (order) => {
+    setRatingModal({
+      orderId: order.orderId,
+      routeInfo: `${order.departureProvince} → ${order.destinationProvince}`,
+      busCompanyName: order.busCompanyName,
+    });
+    setExistingRating(null);
+    setServiceQuality(5);
+    setPunctuality(5);
+    setSafety(5);
+    setCleanliness(5);
+    setDescription("");
+    setRatingLoading(true);
+    try {
+      const res = await getTripRating(order.orderId);
+      if (res.data?.result) {
+        setExistingRating(res.data.result);
+      }
+    } catch {
+      // No rating yet – show form
+    } finally {
+      setRatingLoading(false);
+    }
+  };
+
+  const closeRatingModal = () => {
+    setRatingModal(null);
+    setExistingRating(null);
+  };
+
+  const handleRatingSubmit = async (e) => {
+    e.preventDefault();
+    if (!ratingModal) return;
+    setRatingSubmitting(true);
+    try {
+      await rateTrip(ratingModal.orderId, {
+        serviceQuality,
+        punctuality,
+        safety,
+        cleanliness,
+        description,
+      });
+      toast.success("Cảm ơn bạn đã đánh giá chuyến đi! ⭐");
+      closeRatingModal();
+    } catch (err) {
+      console.error("Submit rating error:", err);
+      toast.error("Gửi đánh giá thất bại. Vui lòng thử lại!");
+    } finally {
+      setRatingSubmitting(false);
+    }
+  };
+
+  const renderStarSelector = (value, setter, label, icon) => (
+    <div className="oh-star-row">
+      <span className="oh-star-label">
+        {icon} {label}
+      </span>
+      <div className="oh-star-group">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            className={`oh-star-btn ${star <= value ? "oh-star-btn--active" : ""}`}
+            onClick={() => setter(star)}
+            aria-label={`${star} sao`}
+          >
+            <Star
+              size={22}
+              fill={star <= value ? "#f59e0b" : "none"}
+              color={star <= value ? "#f59e0b" : "#d1d5db"}
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   if (!isAuthenticated) {
     return (
@@ -137,6 +224,7 @@ export default function OrderHistoryPage() {
   });
 
   return (
+    <>
     <div className="order-history-page">
       <div className="container">
         <div className="order-history-header">
@@ -223,24 +311,38 @@ export default function OrderHistoryPage() {
                       {new Intl.NumberFormat("vi-VN").format(order.totalCost)}đ
                     </span>
                   </div>
-                  {/* Conditional Cancel Button */}
-                  {(order.orderStatus === "HOLDING" || order.orderStatus === "PENDING") && (
-                    <BrutalButton
-                      variant="danger"
-                      onClick={() => handleCancelOrder(order.orderId)}
-                      size="small"
-                      className="cancel-order-btn"
+                  <div className="order-card-actions">
+                    {/* Cancel button for pending orders */}
+                    {(order.orderStatus === "HOLDING" || order.orderStatus === "PENDING") && (
+                      <BrutalButton
+                        variant="danger"
+                        onClick={() => handleCancelOrder(order.orderId)}
+                        size="small"
+                        className="cancel-order-btn"
+                      >
+                        <XCircle size={14} /> HỦY
+                      </BrutalButton>
+                    )}
+                    {/* Rating button for departed orders */}
+                    {activeFilter === "departed" && (
+                      <BrutalButton
+                        variant="secondary"
+                        onClick={() => openRatingModal(order)}
+                        size="small"
+                        className="rate-order-btn"
+                        id={`btn-rate-order-${order.orderId}`}
+                      >
+                        <Star size={14} /> ĐÁNH GIÁ
+                      </BrutalButton>
+                    )}
+                    <Link
+                      to={`/khachhang/don-hang/${order.orderId}`}
+                      className="brutal-btn"
+                      id={`btn-detail-order-${order.orderId}`}
                     >
-                      <XCircle size={14} /> HỦY ĐƠN HÀNG
-                    </BrutalButton>
-                  )}
-                  <Link
-                    to={`/khachhang/don-hang/${order.orderId}`}
-                    className="brutal-btn"
-                    id={`btn-detail-order-${order.orderId}`}
-                  >
-                    <Info size={14} /> CHI TIẾT
-                  </Link>
+                      <Info size={14} /> CHI TIẾT
+                    </Link>
+                  </div>
                 </div>
               </BrutalCard>
             ))}
@@ -248,5 +350,117 @@ export default function OrderHistoryPage() {
         )}
       </div>
     </div>
+
+    {/* ===== Rating Modal ===== */}
+    {ratingModal && (
+      <div className="oh-modal-overlay" onClick={closeRatingModal}>
+        <div className="oh-modal" onClick={(e) => e.stopPropagation()}>
+          {/* Header */}
+          <div className="oh-modal-header">
+            <div className="oh-modal-title-area">
+              <div className="oh-modal-icon">
+                <Award size={22} />
+              </div>
+              <div>
+                <h3 className="oh-modal-title">Đánh giá chuyến đi</h3>
+                <p className="oh-modal-subtitle">{ratingModal.routeInfo} · {ratingModal.busCompanyName}</p>
+              </div>
+            </div>
+            <button className="oh-modal-close" onClick={closeRatingModal} aria-label="Đóng">
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="oh-modal-body">
+            {ratingLoading ? (
+              <div className="oh-modal-loading">
+                <div className="brutal-spinner" />
+                <p>Đang kiểm tra đánh giá...</p>
+              </div>
+            ) : existingRating ? (
+              /* === Show existing rating === */
+              <div className="oh-existing-rating">
+                <div className="oh-avg-badge">
+                  <Star size={28} fill="#f59e0b" color="#f59e0b" />
+                  <span className="oh-avg-num">{existingRating.averageStars?.toFixed(1)}</span>
+                  <span className="oh-avg-total">/ 5.0</span>
+                </div>
+                <p className="oh-already-label">Bạn đã đánh giá chuyến này rồi</p>
+
+                <div className="oh-breakdown">
+                  {[
+                    { label: "🎯 Chất lượng dịch vụ", val: existingRating.serviceQuality },
+                    { label: "⏱ Đúng giờ", val: existingRating.punctuality },
+                    { label: "🛡 An toàn", val: existingRating.safety },
+                    { label: "✨ Vệ sinh", val: existingRating.cleanliness },
+                  ].map(({ label, val }) => (
+                    <div key={label} className="oh-breakdown-row">
+                      <span>{label}</span>
+                      <div className="oh-breakdown-stars">
+                        {[1,2,3,4,5].map(s => (
+                          <Star key={s} size={16}
+                            fill={s <= val ? "#f59e0b" : "none"}
+                            color={s <= val ? "#f59e0b" : "#d1d5db"}
+                          />
+                        ))}
+                        <span className="oh-breakdown-num">{val} ★</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {existingRating.description && (
+                  <div className="oh-comment-box">
+                    <span className="oh-comment-label">Nhận xét của bạn</span>
+                    <p className="oh-comment-text">"{existingRating.description}"</p>
+                  </div>
+                )}
+
+                <p className="oh-rated-at">
+                  Đánh giá lúc {new Date(existingRating.createdAt).toLocaleString("vi-VN")}
+                </p>
+              </div>
+            ) : (
+              /* === Rating form === */
+              <form onSubmit={handleRatingSubmit} className="oh-rating-form">
+                <p className="oh-form-intro">Hãy cho chúng tôi biết trải nghiệm của bạn!</p>
+
+                <div className="oh-stars-section">
+                  {renderStarSelector(serviceQuality, setServiceQuality, "Chất lượng dịch vụ", "🎯")}
+                  {renderStarSelector(punctuality, setPunctuality, "Đúng giờ", "⏱")}
+                  {renderStarSelector(safety, setSafety, "An toàn", "🛡")}
+                  {renderStarSelector(cleanliness, setCleanliness, "Vệ sinh", "✨")}
+                </div>
+
+                <div className="oh-desc-field">
+                  <label className="oh-desc-label">Lời nhắn (không bắt buộc)</label>
+                  <textarea
+                    className="brutal-input oh-desc-textarea"
+                    rows={3}
+                    placeholder="Chia sẻ trải nghiệm của bạn về chuyến xe này..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className={`brutal-btn brutal-btn--primary oh-submit-btn ${ratingSubmitting ? "oh-submit-btn--loading" : ""}`}
+                  disabled={ratingSubmitting}
+                >
+                  {ratingSubmitting ? (
+                    <><div className="oh-btn-spinner" /> Đang gửi...</>
+                  ) : (
+                    <><Send size={16} /> GỬI ĐÁNH GIÁ</>
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
